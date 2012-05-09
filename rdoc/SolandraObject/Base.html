@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+
+<title>Class: DatastaxRails::Base</title>
+
+<link type="text/css" media="screen" href="../rdoc.css" rel="stylesheet">
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "../";
+</script>
+
+<script type="text/javascript" charset="utf-8" src="../js/jquery.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/navigation.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/search_index.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/search.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/searcher.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/darkfish.js"></script>
+
+
+<body id="top" class="class">
+<nav id="metadata">
+  <nav id="home-section" class="section">
+  <h3 class="section-header">
+    <a href="../index.html">Home</a>
+    <a href="../table_of_contents.html#classes">Classes</a>
+    <a href="../table_of_contents.html#methods">Methods</a>
+  </h3>
+</nav>
+
+
+  <nav id="search-section" class="section project-section" class="initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <h3 class="section-header">
+      <input type="text" name="search" placeholder="Search" id="search-field"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </h3>
+  </form>
+
+  <ul id="search-results" class="initially-hidden"></ul>
+</nav>
+
+
+  <div id="file-metadata">
+    <nav id="file-list-section" class="section">
+  <h3 class="section-header">Defined In</h3>
+  <ul>
+    <li>lib/datastax_rails/base.rb
+    <li>lib/solandra_test_hook.rb
+  </ul>
+</nav>
+
+    
+  </div>
+
+  <div id="class-metadata">
+    
+    <nav id="parent-class-section" class="section">
+  <h3 class="section-header">Parent</h3>
+  
+  <p class="link">CassandraObject::Base
+  
+</nav>
+
+    <!-- Included Modules -->
+<nav id="includes-section" class="section">
+  <h3 class="section-header">Included Modules</h3>
+
+  <ul class="link-list">
+  
+  
+    <li><a class="include" href="AttributeMethods.html">DatastaxRails::AttributeMethods</a>
+  
+  
+  
+    <li><a class="include" href="CassandraFinderMethods.html">DatastaxRails::CassandraFinderMethods</a>
+  
+  
+  
+    <li><a class="include" href="Validations.html">DatastaxRails::Validations</a>
+  
+  
+  
+    <li><a class="include" href="Reflection.html">DatastaxRails::Reflection</a>
+  
+  
+  
+    <li><a class="include" href="Associations.html">DatastaxRails::Associations</a>
+  
+  
+  
+    <li><a class="include" href="NamedScope.html">DatastaxRails::NamedScope</a>
+  
+  
+  
+    <li><span class="include">ActiveModel::MassAssignmentSecurity</span>
+  
+  
+  
+    <li><span class="include">ActiveModel::Validations::Callbacks</span>
+  
+  
+  </ul>
+</nav>
+
+    <!-- Method Quickref -->
+<nav id="method-list-section" class="section">
+  <h3 class="section-header">Methods</h3>
+
+  <ul class="link-list">
+    
+    <li><a href="#method-c-attribute_names">::attribute_names</a>
+    
+    <li><a href="#method-c-default_page_size">::default_page_size</a>
+    
+    <li><a href="#method-c-logger">::logger</a>
+    
+    <li><a href="#method-c-new">::new</a>
+    
+    <li><a href="#method-c-respond_to-3F">::respond_to?</a>
+    
+    <li><a href="#method-c-search_ids">::search_ids</a>
+    
+    <li><a href="#method-i-freeze">#freeze</a>
+    
+    <li><a href="#method-i-frozen-3F">#frozen?</a>
+    
+    <li><a href="#method-i-save_with_record_class">#save_with_record_class</a>
+    
+  </ul>
+</nav>
+
+  </div>
+
+  <div id="project-metadata">
+    <nav id="fileindex-section" class="section project-section">
+  <h3 class="section-header">Pages</h3>
+
+  <ul>
+  
+    <li class="file"><a href="../README_rdoc.html">README</a>
+  
+  </ul>
+</nav>
+
+    <nav id="classindex-section" class="section project-section">
+  <h3 class="section-header">Class and Module Index</h3>
+
+  <ul class="link-list">
+  
+    <li><a href="../DatastaxRails.html">SolandraObject</a>
+  
+    <li><a href="../DatastaxRails/AssociationTypeMismatch.html">SolandraObject::AssociationTypeMismatch</a>
+  
+    <li><a href="../DatastaxRails/Associations.html">SolandraObject::Associations</a>
+  
+    <li><a href="../DatastaxRails/Associations/Builder.html">SolandraObject::Associations::Builder</a>
+  
+    <li><a href="../DatastaxRails/Associations/Builder/BelongsTo.html">SolandraObject::Associations::Builder::BelongsTo</a>
+  
+    <li><a href="../DatastaxRails/Associations/ClassMethods.html">SolandraObject::Associations::ClassMethods</a>
+  
+    <li><a href="../DatastaxRails/AttributeMethods.html">SolandraObject::AttributeMethods</a>
+  
+    <li><a href="../DatastaxRails/AttributeMethods/ClassMethods.html">SolandraObject::AttributeMethods::ClassMethods</a>
+  
+    <li><a href="../DatastaxRails/Base.html">SolandraObject::Base</a>
+  
+    <li><a href="../DatastaxRails/CassandraFinderMethods.html">SolandraObject::CassandraFinderMethods</a>
+  
+    <li><a href="../DatastaxRails/CassandraFinderMethods/ClassMethods.html">SolandraObject::CassandraFinderMethods::ClassMethods</a>
+  
+    <li><a href="../DatastaxRails/DeleteRestrictionError.html">SolandraObject::DeleteRestrictionError</a>
+  
+    <li><a href="../DatastaxRails/FinderMethods.html">SolandraObject::FinderMethods</a>
+  
+    <li><a href="../DatastaxRails/ModificationMethods.html">SolandraObject::ModificationMethods</a>
+  
+    <li><a href="../DatastaxRails/NamedScope.html">SolandraObject::NamedScope</a>
+  
+    <li><a href="../DatastaxRails/NamedScope/ClassMethods.html">SolandraObject::NamedScope::ClassMethods</a>
+  
+    <li><a href="../DatastaxRails/Railtie.html">SolandraObject::Railtie</a>
+  
+    <li><a href="../DatastaxRails/RecordNotFound.html">SolandraObject::RecordNotFound</a>
+  
+    <li><a href="../DatastaxRails/RecordNotSaved.html">SolandraObject::RecordNotSaved</a>
+  
+    <li><a href="../DatastaxRails/Reflection.html">SolandraObject::Reflection</a>
+  
+    <li><a href="../DatastaxRails/Reflection/ClassMethods.html">SolandraObject::Reflection::ClassMethods</a>
+  
+    <li><a href="../DatastaxRails/Reflection/MacroReflection.html">SolandraObject::Reflection::MacroReflection</a>
+  
+    <li><a href="../DatastaxRails/Relation.html">SolandraObject::Relation</a>
+  
+    <li><a href="../DatastaxRails/SearchMethods.html">SolandraObject::SearchMethods</a>
+  
+    <li><a href="../DatastaxRails/SolandraObjectError.html">SolandraObject::SolandraObjectError</a>
+  
+    <li><a href="../DatastaxRails/SpawnMethods.html">SolandraObject::SpawnMethods</a>
+  
+    <li><a href="../DatastaxRails/SunspotAdapters.html">SolandraObject::SunspotAdapters</a>
+  
+    <li><a href="../DatastaxRails/SunspotAdapters/SolandraObjectDataAccessor.html">SolandraObject::SunspotAdapters::SolandraObjectDataAccessor</a>
+  
+    <li><a href="../DatastaxRails/SunspotAdapters/SolandraObjectInstanceAdapter.html">SolandraObject::SunspotAdapters::SolandraObjectInstanceAdapter</a>
+  
+    <li><a href="../DatastaxRails/Validations.html">SolandraObject::Validations</a>
+  
+    <li><a href="../DatastaxRails/Validations/ClassMethods.html">SolandraObject::Validations::ClassMethods</a>
+  
+    <li><a href="../DatastaxRails/Validations/UniquenessValidator.html">SolandraObject::Validations::UniquenessValidator</a>
+  
+  </ul>
+</nav>
+
+  </div>
+</nav>
+
+<div id="documentation">
+  <h1 class="class">class DatastaxRails::Base</h1>
+
+  <div id="description" class="description">
+    
+<h1 id="label-Solandra+Object">DatastaxRails</h1>
+
+<p>DatastaxRails-based objects differ from Active Record objects in that
+they specify their attributes directly on the model.  This is necessary
+because of the fact that Cassandra column families do not have a set list
+of columns but rather can have different columns per row.  By specifying
+the attributes on the model, getters and setters are automatically created,
+and the attribute is automatically indexed into SOLR.</p>
+
+<h2 id="label-Creation">Creation</h2>
+
+<p>DatastaxRailss accept constructor parameters either in a hash or as a
+block. The hash method is especially useful when you’re receiving the
+data from somewhere else, like an HTTP request. It works like this:</p>
+
+<pre class="ruby"><span class="ruby-identifier">user</span> = <span class="ruby-constant">User</span>.<span class="ruby-identifier">new</span>(:<span class="ruby-identifier">name</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-string">&quot;David&quot;</span>, :<span class="ruby-identifier">occupation</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-string">&quot;Code Artist&quot;</span>)
+<span class="ruby-identifier">user</span>.<span class="ruby-identifier">name</span> <span class="ruby-comment"># =&gt; &quot;David&quot;</span>
+</pre>
+
+<p>You can also use block initialization:</p>
+
+<pre class="ruby"><span class="ruby-identifier">user</span> = <span class="ruby-constant">User</span>.<span class="ruby-identifier">new</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">u</span><span class="ruby-operator">|</span>
+  <span class="ruby-identifier">u</span>.<span class="ruby-identifier">name</span> = <span class="ruby-string">&quot;David&quot;</span>
+  <span class="ruby-identifier">u</span>.<span class="ruby-identifier">occupation</span> = <span class="ruby-string">&quot;Code Artist&quot;</span>
+<span class="ruby-keyword">end</span>
+</pre>
+
+<p>And of course you can just create a bare object and specify the attributes
+after the fact:</p>
+
+<pre>user = User.new
+user.name = &quot;David&quot;
+user.occupation = &quot;Code Artist&quot;</pre>
+
+<h2 id="label-Conditions">Conditions</h2>
+
+<p>Conditions are specified as a hash representing key/value pairs that will
+eventually be passed to Sunspot or as a chained call for greater_than and
+less_than conditions.  In addition, fulltext queries may be specified as a
+string that will eventually be parsed by SOLR as a standard SOLR query.</p>
+
+<p>A simple hash without a statement will generate conditions based on
+equality using boolean AND logic. For instance:</p>
+
+<pre class="ruby"><span class="ruby-constant">Student</span>.<span class="ruby-identifier">where</span>(:<span class="ruby-identifier">first_name</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-string">&quot;Harvey&quot;</span>, :<span class="ruby-identifier">status</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">1</span>)
+<span class="ruby-constant">Student</span>.<span class="ruby-identifier">where</span>(<span class="ruby-identifier">params</span>[:<span class="ruby-identifier">student</span>])
+</pre>
+
+<p>A range may be used in the hash to use a SOLR range query:</p>
+
+<pre class="ruby"><span class="ruby-constant">Student</span>.<span class="ruby-identifier">where</span>(:<span class="ruby-identifier">grade</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">9</span><span class="ruby-operator">..</span><span class="ruby-value">12</span>)
+</pre>
+
+<p>An array may be used in the hash to construct a SOLR OR query:</p>
+
+<pre class="ruby"><span class="ruby-constant">Student</span>.<span class="ruby-identifier">where</span>(:<span class="ruby-identifier">grade</span> =<span class="ruby-operator">&gt;</span> [<span class="ruby-value">9</span>,<span class="ruby-value">11</span>,<span class="ruby-value">12</span>])
+</pre>
+
+<p>Inequality can be tested for like so:</p>
+
+<pre class="ruby"><span class="ruby-constant">Student</span>.<span class="ruby-identifier">where_not</span>(:<span class="ruby-identifier">grade</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">9</span>)
+<span class="ruby-constant">Student</span>.<span class="ruby-identifier">where</span>(:<span class="ruby-identifier">grade</span>).<span class="ruby-identifier">greater_than</span>(<span class="ruby-value">9</span>)
+<span class="ruby-constant">Student</span>.<span class="ruby-identifier">where</span>(:<span class="ruby-identifier">grade</span>).<span class="ruby-identifier">less_than</span>(<span class="ruby-value">10</span>)
+</pre>
+
+<p>Fulltext searching is natively supported.  All text and string fields are
+automatically indexed for fulltext searching.</p>
+
+<pre>Post.fulltext('Apple AND &quot;iPhone 4s&quot;')</pre>
+
+<p>Fulltext searching uses the standard Lucene query parser.  If you want to
+use the newer disMax query parser, you can specify it like so:</p>
+
+<pre>Post.fulltext('Apple iPhone 4s').query_parser('disMax')</pre>
+
+<p>For a full discussion of the differences between the two query parsers, see
+the SOLR documentation: <a
+href="https://wiki.apache.org/solr/SolrQuerySyntax">wiki.apache.org/solr/SolrQuerySyntax</a></p>
+
+<h2 id="label-Overwriting+default+accessors">Overwriting default accessors</h2>
+
+<p>All column values are automatically available through basic accessors on
+the DatastaxRails, but sometimes you want to specialize this behavior.
+This can be done by overwriting the default accessors (using the same name
+as the attribute) and calling <code>read_attribute(attr_name)</code> and
+<code>write_attribute(attr_name, value)</code> to actually change things.</p>
+
+<pre class="ruby"><span class="ruby-keyword">class</span> <span class="ruby-constant">Song</span> <span class="ruby-operator">&lt;</span> <span class="ruby-constant">DatastaxRails</span><span class="ruby-operator">::</span><span class="ruby-constant">Base</span>
+  <span class="ruby-comment"># Uses an integer of seconds to hold the length of the song</span>
+
+  <span class="ruby-keyword">def</span> <span class="ruby-identifier">length=</span>(<span class="ruby-identifier">minutes</span>)
+    <span class="ruby-identifier">write_attribute</span>(:<span class="ruby-identifier">length</span>, <span class="ruby-identifier">minutes</span>.<span class="ruby-identifier">to_i</span> * <span class="ruby-value">60</span>)
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-keyword">def</span> <span class="ruby-identifier">length</span>
+    <span class="ruby-identifier">read_attribute</span>(:<span class="ruby-identifier">length</span>) <span class="ruby-operator">/</span> <span class="ruby-value">60</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span>
+</pre>
+
+<p>You can alternatively use <code>self[:attribute]=(value)</code> and
+<code>self[:attribute]</code> instead of <code>write_attribute(:attribute,
+value)</code> and <code>read_attribute(:attribute)</code>.</p>
+
+<h2 id="label-Dynamic+attribute-based+finders">Dynamic attribute-based finders</h2>
+
+<p>Dynamic attribute-based finders are a cleaner way of getting (and/or
+creating) objects by simple queries without using where chains. They work
+by appending the name of an attribute to <code>find_by_</code> or
+<code>find_all_by_</code> and thus produces finders like
+<code>Person.find_by_user_name</code>,
+<code>Person.find_all_by_last_name</code>, and
+<code>Payment.find_by_transaction_id</code>. Instead of writing
+<code>Person.where(:user_name =&gt; user_name).first</code>, you just do
+<code>Person.find_by_user_name(user_name)</code>. And instead of writing
+<code>Person.where(:last_name =&gt; last_name).all</code>, you just do
+<code>Person.find_all_by_last_name(last_name)</code>.</p>
+
+<p>It’s also possible to use multiple attributes in the same find by
+separating them with “<em>and</em>”.</p>
+
+<pre class="ruby"><span class="ruby-constant">Person</span>.<span class="ruby-identifier">where</span>(:<span class="ruby-identifier">user_name</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">user_name</span>, :<span class="ruby-identifier">password</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">password</span>).<span class="ruby-identifier">first</span>
+<span class="ruby-constant">Person</span>.<span class="ruby-identifier">find_by_user_name_and_password</span>(<span class="ruby-identifier">user_name</span>, <span class="ruby-identifier">password</span>) <span class="ruby-comment"># with dynamic finder</span>
+</pre>
+
+<p>It’s even possible to call these dynamic finder methods on relations and
+named scopes.</p>
+
+<pre>Payment.order(&quot;created_on&quot;).find_all_by_amount(50)
+Payment.pending.find_last_by_amount(100)</pre>
+
+<p>The same dynamic finder style can be used to create the object if it
+doesn’t already exist. This dynamic finder is called with
+<code>find_or_create_by_</code> and will return the object if it already
+exists and otherwise creates it, then returns it. Protected attributes
+won’t be set unless they are given in a block.</p>
+
+<p>NOTE: This functionality is currently unimplemented but will be in a
+release in the near future.</p>
+
+<pre class="ruby"><span class="ruby-comment"># No 'Summer' tag exists</span>
+<span class="ruby-constant">Tag</span>.<span class="ruby-identifier">find_or_create_by_name</span>(<span class="ruby-string">&quot;Summer&quot;</span>) <span class="ruby-comment"># equal to Tag.create(:name =&gt; &quot;Summer&quot;)</span>
+
+<span class="ruby-comment"># Now the 'Summer' tag does exist</span>
+<span class="ruby-constant">Tag</span>.<span class="ruby-identifier">find_or_create_by_name</span>(<span class="ruby-string">&quot;Summer&quot;</span>) <span class="ruby-comment"># equal to Tag.find_by_name(&quot;Summer&quot;)</span>
+
+<span class="ruby-comment"># Now 'Bob' exist and is an 'admin'</span>
+<span class="ruby-constant">User</span>.<span class="ruby-identifier">find_or_create_by_name</span>(<span class="ruby-string">'Bob'</span>, :<span class="ruby-identifier">age</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">40</span>) { <span class="ruby-operator">|</span><span class="ruby-identifier">u</span><span class="ruby-operator">|</span> <span class="ruby-identifier">u</span>.<span class="ruby-identifier">admin</span> = <span class="ruby-keyword">true</span> }
+</pre>
+
+<p>Use the <code>find_or_initialize_by_</code> finder if you want to return a
+new record without saving it first. Protected attributes won’t be set
+unless they are given in a block.</p>
+
+<pre># No 'Winter' tag exists
+winter = Tag.find_or_initialize_by_name(&quot;Winter&quot;)
+winter.persisted? # false</pre>
+
+<p>Just like <code>find_by_*</code>, you can also use <code>scoped_by_*</code>
+to retrieve data. The good thing about using this feature is that the very
+first time result is returned using <code>method_missing</code> technique
+but after that the method is declared on the class. Henceforth
+<code>method_missing</code> will not be hit.</p>
+
+<pre>User.scoped_by_user_name('David')</pre>
+
+<h2 id="label-Exceptions">Exceptions</h2>
+<ul><li>
+<p><a href="DatastaxRailsError.html">SolandraObjectError</a> - Generic error
+class and superclass of all other errors raised by DatastaxRails.</p>
+</li><li>
+<p><a href="AssociationTypeMismatch.html">AssociationTypeMismatch</a> - The
+object assigned to the association wasn’t of the type specified in the
+association definition.</p>
+</li><li>
+<p>ConnectionNotEstablished+ - No connection has been established. Use
+<code>establish_connection</code> before querying.</p>
+</li><li>
+<p><a href="RecordNotFound.html">RecordNotFound</a> - No record responded to
+the <code>find</code> method. Either the row with the given ID doesn’t
+exist or the row didn’t meet the additional restrictions. Some
+<code>find</code> calls do not raise this exception to signal nothing was
+found, please check its documentation for further details.</p>
+</li><li>
+<p>MultiparameterAssignmentErrors - Collection of errors that occurred during
+a mass assignment using the <code>attributes=</code> method. The
+<code>errors</code> property of this exception contains an array of
+AttributeAssignmentError objects that should be inspected to determine
+which attributes triggered the errors.</p>
+</li><li>
+<p>AttributeAssignmentError - An error occurred while doing a mass assignment
+through the <code>attributes=</code> method. You can inspect the
+<code>attribute</code> property of the exception object to determine which
+attribute triggered the error.</p>
+</li></ul>
+
+<p>See the documentation for <a href="SearchMethods.html">SearchMethods</a>
+for more examples of using the search API.</p>
+
+  </div><!-- description -->
+
+  
+  
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+
+    
+
+    <!-- Methods -->
+    
+     <section id="public-class-5Buntitled-5D-method-details" class="method-section section">
+      <h3 class="section-header">Public Class Methods</h3>
+
+    
+      <div id="method-c-attribute_names" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">attribute_names</span><span
+            class="method-args">()</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Returns an array of attribute names as strings</p>
+          
+
+          
+          <div class="method-source-code" id="attribute_names-source">
+            <pre><span class="ruby-comment"># File lib/datastax_rails/base.rb, line 228</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">attribute_names</span>
+  <span class="ruby-ivar">@attribute_names</span> <span class="ruby-operator">||=</span> <span class="ruby-identifier">attribute_definitions</span>.<span class="ruby-identifier">keys</span>.<span class="ruby-identifier">collect</span> {<span class="ruby-operator">|</span><span class="ruby-identifier">a</span><span class="ruby-operator">|</span><span class="ruby-identifier">a</span>.<span class="ruby-identifier">to_s</span>}
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- attribute_names-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- attribute_names-method -->
+
+    
+      <div id="method-c-default_page_size" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">default_page_size</span><span
+            class="method-args">()</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>SOLR always paginates all requests.  There is no way to disable it, so we
+are setting the default page size to an arbitrarily high number so that we
+effectively remove pagination.  If you instead want a model set to
+something more sane, then override this method in your model and set it. 
+Of course, the page size can always be raised or lowered for an individual
+request.</p>
+
+<pre class="ruby"><span class="ruby-keyword">class</span> <span class="ruby-constant">Model</span> <span class="ruby-operator">&lt;</span> <span class="ruby-constant">DatastaxRails</span><span class="ruby-operator">::</span><span class="ruby-constant">Base</span>
+  <span class="ruby-keyword">def</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">default_page_size</span>
+    <span class="ruby-value">30</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span>
+</pre>
+          
+
+          
+          <div class="method-source-code" id="default_page_size-source">
+            <pre><span class="ruby-comment"># File lib/datastax_rails/base.rb, line 243</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">default_page_size</span>
+  <span class="ruby-value">100000</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- default_page_size-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- default_page_size-method -->
+
+    
+      <div id="method-c-logger" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">logger</span><span
+            class="method-args">()</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+
+          
+          <div class="method-source-code" id="logger-source">
+            <pre><span class="ruby-comment"># File lib/datastax_rails/base.rb, line 213</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">logger</span>
+  <span class="ruby-constant">Rails</span>.<span class="ruby-identifier">logger</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- logger-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- logger-method -->
+
+    
+      <div id="method-c-new" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">new</span><span
+            class="method-args">(attributes = {})</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+
+          
+          <div class="method-source-code" id="new-source">
+            <pre><span class="ruby-comment"># File lib/datastax_rails/base.rb, line 176</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">attributes</span> = {})
+  <span class="ruby-ivar">@key</span> = <span class="ruby-identifier">attributes</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-value">:key</span>)
+  <span class="ruby-ivar">@attributes</span> = {}
+  
+  <span class="ruby-ivar">@relation</span> = <span class="ruby-keyword">nil</span>
+  <span class="ruby-ivar">@new_record</span> = <span class="ruby-keyword">true</span>
+  <span class="ruby-ivar">@destroyed</span> = <span class="ruby-keyword">false</span>
+  <span class="ruby-ivar">@previously_changed</span> = {}
+  <span class="ruby-ivar">@changed_attributes</span> = {}
+  <span class="ruby-ivar">@schema_version</span> = <span class="ruby-keyword">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">current_schema_version</span>
+  
+  <span class="ruby-identifier">sanitize_for_mass_assignment</span>(<span class="ruby-identifier">attributes</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">k</span>,<span class="ruby-identifier">v</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">respond_to?</span>(<span class="ruby-node">&quot;#{k.to_s.downcase}=&quot;</span>)
+      <span class="ruby-identifier">send</span>(<span class="ruby-node">&quot;#{k.to_s.downcase}=&quot;</span>,<span class="ruby-identifier">v</span>)
+    <span class="ruby-keyword">else</span>
+      <span class="ruby-identifier">raise</span>(<span class="ruby-constant">UnknownAttributeError</span>, <span class="ruby-node">&quot;unknown attribute: #{k}&quot;</span>)
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- new-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- new-method -->
+
+    
+      <div id="method-c-respond_to-3F" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">respond_to?</span><span
+            class="method-args">(method_id, include_private = false)</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+
+          
+          <div class="method-source-code" id="respond_to-3F-source">
+            <pre><span class="ruby-comment"># File lib/datastax_rails/base.rb, line 217</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">respond_to?</span>(<span class="ruby-identifier">method_id</span>, <span class="ruby-identifier">include_private</span> = <span class="ruby-keyword">false</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">match</span> = <span class="ruby-constant">ActiveRecord</span><span class="ruby-operator">::</span><span class="ruby-constant">DynamicFinderMatch</span>.<span class="ruby-identifier">match</span>(<span class="ruby-identifier">method_id</span>)
+    <span class="ruby-keyword">return</span> <span class="ruby-keyword">true</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">all_attributes_exists?</span>(<span class="ruby-identifier">match</span>.<span class="ruby-identifier">attribute_names</span>)
+  <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">match</span> = <span class="ruby-constant">ActiveRecord</span><span class="ruby-operator">::</span><span class="ruby-constant">DynamicScopeMatch</span>.<span class="ruby-identifier">match</span>(<span class="ruby-identifier">method_id</span>)
+    <span class="ruby-keyword">return</span> <span class="ruby-keyword">true</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">all_attributes_exists?</span>(<span class="ruby-identifier">match</span>.<span class="ruby-identifier">attribute_names</span>)
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-keyword">super</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- respond_to-3F-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- respond_to-3F-method -->
+
+    
+      <div id="method-c-search_ids" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">search_ids</span><span
+            class="method-args">(&block)</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+
+          
+          <div class="method-source-code" id="search_ids-source">
+            <pre><span class="ruby-comment"># File lib/datastax_rails/base.rb, line 247</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">search_ids</span>(&amp;<span class="ruby-identifier">block</span>)
+  <span class="ruby-identifier">search</span> = <span class="ruby-identifier">solr_search</span>(&amp;<span class="ruby-identifier">block</span>)
+  <span class="ruby-identifier">search</span>.<span class="ruby-identifier">raw_results</span>.<span class="ruby-identifier">map</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">result</span><span class="ruby-operator">|</span> <span class="ruby-identifier">result</span>.<span class="ruby-identifier">primary_key</span> }
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- search_ids-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- search_ids-method -->
+
+    
+    </section><!-- public-class-method-details -->
+  
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section section">
+      <h3 class="section-header">Public Instance Methods</h3>
+
+    
+      <div id="method-i-freeze" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">freeze</span><span
+            class="method-args">()</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Freeze the attributes hash such that associations are still accessible,
+even on destroyed records.</p>
+          
+
+          
+          <div class="method-source-code" id="freeze-source">
+            <pre><span class="ruby-comment"># File lib/datastax_rails/base.rb, line 197</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">freeze</span>
+  <span class="ruby-ivar">@attributes</span>.<span class="ruby-identifier">freeze</span>; <span class="ruby-keyword">self</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- freeze-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- freeze-method -->
+
+    
+      <div id="method-i-frozen-3F" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">frozen?</span><span
+            class="method-args">()</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Returns <code>true</code> if the attributes hash has been frozen.</p>
+          
+
+          
+          <div class="method-source-code" id="frozen-3F-source">
+            <pre><span class="ruby-comment"># File lib/datastax_rails/base.rb, line 202</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">frozen?</span>
+  <span class="ruby-ivar">@attributes</span>.<span class="ruby-identifier">frozen?</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- frozen-3F-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- frozen-3F-method -->
+
+    
+      <div id="method-i-save_with_record_class" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">save_with_record_class</span><span
+            class="method-args">(*args)</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+
+          
+          <div class="method-source-code" id="save_with_record_class-source">
+            <pre><span class="ruby-comment"># File lib/solandra_test_hook.rb, line 8</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">save_with_record_class</span>(*<span class="ruby-identifier">args</span>)
+  <span class="ruby-constant">DatastaxRails</span><span class="ruby-operator">::</span><span class="ruby-constant">Base</span>.<span class="ruby-identifier">recorded_classes</span>[<span class="ruby-keyword">self</span>.<span class="ruby-identifier">class</span>] = <span class="ruby-keyword">nil</span>
+  <span class="ruby-identifier">save_without_record_class</span>(*<span class="ruby-identifier">args</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- save_with_record_class-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- save_with_record_class-method -->
+
+    
+    </section><!-- public-instance-method-details -->
+  
+  </section><!-- 5Buntitled-5D -->
+
+</div><!-- documentation -->
+
+
+<footer id="validator-badges">
+  <p><a href="http://validator.w3.org/check/referer">[Validate]</a>
+  <p>Generated by <a href="https://github.com/rdoc/rdoc">RDoc</a> 3.11.
+  <p>Generated with the <a href="http://deveiate.org/projects/Darkfish-Rdoc/">Darkfish Rdoc Generator</a> 3.
+</footer>
+

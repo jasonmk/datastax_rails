@@ -1,0 +1,17 @@
+development:
+  solr:
+    hostname: localhost
+    port: 8983
+    path: /solandra/datastax_rails_development
+test:
+  solr:
+    hostname: localhost
+    port: 8983
+    path: /solandra/datastax_rails_test
+    log_level: OFF
+production:
+  solr:
+    hostname: localhost
+    port: 8983
+    path: /solandra/datastax_rails_production
+    log_level: WARNING

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+
+<title>Module: DatastaxRails::FinderMethods</title>
+
+<link type="text/css" media="screen" href="../rdoc.css" rel="stylesheet">
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "../";
+</script>
+
+<script type="text/javascript" charset="utf-8" src="../js/jquery.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/navigation.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/search_index.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/search.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/searcher.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/darkfish.js"></script>
+
+
+<body id="top" class="module">
+<nav id="metadata">
+  <nav id="home-section" class="section">
+  <h3 class="section-header">
+    <a href="../index.html">Home</a>
+    <a href="../table_of_contents.html#classes">Classes</a>
+    <a href="../table_of_contents.html#methods">Methods</a>
+  </h3>
+</nav>
+
+
+  <nav id="search-section" class="section project-section" class="initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <h3 class="section-header">
+      <input type="text" name="search" placeholder="Search" id="search-field"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </h3>
+  </form>
+
+  <ul id="search-results" class="initially-hidden"></ul>
+</nav>
+
+
+  <div id="file-metadata">
+    <nav id="file-list-section" class="section">
+  <h3 class="section-header">Defined In</h3>
+  <ul>
+    <li>lib/datastax_rails/relation/finder_methods.rb
+  </ul>
+</nav>
+
+    
+  </div>
+
+  <div id="class-metadata">
+    
+    
+    
+    <!-- Method Quickref -->
+<nav id="method-list-section" class="section">
+  <h3 class="section-header">Methods</h3>
+
+  <ul class="link-list">
+    
+    <li><a href="#method-i-find">#find</a>
+    
+    <li><a href="#method-i-first">#first</a>
+    
+    <li><a href="#method-i-first-21">#first!</a>
+    
+    <li><a href="#method-i-last">#last</a>
+    
+    <li><a href="#method-i-last-21">#last!</a>
+    
+  </ul>
+</nav>
+
+  </div>
+
+  <div id="project-metadata">
+    <nav id="fileindex-section" class="section project-section">
+  <h3 class="section-header">Pages</h3>
+
+  <ul>
+  
+    <li class="file"><a href="../README_rdoc.html">README</a>
+  
+  </ul>
+</nav>
+
+    <nav id="classindex-section" class="section project-section">
+  <h3 class="section-header">Class and Module Index</h3>
+
+  <ul class="link-list">
+  
+    <li><a href="../DatastaxRails.html">SolandraObject</a>
+  
+    <li><a href="../DatastaxRails/AssociationTypeMismatch.html">SolandraObject::AssociationTypeMismatch</a>
+  
+    <li><a href="../DatastaxRails/Associations.html">SolandraObject::Associations</a>
+  
+    <li><a href="../DatastaxRails/Associations/Builder.html">SolandraObject::Associations::Builder</a>
+  
+    <li><a href="../DatastaxRails/Associations/Builder/BelongsTo.html">SolandraObject::Associations::Builder::BelongsTo</a>
+  
+    <li><a href="../DatastaxRails/Associations/ClassMethods.html">SolandraObject::Associations::ClassMethods</a>
+  
+    <li><a href="../DatastaxRails/AttributeMethods.html">SolandraObject::AttributeMethods</a>
+  
+    <li><a href="../DatastaxRails/AttributeMethods/ClassMethods.html">SolandraObject::AttributeMethods::ClassMethods</a>
+  
+    <li><a href="../DatastaxRails/Base.html">SolandraObject::Base</a>
+  
+    <li><a href="../DatastaxRails/CassandraFinderMethods.html">SolandraObject::CassandraFinderMethods</a>
+  
+    <li><a href="../DatastaxRails/CassandraFinderMethods/ClassMethods.html">SolandraObject::CassandraFinderMethods::ClassMethods</a>
+  
+    <li><a href="../DatastaxRails/DeleteRestrictionError.html">SolandraObject::DeleteRestrictionError</a>
+  
+    <li><a href="../DatastaxRails/FinderMethods.html">SolandraObject::FinderMethods</a>
+  
+    <li><a href="../DatastaxRails/ModificationMethods.html">SolandraObject::ModificationMethods</a>
+  
+    <li><a href="../DatastaxRails/NamedScope.html">SolandraObject::NamedScope</a>
+  
+    <li><a href="../DatastaxRails/NamedScope/ClassMethods.html">SolandraObject::NamedScope::ClassMethods</a>
+  
+    <li><a href="../DatastaxRails/Railtie.html">SolandraObject::Railtie</a>
+  
+    <li><a href="../DatastaxRails/RecordNotFound.html">SolandraObject::RecordNotFound</a>
+  
+    <li><a href="../DatastaxRails/RecordNotSaved.html">SolandraObject::RecordNotSaved</a>
+  
+    <li><a href="../DatastaxRails/Reflection.html">SolandraObject::Reflection</a>
+  
+    <li><a href="../DatastaxRails/Reflection/ClassMethods.html">SolandraObject::Reflection::ClassMethods</a>
+  
+    <li><a href="../DatastaxRails/Reflection/MacroReflection.html">SolandraObject::Reflection::MacroReflection</a>
+  
+    <li><a href="../DatastaxRails/Relation.html">SolandraObject::Relation</a>
+  
+    <li><a href="../DatastaxRails/SearchMethods.html">SolandraObject::SearchMethods</a>
+  
+    <li><a href="../DatastaxRails/SolandraObjectError.html">SolandraObject::SolandraObjectError</a>
+  
+    <li><a href="../DatastaxRails/SpawnMethods.html">SolandraObject::SpawnMethods</a>
+  
+    <li><a href="../DatastaxRails/SunspotAdapters.html">SolandraObject::SunspotAdapters</a>
+  
+    <li><a href="../DatastaxRails/SunspotAdapters/SolandraObjectDataAccessor.html">SolandraObject::SunspotAdapters::SolandraObjectDataAccessor</a>
+  
+    <li><a href="../DatastaxRails/SunspotAdapters/SolandraObjectInstanceAdapter.html">SolandraObject::SunspotAdapters::SolandraObjectInstanceAdapter</a>
+  
+    <li><a href="../DatastaxRails/Validations.html">SolandraObject::Validations</a>
+  
+    <li><a href="../DatastaxRails/Validations/ClassMethods.html">SolandraObject::Validations::ClassMethods</a>
+  
+    <li><a href="../DatastaxRails/Validations/UniquenessValidator.html">SolandraObject::Validations::UniquenessValidator</a>
+  
+  </ul>
+</nav>
+
+  </div>
+</nav>
+
+<div id="documentation">
+  <h1 class="module">module DatastaxRails::FinderMethods</h1>
+
+  <div id="description" class="description">
+    
+  </div><!-- description -->
+
+  
+  
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+
+    
+
+    <!-- Methods -->
+    
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section section">
+      <h3 class="section-header">Public Instance Methods</h3>
+
+    
+      <div id="method-i-find" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">find</span><span
+            class="method-args">(*args) { |*block_args| ... }</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Find operates with four different retrieval approaches:</p>
+<ul><li>
+<p>Find by id - This can either be a specific id (1), a list of ids (1, 5, 6),
+or an array of ids ([5, 6, 10]). If no record can be found for all of the
+listed ids, then <a href="RecordNotFound.html">RecordNotFound</a> will be
+raised.</p>
+</li><li>
+<p>Find first - This will return the first record matched by the options used.
+These options can either be specific conditions or merely an order. If no
+record can be matched, <code>nil</code> is returned. Use
+<code>Model.find(:first, *args)</code> or its shortcut
+<code>Model.first(*args)</code>.</p>
+</li><li>
+<p>Find last - This will return the last record matched by the options used.
+These options can either be specific conditions or merely an order. If no
+record can be matched, <code>nil</code> is returned. Use
+<code>Model.find(:last, *args)</code> or its shortcut
+<code>Model.last(*args)</code>.</p>
+</li><li>
+<p>Find all - This will return all the records matched by the options used. If
+no records are found, an empty array is returned. Use
+<code>Model.find(:all, *args)</code> or its shortcut
+<code>Model.all(*args)</code>.</p>
+</li></ul>
+
+<p>All approaches accept an options hash as their last parameter.</p>
+
+<h4 id="method-i-find-label-Options">Options</h4>
+<ul><li>
+<p><code>:conditions</code> - See conditions in the intro.</p>
+</li><li>
+<p><code>:order</code> - An SQL fragment like “created_at DESC, name”.</p>
+</li><li>
+<p><code>:group</code> - An attribute name by which the result should be
+grouped. Uses the <code>GROUP BY</code> SQL-clause.</p>
+</li><li>
+<p><code>:limit</code> - An integer determining the limit on the number of
+rows that should be returned.</p>
+</li><li>
+<p><code>:offset</code> - An integer determining the offset from where the
+rows should be fetched. So at 5, it would skip rows 0 through 4.</p>
+</li></ul>
+
+<h4 id="method-i-find-label-Examples">Examples</h4>
+
+<p># find by id</p>
+
+<pre class="ruby"><span class="ruby-constant">Person</span>.<span class="ruby-identifier">find</span>(<span class="ruby-value">1</span>) <span class="ruby-comment"># returns the object for ID = 1</span>
+<span class="ruby-constant">Person</span>.<span class="ruby-identifier">find</span>(<span class="ruby-value">1</span>, <span class="ruby-value">2</span>, <span class="ruby-value">6</span>) <span class="ruby-comment"># returns an array for objects with IDs in (1, 2, 6)</span>
+<span class="ruby-constant">Person</span>.<span class="ruby-identifier">find</span>([<span class="ruby-value">7</span>, <span class="ruby-value">17</span>]) <span class="ruby-comment"># returns an array for objects with IDs in (7, 17)</span>
+<span class="ruby-constant">Person</span>.<span class="ruby-identifier">find</span>([<span class="ruby-value">1</span>]) <span class="ruby-comment"># returns an array for the object with ID = 1</span>
+<span class="ruby-constant">Person</span>.<span class="ruby-identifier">where</span>(:<span class="ruby-identifier">administrator</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">1</span>).<span class="ruby-identifier">order</span>(:<span class="ruby-identifier">created_on</span> =<span class="ruby-operator">&gt;</span> :<span class="ruby-identifier">desc</span>).<span class="ruby-identifier">find</span>(<span class="ruby-value">1</span>)
+</pre>
+
+<p>Note that the returned order is undefined unless you give a specific
+<code>:order</code> clause.</p>
+
+<h4 id="method-i-find-label-Examples">Examples</h4>
+
+<pre class="ruby"><span class="ruby-comment"># find first</span>
+<span class="ruby-constant">Person</span>.<span class="ruby-identifier">first</span> <span class="ruby-comment"># returns the first object fetched by SELECT * FROM people</span>
+<span class="ruby-constant">Person</span>.<span class="ruby-identifier">where</span>(:<span class="ruby-identifier">user_name</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">user_name</span>).<span class="ruby-identifier">first</span>
+<span class="ruby-constant">Person</span>.<span class="ruby-identifier">order</span>(:<span class="ruby-identifier">created_on</span> =<span class="ruby-operator">&gt;</span> :<span class="ruby-identifier">desc</span>).<span class="ruby-identifier">offset</span>(<span class="ruby-value">5</span>).<span class="ruby-identifier">first</span>
+
+<span class="ruby-comment"># find last</span>
+<span class="ruby-constant">Person</span>.<span class="ruby-identifier">last</span> <span class="ruby-comment"># returns the last object in the column family</span>
+<span class="ruby-constant">Person</span>.<span class="ruby-identifier">where</span>(:<span class="ruby-identifier">user_name</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">user_name</span>).<span class="ruby-identifier">last</span>
+<span class="ruby-constant">Person</span>.<span class="ruby-identifier">order</span>(:<span class="ruby-identifier">created_at</span> =<span class="ruby-operator">&gt;</span> :<span class="ruby-identifier">desc</span>).<span class="ruby-identifier">offset</span>(<span class="ruby-value">5</span>).<span class="ruby-identifier">last</span>
+
+<span class="ruby-comment"># find all</span>
+<span class="ruby-constant">Person</span>.<span class="ruby-identifier">all</span> <span class="ruby-comment"># returns an array of objects for all the rows in the column family</span>
+<span class="ruby-constant">Person</span>.<span class="ruby-identifier">where</span>([<span class="ruby-string">&quot;category IN (?)&quot;</span>, <span class="ruby-identifier">categories</span>]).<span class="ruby-identifier">limit</span>(<span class="ruby-value">50</span>).<span class="ruby-identifier">all</span>
+<span class="ruby-constant">Person</span>.<span class="ruby-identifier">where</span>(:<span class="ruby-identifier">friends</span> =<span class="ruby-operator">&gt;</span> [<span class="ruby-string">&quot;Bob&quot;</span>, <span class="ruby-string">&quot;Steve&quot;</span>, <span class="ruby-string">&quot;Fred&quot;</span>]).<span class="ruby-identifier">all</span>
+<span class="ruby-constant">Person</span>.<span class="ruby-identifier">offset</span>(<span class="ruby-value">10</span>).<span class="ruby-identifier">limit</span>(<span class="ruby-value">10</span>).<span class="ruby-identifier">all</span>
+<span class="ruby-constant">Person</span>.<span class="ruby-identifier">group</span>(<span class="ruby-string">&quot;category&quot;</span>).<span class="ruby-identifier">all</span>
+</pre>
+          
+
+          
+          <div class="method-source-code" id="find-source">
+            <pre><span class="ruby-comment"># File lib/datastax_rails/relation/finder_methods.rb, line 57</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">find</span>(*<span class="ruby-identifier">args</span>)
+  <span class="ruby-keyword">return</span> <span class="ruby-identifier">to_a</span>.<span class="ruby-identifier">find</span> { <span class="ruby-operator">|</span>*<span class="ruby-identifier">block_args</span><span class="ruby-operator">|</span> <span class="ruby-keyword">yield</span>(*<span class="ruby-identifier">block_args</span>) } <span class="ruby-keyword">if</span> <span class="ruby-identifier">block_given?</span>
+
+  <span class="ruby-identifier">options</span> = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">extract_options!</span>
+
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">options</span>.<span class="ruby-identifier">present?</span>
+    <span class="ruby-identifier">apply_finder_options</span>(<span class="ruby-identifier">options</span>).<span class="ruby-identifier">find</span>(*<span class="ruby-identifier">args</span>)
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-keyword">case</span> <span class="ruby-identifier">args</span>.<span class="ruby-identifier">first</span>
+    <span class="ruby-keyword">when</span> <span class="ruby-value">:first</span>, <span class="ruby-value">:last</span>, <span class="ruby-value">:all</span>
+      <span class="ruby-identifier">send</span>(<span class="ruby-identifier">args</span>.<span class="ruby-identifier">first</span>)
+    <span class="ruby-keyword">else</span>
+      <span class="ruby-identifier">find_with_ids</span>(*<span class="ruby-identifier">args</span>)
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- find-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- find-method -->
+
+    
+      <div id="method-i-first" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">first</span><span
+            class="method-args">(*args)</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>A convenience wrapper for <code>find(:first, *args)</code>. You can pass in
+all the same arguments to this method as you can to
+<code>find(:first)</code>.</p>
+          
+
+          
+          <div class="method-source-code" id="first-source">
+            <pre><span class="ruby-comment"># File lib/datastax_rails/relation/finder_methods.rb, line 76</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">first</span>(*<span class="ruby-identifier">args</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">args</span>.<span class="ruby-identifier">any?</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">args</span>.<span class="ruby-identifier">first</span>.<span class="ruby-identifier">kind_of?</span>(<span class="ruby-constant">Integer</span>) <span class="ruby-operator">||</span> (<span class="ruby-identifier">loaded?</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-operator">!</span><span class="ruby-identifier">args</span>.<span class="ruby-identifier">first</span>.<span class="ruby-identifier">kind_of?</span>(<span class="ruby-constant">Hash</span>))
+      <span class="ruby-identifier">limit</span>(*<span class="ruby-identifier">args</span>).<span class="ruby-identifier">to_a</span>
+    <span class="ruby-keyword">else</span>
+      <span class="ruby-identifier">apply_finder_options</span>(<span class="ruby-identifier">args</span>.<span class="ruby-identifier">first</span>).<span class="ruby-identifier">first</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">find_first</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- first-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- first-method -->
+
+    
+      <div id="method-i-first-21" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">first!</span><span
+            class="method-args">()</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Same as <code>first</code> but raises
+<code>DatastaxRails::RecordNotFound</code> if no record is found. Note
+that <code>first!</code> accepts no arguments.</p>
+          
+
+          
+          <div class="method-source-code" id="first-21-source">
+            <pre><span class="ruby-comment"># File lib/datastax_rails/relation/finder_methods.rb, line 90</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">first!</span>
+  <span class="ruby-identifier">first</span> <span class="ruby-keyword">or</span> <span class="ruby-identifier">raise</span> <span class="ruby-constant">RecordNotFound</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- first-21-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- first-21-method -->
+
+    
+      <div id="method-i-last" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">last</span><span
+            class="method-args">(*args)</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>A convenience wrapper for <code>find(:last, *args)</code>. You can pass in
+all the same arguments to this method as you can to
+<code>find(:last)</code>.</p>
+          
+
+          
+          <div class="method-source-code" id="last-source">
+            <pre><span class="ruby-comment"># File lib/datastax_rails/relation/finder_methods.rb, line 96</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">last</span>(*<span class="ruby-identifier">args</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">args</span>.<span class="ruby-identifier">any?</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">args</span>.<span class="ruby-identifier">first</span>.<span class="ruby-identifier">kind_of?</span>(<span class="ruby-constant">Integer</span>) <span class="ruby-operator">||</span> (<span class="ruby-identifier">loaded?</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-operator">!</span><span class="ruby-identifier">args</span>.<span class="ruby-identifier">first</span>.<span class="ruby-identifier">kind_of?</span>(<span class="ruby-constant">Hash</span>))
+      <span class="ruby-keyword">if</span> <span class="ruby-identifier">order_values</span>.<span class="ruby-identifier">empty?</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">reorder_value</span>.<span class="ruby-identifier">nil?</span>
+        <span class="ruby-identifier">order</span>(<span class="ruby-value">:id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">:desc</span>).<span class="ruby-identifier">limit</span>(*<span class="ruby-identifier">args</span>).<span class="ruby-identifier">reverse</span>
+      <span class="ruby-keyword">else</span>
+        <span class="ruby-identifier">to_a</span>.<span class="ruby-identifier">last</span>(*<span class="ruby-identifier">args</span>)
+      <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">else</span>
+      <span class="ruby-identifier">apply_finder_options</span>(<span class="ruby-identifier">args</span>.<span class="ruby-identifier">first</span>).<span class="ruby-identifier">last</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">find_last</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- last-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- last-method -->
+
+    
+      <div id="method-i-last-21" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">last!</span><span
+            class="method-args">()</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Same as <code>last</code> but raises
+<code>DatastaxRails::RecordNotFound</code> if no record is found. Note
+that <code>last!</code> accepts no arguments.</p>
+          
+
+          
+          <div class="method-source-code" id="last-21-source">
+            <pre><span class="ruby-comment"># File lib/datastax_rails/relation/finder_methods.rb, line 114</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">last!</span>
+  <span class="ruby-identifier">last</span> <span class="ruby-keyword">or</span> <span class="ruby-identifier">raise</span> <span class="ruby-constant">RecordNotFound</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- last-21-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- last-21-method -->
+
+    
+    </section><!-- public-instance-method-details -->
+  
+  </section><!-- 5Buntitled-5D -->
+
+</div><!-- documentation -->
+
+
+<footer id="validator-badges">
+  <p><a href="http://validator.w3.org/check/referer">[Validate]</a>
+  <p>Generated by <a href="https://github.com/rdoc/rdoc">RDoc</a> 3.11.
+  <p>Generated with the <a href="http://deveiate.org/projects/Darkfish-Rdoc/">Darkfish Rdoc Generator</a> 3.
+</footer>
+

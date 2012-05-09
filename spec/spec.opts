@@ -1,0 +1,5 @@
+--colour
+--format progress
+--format html
+--out log/spec_report.html
+--debug

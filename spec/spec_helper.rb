@@ -13,13 +13,17 @@ Dir[File.join(ENGINE_RAILS_ROOT, "spec/support/**/*.rb")].each {|f| require f }
 RSpec.configure do |config|
   config.before(:each) do
     DatastaxRails::Base.recorded_classes = {}
-    Sunspot.remove_all!
-    Sunspot.commit
   end
   
   config.after(:each) do
     DatastaxRails::Base.recorded_classes.keys.each do |klass|
-      DatastaxRails::Base.connection.truncate!(klass.column_family.to_sym)
+      DatastaxRails::Cql::Truncate.new(klass).execute
     end
   end
+  
+  # config.after(:all) do
+    # DatastaxRails::Base.models.each do |m|
+      # DatastaxRails::Cql::Truncate.new(m).execute
+    # end
+  # end
 end

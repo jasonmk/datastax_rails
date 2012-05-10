@@ -1,3 +1,5 @@
+require 'rsolr'
+
 module DatastaxRails
   class Relation
     MULTI_VALUE_METHODS = [:group, :order, :where, :where_not, :fulltext, :search, :greater_than, :less_than, :select]
@@ -43,7 +45,14 @@ module DatastaxRails
     def ==(other)
       case other
       when Relation
-        other.sunspot_search.query.to_params == sunspot_search.query.to_params
+        # This is not a valid implementation.  It's a placeholder till I figure out the right way.
+        MULTI_VALUE_METHODS.each do |m|
+          return false unless other.send("#{m}_values") == self.send("#{m}_values")
+        end
+        SINGLE_VALUE_METHODS.each do |m|
+          return false unless other.send("#{m}_value") == self.send("#{m}_value")
+        end
+        return true
       when Array
         to_a == other
       end
@@ -254,7 +263,6 @@ module DatastaxRails
         q = @fulltext_values.collect {|ftv| "(" + ftv[:query] + ")"}.join(' AND ')
       end
       
-      
       #TODO highlighting and fielded queries of fulltext
       
       params = {:q => q}
@@ -275,56 +283,6 @@ module DatastaxRails
         results << @klass.instantiate(key,doc)
       end
       results
-    end
-    
-    # Creates and returns an actual sunspot search object based on the
-    # information that is stored in this +Relation+.
-    def sunspot_search
-      return @search if @search
-      @search = Sunspot.new_search(@klass)
-      
-      @group_values.each do |gv|
-        @search.build { group gv }
-      end
-      
-      @fulltext_values.each do |ftv|
-        @search.build do 
-          fulltext DatastaxRails::Relation.downcase_query(ftv[:query]) do
-            if(ftv[:fields])
-              fields ftv[:fields]
-            end
-            if(ftv[:highlight])
-              highlight ftv[:fields]
-            end
-          end
-        end
-      end
-      
-      # We have to put these in local variables because the block doesn't
-      # get access to our instance variables
-      pv, ppv, ov = @page_value, @per_page_value, @offset_value
-      @search.build { paginate :page => pv, :per_page => ppv, :offset => ov }
-      
-      qpv = @query_parser_value
-      
-      if qpv
-        @search.build do
-          adjust_solr_params do |params|
-            params[:defType] = qpv
-          end
-        end
-      else
-        @search.build do
-          adjust_solr_params do |params|
-            params.delete :defType
-          end
-        end
-      end
-      
-      @search_values.each do |sv|
-        @search.build(&sv)
-      end
-      @search
     end
     
     def inspect(just_me = false)
@@ -356,6 +314,10 @@ module DatastaxRails
     # def scoped #:nodoc:
       # self
     # end
+    
+    def commit_solr
+      rsolr.commit :commit_attributes => {}
+    end
     
     # Everything that gets indexed into solr is downcased as part of the analysis phase.
     # Normally, this is done to the query as well, but if your query includes wildcards
@@ -391,7 +353,7 @@ module DatastaxRails
       end
       
       def rsolr
-        @Rsolr ||= RSolr.connect :url => "#{DatastaxRails::Base.config[:solr][:url]}/#{SolandraObject::Base.connection.keyspace}.#{@klass.column_family}"
+        @rsolr ||= RSolr.connect :url => "#{DatastaxRails::Base.config[:solr][:url]}/#{DatastaxRails::Base.connection.keyspace}.#{@klass.column_family}"
       end
   end
 end

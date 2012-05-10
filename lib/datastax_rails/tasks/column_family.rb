@@ -81,7 +81,7 @@ module DatastaxRails
         
         models_to_upload.each do |model|
           schema = generate_solr_schema(model)
-          solr_url = "#{DatastaxRails::Base.config[:solr][:url]}/resource/#{SolandraObject::Base.config[:keyspace]}.#{model.column_family}"
+          solr_url = "#{DatastaxRails::Base.config[:solr][:url]}/resource/#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}"
           uri = URI.parse(solr_url)
           Net::HTTP.start(uri.host, uri.port) do |http|
             puts "Posting Solr Config file to '#{uri.path}/solrconfig.xml'"

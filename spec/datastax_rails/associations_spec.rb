@@ -13,7 +13,6 @@ describe DatastaxRails::Base do
       it "should look up the owning model by id" do
         person = Person.create(:name => "John")
         job = Job.create(:title => "Developer", :person_id => person.id)
-        Sunspot.commit
         Job.first.person.should == person
       end
     end

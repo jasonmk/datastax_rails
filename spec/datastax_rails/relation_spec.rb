@@ -14,7 +14,7 @@ describe DatastaxRails::Relation do
   describe "#any?" do
     it "should return true if there are records" do
       Hobby.create(:name => "fishing")
-      Sunspot.commit
+      @relation.commit_solr
       @relation.any?.should be_true
     end
     
@@ -42,8 +42,9 @@ describe DatastaxRails::Relation do
       Hobby.create(:name => "boxing")
       Hobby.create(:name => "fishing")
       Hobby.create(:name => "running")
-      Sunspot.commit
+      @relation.commit_solr
       @relation.count.should == 4
+      
       @relation.limit(2).count.should == 4
     end
   end
@@ -51,7 +52,6 @@ describe DatastaxRails::Relation do
   describe "#default_scope" do
     it "should return a relation that has no scope set" do
       Hobby.create(:name => "fishing")
-      Sunspot.commit
       relation = @relation.where("name" => "hiking")
       relation.count.should == 0
       relation.default_scope.count.should == 1
@@ -73,14 +73,12 @@ describe DatastaxRails::Relation do
     it "should return true if there are multiple records matching" do
       Hobby.create(:name => "hiking")
       Hobby.create(:name => "swimming")
-      Sunspot.commit
       @relation.should be_many
     end
     
     it "should return false if there are zero or one records matching" do
       @relation.should_not be_many
       Hobby.create(:name => "hiking")
-      Sunspot.commit
       @relation.should_not be_many
     end
   end
@@ -97,7 +95,6 @@ describe DatastaxRails::Relation do
     it "should reload the results" do
       @relation.all.should be_empty
       Hobby.create(:name => "hiking")
-      Sunspot.commit
       @relation.all.should be_empty
       @relation.reload.all.should_not be_empty
     end
@@ -109,7 +106,6 @@ describe DatastaxRails::Relation do
       Hobby.create(:name => "boxing")
       Hobby.create(:name => "fishing")
       Hobby.create(:name => "running")
-      Sunspot.commit
       @relation.size.should == 4
       @relation.limit(2).size.should == 2
     end

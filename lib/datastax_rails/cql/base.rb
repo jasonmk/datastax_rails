@@ -7,6 +7,7 @@ module DatastaxRails
       
       def execute
         cql = self.to_cql
+        puts cql
         Rails.logger.debug(cql)
         DatastaxRails::Base.connection.execute_cql_query(cql)
       end

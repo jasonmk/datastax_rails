@@ -4,7 +4,7 @@ module DatastaxRails
       def initialize(klass, key)
         @klass = klass
         @key = key
-        @consistency = DatastaxRails::Cql::Consistency::LOCAL_QUORUM
+        @consistency = DatastaxRails::Cql::Consistency::QUORUM
         @columns = {}
       end
       

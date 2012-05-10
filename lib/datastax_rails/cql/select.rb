@@ -4,7 +4,7 @@ module DatastaxRails#:nodoc:
       def initialize(klass, select)
         @klass = klass
         @select = select.join(",")
-        @consistency = DatastaxRails::Cql::Consistency::LOCAL_QUORUM
+        @consistency = DatastaxRails::Cql::Consistency::QUORUM
         @limit = nil
         @conditions = {}
       end

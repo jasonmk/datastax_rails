@@ -84,7 +84,7 @@ module DatastaxRails
         @macro           = macro
         @name            = name
         @options         = options
-        @datastax_rails = solandra_object
+        @datastax_rails  = datastax_rails
         @plural_name     = name.to_s.pluralize
       end
 

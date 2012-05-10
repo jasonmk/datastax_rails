@@ -84,13 +84,6 @@ end
 
 require 'datastax_rails/railtie' if defined?(Rails)
 require 'datastax_rails/errors'
-require 'solr_no_escape'
-
-if Rails.env.test?
-  # In order to run the unit tests properly, we need to clear out the
-  # database and index between each test.  This file helps facilitate
-  # that functionality.
-  require 'solandra_test_hook'
-end
+# require 'solr_no_escape'
 
 ActiveSupport.run_load_hooks(:datastax_rails, DatastaxRails::Base)

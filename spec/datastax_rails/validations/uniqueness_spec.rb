@@ -4,6 +4,7 @@ describe DatastaxRails::Base do
   describe "uniqueness validation" do
     it "should validate uniqueness" do
       Person.create(:name => "Jason")
+      Person.scoped.commit_solr
       person = Person.new(:name => "Jason")
       person.should_not be_valid
       person.name = "John"

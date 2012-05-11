@@ -12,15 +12,13 @@ module DatastaxRails
         #      are implemented in solandra object (such as STI)
         finder_class = record.class
         
-        count = finder_class.search_ids do
-          with attribute, value
-          Array.wrap(options[:scope]).each do |scope_item|
-            scope_value = record.send(scope_item)
-            scope_value = nil if scope_value.blank?
-            with scope_item, scope_value
-          end
-        end.reject {|id| id == record.id}.size
-        if count > 0
+        scope = finder_class.where_not(:id => record.id.to_s).where(attribute => value)
+        Array.wrap(options[:scope]).each do |scope_item|
+          scope_value = record.send(scope_item)
+          scope_value = nil if scope_value.blank?
+          scope = scope.where(scope_item, scope_value)
+        end
+        if scope.count > 0
           record.errors.add(attribute, "has already been taken", options.except(:case_sensitive, :scope).merge(:value => value))
         end
       end

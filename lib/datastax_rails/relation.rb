@@ -229,7 +229,13 @@ module DatastaxRails
       
       @where_not_values.each do |wnv|
         wnv.each do |k,v|
-          filter_queries << "-#{k}:#{v}"
+          if v.blank?
+            # Check for any value present
+            filter_queries << "#{k}:[* TO *]"
+          else
+            # Check not the passed in value
+            filter_queries << "-#{k}:#{v}"
+          end
         end
       end
       

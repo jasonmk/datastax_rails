@@ -1,7 +1,7 @@
 module DatastaxRails
   module Types
     class StringType < BaseType
-      DEFAULTS = {:solr_type => 'string', :indexed => true, :stored => true, :multi_valued => false, :sortable => true, :tokenized => false, :fulltext => false}
+      DEFAULTS = {:solr_type => 'string', :indexed => true, :stored => true, :multi_valued => false, :sortable => true, :tokenized => false, :fulltext => true}
       def encode(str)
         raise ArgumentError.new("#{self} requires a String") unless str.kind_of?(String)
         str.dup

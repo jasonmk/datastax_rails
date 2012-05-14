@@ -173,7 +173,6 @@ module DatastaxRails #:nodoc:
     include AttributeMethods::Dirty
     include AttributeMethods::Typecasting
     include Callbacks
-    include CassandraFinderMethods
     include Validations
     include Reflection
     include Associations

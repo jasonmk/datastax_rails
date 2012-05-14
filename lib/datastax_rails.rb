@@ -9,7 +9,6 @@ module DatastaxRails
   autoload :Base
   autoload :Batches
   autoload :Callbacks
-  autoload :CassandraFinderMethods
   autoload :Collection
   autoload :Connection
   autoload :Consistency

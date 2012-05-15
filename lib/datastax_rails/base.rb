@@ -162,7 +162,6 @@ module DatastaxRails #:nodoc:
     include ActiveModel::Conversion
     extend ActiveSupport::DescendantsTracker
     include ActiveModel::MassAssignmentSecurity
-    include ActiveModel::Validations::Callbacks
     
     include Connection
     include Consistency
@@ -172,13 +171,13 @@ module DatastaxRails #:nodoc:
     include AttributeMethods
     include AttributeMethods::Dirty
     include AttributeMethods::Typecasting
+    include Persistence
     include Callbacks
     include CassandraFinderMethods
     include Validations
     include Reflection
     include Associations
     include Scoping
-    include Persistence
     include Timestamps
     include Serialization
     include Migrations

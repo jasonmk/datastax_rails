@@ -16,10 +16,12 @@ class Person < DatastaxRails::Base
   validates :name, :presence => true, :uniqueness => :true
   
   def set_nickname
+  puts "before save ran"
     self.nickname ||= self.name
   end
   
   def set_variable
+  puts "after save ran"
     @after_save_ran = "yup"
   end
 end

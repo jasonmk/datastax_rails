@@ -17,9 +17,14 @@ module DatastaxRails
           EOV
         end
         
-        def binary(name, options = {})
+        def self.binary(name, options = {})
           options.reverse_merge!(:lazy => true)
           attribute(name, options.update(:type => :binary))
+        end
+        
+        def self.timestamps(options = {})
+          attribute(:created_at, options.update(:type => :time))
+          attribute(:updated_at, options.update(:type => :time))
         end
       end
 

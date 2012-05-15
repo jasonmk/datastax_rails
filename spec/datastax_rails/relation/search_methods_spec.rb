@@ -14,15 +14,6 @@ describe DatastaxRails::Relation do
     end
   end
   
-  describe "#offset" do
-    it "should skip into the result set by the given amount" do
-      "a".upto("l") do |letter|
-        Hobby.create(:name => letter)
-      end
-      @relation.offset(4).order(:name).first.name.should == "e"
-    end
-  end
-  
   describe "#page" do
     it "should get a particular page" do
       "a".upto("l") do |letter|
@@ -38,21 +29,19 @@ describe DatastaxRails::Relation do
   
   describe "#order" do
     it "should return items in ascending order" do
-      pending "Solandra doesn't seem to be sorting correctly" do
-        %w[fishing hiking boating jogging swimming chess].each do |word|
-          Hobby.create(:name => word)
-        end
-        @relation.order(:name).collect {|h| h.name}.should == %w[boating chess fishing hiking jogging swimming]
+      %w[fishing hiking boating jogging swimming chess].each do |word|
+        Hobby.create(:name => word)
       end
+      @relation.commit_solr
+      @relation.order(:name).collect {|h| h.name}.should == %w[boating chess fishing hiking jogging swimming]
     end
     
     it "should return items in descending order" do
-      pending "Solandra doesn't seem to be sorting correctly" do
-        %w[fishing hiking boating jogging swimming chess].each do |word|
-          Hobby.create(:name => word)
-        end
-        @relation.order(:name => :desc).collect {|h| h.name}.should == %w[swimming jogging hiking fishing chess boating]
+      %w[fishing hiking boating jogging swimming chess].each do |word|
+        Hobby.create(:name => word)
       end
+      @relation.commit_solr
+      @relation.order(:name => :desc).collect {|h| h.name}.should == %w[swimming jogging hiking fishing chess boating]
     end
   end
   

@@ -9,6 +9,7 @@ class Person < DatastaxRails::Base
   text :name, :sortable => true
   date :birthdate
   string :nickname
+  timestamps
   
   before_save :set_nickname
   after_save :set_variable
@@ -16,12 +17,10 @@ class Person < DatastaxRails::Base
   validates :name, :presence => true, :uniqueness => :true
   
   def set_nickname
-  puts "before save ran"
     self.nickname ||= self.name
   end
   
   def set_variable
-  puts "after save ran"
     @after_save_ran = "yup"
   end
 end
@@ -34,6 +33,7 @@ class Car < DatastaxRails::Base
   key :uuid
   string :name
   string :person_id
+  timestamps
 end
 
 class Job < DatastaxRails::Base
@@ -44,6 +44,7 @@ class Job < DatastaxRails::Base
   key :uuid
   string :title
   string :person_id
+  timestamps
 end
 
 class Boat < DatastaxRails::Base
@@ -51,6 +52,7 @@ class Boat < DatastaxRails::Base
   
   key :uuid
   string :name
+  timestamps
 end
 
 class Hobby < DatastaxRails::Base
@@ -61,4 +63,5 @@ class Hobby < DatastaxRails::Base
   key :uuid
   string :name
   float :complexity
+  timestamps
 end

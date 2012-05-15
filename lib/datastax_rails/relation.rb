@@ -3,7 +3,7 @@ require 'rsolr'
 module DatastaxRails
   class Relation
     MULTI_VALUE_METHODS = [:group, :order, :where, :where_not, :fulltext, :search, :greater_than, :less_than, :select]
-    SINGLE_VALUE_METHODS = [:offset, :page, :per_page, :reverse_order, :query_parser, :consistency, :ttl, :use_solr]
+    SINGLE_VALUE_METHODS = [:page, :per_page, :reverse_order, :query_parser, :consistency, :ttl, :use_solr]
     
     Relation::MULTI_VALUE_METHODS.each do |m|
       attr_accessor :"#{m}_values"
@@ -33,7 +33,6 @@ module DatastaxRails
       MULTI_VALUE_METHODS.each {|v| instance_variable_set(:"@#{v}_values", [])}
       @per_page_value = @klass.default_page_size
       @page_value = 1
-      @offset_value = 0
       @use_solr_value = true
       @consistency_value = "QUORUM"
       @extensions = []
@@ -72,11 +71,7 @@ module DatastaxRails
     # This means the total number of matches regardless of page size.
     # Compare with #size.
     def count
-      if loaded?
-        @results.total_entries
-      else
-        limit(1).to_a.total_entries
-      end
+      @count ||= self.use_solr_value ? count_via_solr : count_via_cql
     end
     
     # Returns the current page for will_paginate compatibility
@@ -135,7 +130,7 @@ module DatastaxRails
     # Empties out the current results.  The next call to to_a
     # will re-run the query.
     def reset
-      @loaded = @first = @last = @scope_for_create = nil
+      @loaded = @first = @last = @scope_for_create = @count = nil
       @results = []
     end
     
@@ -183,7 +178,12 @@ module DatastaxRails
     # Returns a standard array thus no more methods may be chained.
     def to_a
       return @results if loaded?
-      @results = use_solr_value ? query_via_solr : query_via_cql
+      if use_solr_value
+        @results = query_via_solr
+        @count = @results.total_entries
+      else
+        @results = query_via_cql
+      end
       @loaded = true
       @results
     end
@@ -205,6 +205,15 @@ module DatastaxRails
         super
     end
     
+    def count_via_cql
+      cql = @cql.select("count(*)")
+      cql.using(@consistency_value) if @consistency_value
+      @where_values.each do |wv|
+        cql.conditions(wv)
+      end
+      CassandraCQL::Result.new(cql.execute).fetch.column_values.first
+    end
+    
     def query_via_cql
       cql = @cql.select(@klass.attribute_definitions.keys - @klass.lazy_attributes)
       cql.using(@consistency_value) if @consistency_value
@@ -216,6 +225,10 @@ module DatastaxRails
         results << @klass.instantiate(row.row.key,row.to_hash)
       end
       results
+    end
+    
+    def count_via_solr
+      limit(1).to_a.total_entries
     end
     
     def query_via_solr

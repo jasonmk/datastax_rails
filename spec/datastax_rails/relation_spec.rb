@@ -24,9 +24,14 @@ describe DatastaxRails::Relation do
   end
   
   describe "#count" do
-    it "should use the currently loaded result set to get count" do
-      @relation.stub(:loaded? => true)
-      @relation.instance_variable_set(:@results, mock("Recordset", :total_entries => 42))
+    it "should use the cached count if it is available" do
+      @relation.instance_variable_set(:@count, 42)
+      @relation.count.should == 42
+    end
+    
+    it "should cache the total count on any solr query" do
+      @relation.should_receive(:query_via_solr).and_return(mock("ResultSet", :total_entries => 42))
+      @relation.all
       @relation.count.should == 42
     end
     
@@ -73,6 +78,7 @@ describe DatastaxRails::Relation do
     it "should return true if there are multiple records matching" do
       Hobby.create(:name => "hiking")
       Hobby.create(:name => "swimming")
+      @relation.commit_solr
       @relation.should be_many
     end
     
@@ -95,6 +101,7 @@ describe DatastaxRails::Relation do
     it "should reload the results" do
       @relation.all.should be_empty
       Hobby.create(:name => "hiking")
+      @relation.commit_solr
       @relation.all.should be_empty
       @relation.reload.all.should_not be_empty
     end
@@ -106,6 +113,7 @@ describe DatastaxRails::Relation do
       Hobby.create(:name => "boxing")
       Hobby.create(:name => "fishing")
       Hobby.create(:name => "running")
+      @relation.commit_solr
       @relation.size.should == 4
       @relation.limit(2).size.should == 2
     end

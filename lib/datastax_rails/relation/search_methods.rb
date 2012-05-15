@@ -36,15 +36,6 @@ module DatastaxRails
     end
     alias :per_page :limit
     
-    # Sets an offset into the result set to start looking from
-    #
-    #   Model.offset(1000)
-    def offset(value)
-      clone.tap do |r|
-        r.offset_value = value
-      end
-    end
-    
     # Sets the page number to retrieve
     #
     #   Model.page(2)
@@ -234,8 +225,12 @@ module DatastaxRails
       if attribute.is_a?(Symbol)
         WhereProxy.new(self, attribute)
       else
+        attributes = attribute.dup
+        attributes.each do |k,v|
+          attributes[k] = v.strftime('%Y-%m-%dT%H\:%M\:%SZ') if v.is_a?(Date) || v.is_a?(Time)
+        end
         clone.tap do |r|
-          r.where_values << attribute
+          r.where_values << attributes
         end
       end
     end
@@ -247,6 +242,10 @@ module DatastaxRails
     def where_not(attribute)
       return self if attribute.blank?
       
+      attributes = attribute.dup
+      attributes.each do |k,v|
+        attributes[k] = v.strftime('%Y-%m-%dT%H\:%M\:%SZ') if v.is_a?(Date) || v.is_a?(Time)
+      end
       clone.tap do |r|
         r.where_not_values << attribute
       end
@@ -302,18 +301,21 @@ module DatastaxRails
       end
       
       def equal_to(value) #:nodoc:
+        value = value.strftime('%Y-%m-%dT%H\:%M\:%SZ') if value.is_a?(Date) || value.is_a?(Time)
         @relation.clone.tap do |r|
           r.where_values << {@attribute => value}
         end
       end
       
       def greater_than(value) #:nodoc:
+        value = value.strftime('%Y-%m-%dT%H\:%M\:%SZ') if value.is_a?(Date) || value.is_a?(Time)
         @relation.clone.tap do |r|
           r.greater_than_values << {@attribute => value}
         end
       end
       
       def less_than(value) #:nodoc:
+        value = value.strftime('%Y-%m-%dT%H\:%M\:%SZ') if value.is_a?(Date) || value.is_a?(Time)
         @relation.clone.tap do |r|
           r.less_than_values << {@attribute => value}
         end

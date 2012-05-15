@@ -68,7 +68,7 @@ module DatastaxRails
       if id.is_a?(Array)
         id.map { |one_id| destroy(one_id) }
       else
-        find(id).destroy
+        find(id).destroy.tap { reset }
       end
     end
     # TODO: Find a way to delete from both without instantiating

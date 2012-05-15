@@ -34,7 +34,7 @@ module DatastaxRails
         
         stmt << "WHERE KEY IN (?)"
         
-        CassandraCQL::Statement.sanitize(stmt, keys)
+        CassandraCQL::Statement.sanitize(stmt, @keys)
       end
     end
   end

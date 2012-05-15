@@ -13,7 +13,7 @@ module DatastaxRails#:nodoc:
       end
       
       def columns(columns)
-        @columns.merge! = columns
+        @columns.merge! columns
         self
       end
       

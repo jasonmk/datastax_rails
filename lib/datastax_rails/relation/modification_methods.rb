@@ -30,10 +30,12 @@ module DatastaxRails
     # Person.where_not(:status => "active").destroy_all
     def destroy_all(conditions = nil)
       if conditions
-        where(conditions).destroy_all
+        ret = where(conditions).destroy_all
       else
-        to_a.each {|object| object.destroy }.tap { reset }
+        ret = to_a.each {|object| object.destroy }
       end
+      reset
+      ret
     end
     # TODO: Find a way to delete from both without instantiating
     alias :delete_all :destroy_all
@@ -66,10 +68,12 @@ module DatastaxRails
     # Todo.destroy(todos)
     def destroy(id)
       if id.is_a?(Array)
-        id.map { |one_id| destroy(one_id) }
+        ret = id.map { |one_id| destroy(one_id) }
       else
-        find(id).destroy.tap { reset }
+        ret = find(id).destroy
       end
+      reset
+      ret
     end
     # TODO: Find a way to delete from both without instantiating
     alias :delete :destroy

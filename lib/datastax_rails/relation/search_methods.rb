@@ -227,7 +227,13 @@ module DatastaxRails
       else
         attributes = attribute.dup
         attributes.each do |k,v|
-          attributes[k] = v.strftime('%Y-%m-%dT%H\:%M\:%SZ') if v.is_a?(Date) || v.is_a?(Time)
+          attributes[k] = if v.is_a?(Date) || v.is_a?(Time)
+            v.strftime('%Y-%m-%dT%H\:%M\:%SZ')
+          elsif v.is_a?(Array)
+            v.join(" OR ")
+          else
+            v
+          end
         end
         clone.tap do |r|
           r.where_values << attributes
@@ -244,7 +250,14 @@ module DatastaxRails
       
       attributes = attribute.dup
       attributes.each do |k,v|
-        attributes[k] = v.strftime('%Y-%m-%dT%H\:%M\:%SZ') if v.is_a?(Date) || v.is_a?(Time)
+        attributes[k] = case v
+          when v.is_a?(Date), v.is_a?(Time)
+            v.strftime('%Y-%m-%dT%H\:%M\:%SZ')
+          when v.is_a?(Array)
+            v.join(" OR ")
+          else
+            v
+        end
       end
       clone.tap do |r|
         r.where_not_values << attribute
@@ -301,7 +314,14 @@ module DatastaxRails
       end
       
       def equal_to(value) #:nodoc:
-        value = value.strftime('%Y-%m-%dT%H\:%M\:%SZ') if value.is_a?(Date) || value.is_a?(Time)
+        value = case value
+          when value.is_a?(Date), value.is_a?(Time)
+            value.strftime('%Y-%m-%dT%H\:%M\:%SZ')
+          when value.is_a?(Array)
+            value.join(" OR ")
+          else
+            value
+        end
         @relation.clone.tap do |r|
           r.where_values << {@attribute => value}
         end

@@ -79,6 +79,8 @@ module DatastaxRails
           models_to_upload << column_family.constantize
         end
         
+        puts "models: #{models_to_upload.collect(&:to_s).join(",")}"
+        
         models_to_upload.each do |model|
           schema = generate_solr_schema(model)
           solr_url = "#{DatastaxRails::Base.config[:solr][:url]}/resource/#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}"

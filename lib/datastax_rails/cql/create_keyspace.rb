@@ -11,7 +11,7 @@ module DatastaxRails#:nodoc:
         self
       end
       
-      def strategy_option(so)
+      def strategy_options(so)
         @strategy_options.merge!(so)
         self
       end

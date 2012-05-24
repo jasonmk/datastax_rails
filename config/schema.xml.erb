@@ -49,6 +49,7 @@
  </fields>
 
 <defaultSearchField>text</defaultSearchField>
+<solrQueryParser defaultOperator="AND"/>
 <uniqueKey>id</uniqueKey>
 <% @fulltext_fields.each do |field| %>
   <copyField source="<%= field %>" dest="text"/>

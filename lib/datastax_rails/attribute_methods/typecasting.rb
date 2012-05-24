@@ -6,8 +6,10 @@ module DatastaxRails
       included do
         class_attribute :attribute_definitions
         class_attribute :lazy_attributes
+        class_attribute :readonly_attributes
         self.attribute_definitions = {}
         self.lazy_attributes = []
+        self.readonly_attributes = []
 
         %w(array boolean date float integer json string text time time_with_zone).each do |type|
           instance_eval <<-EOV, __FILE__, __LINE__ + 1

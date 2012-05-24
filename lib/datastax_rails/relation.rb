@@ -236,7 +236,7 @@ module DatastaxRails
       orders = []
       @where_values.each do |wv|
         wv.each do |k,v|
-          filter_queries << "#{k}:#{v}" 
+          filter_queries << "#{k}:(#{v})" 
         end
       end
       
@@ -247,7 +247,7 @@ module DatastaxRails
             filter_queries << "#{k}:[* TO *]"
           else
             # Check not the passed in value
-            filter_queries << "-#{k}:#{v}"
+            filter_queries << "-#{k}:(#{v})"
           end
         end
       end

@@ -2,7 +2,7 @@ module DatastaxRails
   # = DatastaxRails Has And Belongs To Many Association
   module Associations
     class HasAndBelongsToManyAssociation < CollectionAssociation #:nodoc:
-      attr_reader => :join_name
+      attr_reader :join_name
       
       def initialize(owner, reflection)
         join_name = [owner.class.name.underscore, reflection.class_name.underscore].sort.join('_')

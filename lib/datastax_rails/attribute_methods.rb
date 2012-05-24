@@ -14,6 +14,10 @@ module DatastaxRails
       def define_attribute_methods
         return if attribute_methods_generated?
         super(attribute_definitions.keys)
+        # Remove setter methods from readonly attributes
+        readonly_attributes.each do |attr|
+          remove_method("#{attr}=".to_sym) if method_defined?("#{attr}=".to_sym)
+        end
         @attribute_methods_generated = true
       end
 
@@ -37,6 +41,10 @@ module DatastaxRails
         
         if(options[:lazy])
           lazy_attributes << name.to_sym
+        end
+        
+        if(options[:readonly])
+          readonly_attributes << name.to_sym
         end
 
         attribute_definitions[name.to_sym] = AttributeMethods::Definition.new(name, coder, options)

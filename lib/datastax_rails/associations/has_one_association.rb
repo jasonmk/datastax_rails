@@ -23,13 +23,6 @@ module DatastaxRails
         self.target = record
       end
       
-      def find_target
-        reflection.klass.search do
-          with reflection.foreign_key, owner.id
-          paginate :per_page => 1
-        end.results.first.tap { |record| set_inverse_instance(record) }
-      end
-
       def delete(method = options[:dependent])
         if load_target
           case method

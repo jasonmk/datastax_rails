@@ -1,10 +1,24 @@
 module DatastaxRails
   module Associations
+    # = DatastaxRails Association Collection
+    #
+    # CollectionAssociation is an abstract class that provides common stuff to
+    # ease the implementation of association proxies that represent
+    # collections. See the class hierarchy in AssociationProxy.
+    #
+    # You need to be careful with assumptions regarding the target: The proxy
+    # does not fetch records from the database until it needs them, but new
+    # ones created with +build+ are added to the target. So, the target may be
+    # non-empty and still lack children waiting to be read from the database.
+    # If you look directly to the database you cannot assume that's the entire
+    # collection because new records may have been added to the target, etc.
+    #
+    # If you need to work on all current children, new and existing records,
+    # +load_target+ and the +loaded+ flag are your friends.
     class CollectionAssociation < Association #:nodoc:
       attr_reader :proxy
       
-      delegate :find, :first, :all, :count, :size, :delete, :destroy, :delete_all, :destroy_all, :to => :scoped 
-      delegate :empty?, :any?, :many?, :loaded?, :to => :scoped
+      delegate :count, :size, :empty?, :any?, :many?, :first, :last, :to => :proxy
       
       def initialize(owner, reflection)
         super
@@ -49,10 +63,95 @@ module DatastaxRails
         @target = []
       end
       
+      def build(attributes = {}, options = {}, &block)
+        if attributes.is_a?(Array)
+          attributes.collect { |attr| build(attr, options, &block) }
+        else
+          add_to_target(build_record(attributes, options)) do |record|
+            yield(record) if block_given?
+          end
+        end
+      end
+
+      def create(attributes = {}, options = {}, &block)
+        create_record(attributes, options, &block)
+      end
+
+      def create!(attributes = {}, options = {}, &block)
+        create_record(attributes, options, true, &block)
+      end
+      
+      # Remove all records from this association
+      #
+      # See delete for more info.
+      def delete_all
+        delete(load_target).tap do
+          reset
+          loaded!
+        end
+      end
+
+      # Destroy all the records from this association.
+      #
+      # See destroy for more info.
+      def destroy_all
+        destroy(load_target).tap do
+          reset
+          loaded!
+        end
+      end
+      
+      # Removes +records+ from this association calling +before_remove+ and
+      # +after_remove+ callbacks.
+      #
+      # This method is abstract in the sense that +delete_records+ has to be
+      # provided by descendants. Note this method does not imply the records
+      # are actually removed from the database, that depends precisely on
+      # +delete_records+. They are in any case removed from the collection.
+      def delete(*records)
+        delete_or_destroy(records, options[:dependent])
+      end
+
+      # Destroy +records+ and remove them from this association calling
+      # +before_remove+ and +after_remove+ callbacks.
+      #
+      # Note that this method will _always_ remove records from the database
+      # ignoring the +:dependent+ option.
+      def destroy(*records)
+        records = find(records) if records.any? { |record| record.kind_of?(Fixnum) || record.kind_of?(String) }
+        delete_or_destroy(records, :destroy)
+      end
+      
+      def uniq(collection = load_target)
+        seen = {}
+        collection.find_all do |record|
+          seen[record.id] = true unless seen.key?(record.id)
+        end
+      end
+      
       def load_target
-        @target = find_target
+        if find_target?
+          @target = merge_target_lists(find_target, target)
+        end
+
         loaded!
         target
+      end
+      
+      def add_to_target(record)
+        callback(:before_add, record)
+        yield(record) if block_given?
+
+        if options[:uniq] && index = @target.index(record)
+          @target[index] = record
+        else
+          @target << record
+        end
+
+        callback(:after_add, record)
+        set_inverse_instance(record)
+
+        record
       end
       
       private
@@ -94,7 +193,81 @@ module DatastaxRails
         
         def find_target
           records = scoped.all
+          records = options[:uniq] ? uniq(records) : records
           records.each { |record| set_inverse_instance(record) }
+          records
+        end
+        
+        def create_record(attributes, options, raise = false, &block)
+          unless owner.persisted?
+            raise DatastaxRails::RecordNotSaved, "You cannot call create unless the parent is saved"
+          end
+
+          if attributes.is_a?(Array)
+            attributes.collect { |attr| create_record(attr, options, raise, &block) }
+          else
+            add_to_target(build_record(attributes, options)) do |record|
+              yield(record) if block_given?
+              insert_record(record, true, raise)
+            end
+          end
+        end
+
+        # Do the relevant stuff to insert the given record into the association collection.
+        def insert_record(record, validate = true, raise = false)
+          raise NotImplementedError
+        end
+        
+        def create_scope
+          scoped.scope_for_create.stringify_keys
+        end
+
+        def delete_or_destroy(records, method)
+          records = records.flatten
+          records.each { |record| raise_on_type_mismatch(record) }
+          existing_records = records.reject { |r| r.new_record? }
+
+          records.each { |record| callback(:before_remove, record) }
+
+          delete_records(existing_records, method) if existing_records.any?
+          records.each { |record| target.delete(record) }
+
+          records.each { |record| callback(:after_remove, record) }
+        end
+        
+        # Delete the given records from the association, using one of the methods :destroy,
+        # :delete_all or :nullify (or nil, in which case a default is used).
+        def delete_records(records, method)
+          raise NotImplementedError
+        end
+
+        def callback(method, record)
+          callbacks_for(method).each do |callback|
+            case callback
+            when Symbol
+              owner.send(callback, record)
+            when Proc
+              callback.call(owner, record)
+            else
+              callback.send(method, owner, record)
+            end
+          end
+        end
+
+        def callbacks_for(callback_name)
+          full_callback_name = "#{callback_name}_for_#{reflection.name}"
+          owner.class.send(full_callback_name.to_sym) || []
+        end
+        
+        def include_in_memory?(record)
+          if reflection.is_a?(DatastaxRails::Reflection::ThroughReflection)
+            owner.send(reflection.through_reflection.name).any? { |source|
+              target = source.send(reflection.source_reflection.name)
+              target.respond_to?(:include?) ? target.include?(record) : target == record
+            } || target.include?(record)
+          else
+            target.include?(record)
+          end
         end
     end
   end

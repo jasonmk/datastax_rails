@@ -31,7 +31,6 @@ module DatastaxRails
   autoload :Schema
   autoload :Scoping
   autoload :Serialization
-  autoload :SunspotAdapters
   autoload :Timestamps
   autoload :Type
   autoload :Validations

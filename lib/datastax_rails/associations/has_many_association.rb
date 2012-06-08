@@ -1,6 +1,20 @@
 module DatastaxRails
   module Associations
+    # This is the proxy that handles a has many association.
+    #
+    # If the association has a <tt>:through</tt> option further specialization
+    # is provided by its child HasManyThroughAssociation.
     class HasManyAssociation < CollectionAssociation #:nodoc:
+      def insert_record(record, validate = true, raise = false)
+        set_owner_attributes(record)
+
+        if raise
+          record.save!(:validate => validate)
+        else
+          record.save(:validate => validate)
+        end
+      end
+      
       private
       
         # Returns the number of records in this collection.
@@ -29,13 +43,13 @@ module DatastaxRails
           else
             keys = records.map { |r| r[reflection.association_primary_key] }
             scope = scoped.where(reflection.association_primary_key => keys)
-
+            
             if method == :delete_all
-              update_counter(-scope.delete_all)
+              scope.delete_all
             else
               # This is for :nullify which isn't actually supported yet,
               # but this should work once it is
-              update_counter(-scope.update_all(reflection.foreign_key => nil))
+              scope.update_all(reflection.foreign_key => nil)
             end
           end
         end

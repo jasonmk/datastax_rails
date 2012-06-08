@@ -1,5 +1,5 @@
 development:
-  servers: ["localhost:9160"]
+  servers: ["192.168.101.1:9160"]
   keyspace: "datastax_rails_development"
   strategy_class: "org.apache.cassandra.locator.SimpleStrategy"
   strategy_options: {"DC1": "1"} 

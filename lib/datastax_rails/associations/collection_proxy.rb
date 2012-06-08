@@ -8,7 +8,7 @@ module DatastaxRails
     #
     # For example, given
     #
-    #   class Blog < ActiveRecord::Base
+    #   class Blog < DatastaxRails::Base
     #     has_many :posts
     #   end
     #
@@ -26,6 +26,13 @@ module DatastaxRails
     #
     # though the object behind <tt>blog.posts</tt> is not an Array, but an
     # DatastaxRails::Associations::HasManyAssociation.
+    #
+    # The <tt>@target</tt> object is not \loaded until needed. For example,
+    #
+    #   blog.posts.count
+    #
+    # is computed directly through Solr and does not trigger by itself the
+    # instantiation of the actual post records.
     class CollectionProxy #:nodoc:
       alias :proxy_extend :extend
       
@@ -34,7 +41,7 @@ module DatastaxRails
       delegate :order, :limit, :where, :to => :scoped
       delegate :target, :load_target, :loaded?, :scoped, :to => :@association
       delegate :select, :find, :first, :last, :build, :create, :create!, :destroy_all, :destroy,
-               :count, :size, :length, :empty?, :any?, :many?, :to => :@association
+               :delete, :delete_all, :count, :size, :length, :empty?, :any?, :many?, :to => :@association
                
       def initialize(association)
         @association = association
@@ -81,6 +88,8 @@ module DatastaxRails
         end
       end
       
+      # Forwards <tt>===</tt> explicitly to the \target because the instance method
+      # removal above doesn't catch it. Loads the \target if needed.
       def ===(other)
         other === load_target
       end

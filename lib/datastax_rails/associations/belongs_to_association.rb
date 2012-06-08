@@ -18,10 +18,6 @@ module DatastaxRails
       
       private
       
-        def find_target
-          reflection.klass.find(owner[reflection.foreign_key]).tap { |record| set_inverse_instance(record) }
-        end
-        
         def find_target?
           !loaded? && foreign_key_present? && klass
         end

@@ -1,11 +1,13 @@
 module DatastaxRails
   module Associations
     class SingularAssociation < Association #:nodoc:
+      # Implements the reader method, e.g. foo.bar for Foo.has_one :bar
       def reader(force_reload = false)
         reload if force_reload || !loaded? || stale_target?
         target
       end
       
+      # Implements the writer method, e.g. foo.items= for Foo.has_many :items
       def writer(record)
         replace(record)
       end
@@ -26,6 +28,13 @@ module DatastaxRails
       end
       
       private
+        def create_scope
+          scoped.scope_for_create.stringify_keys.except("id")
+        end
+
+        def find_target
+          scoped.first.tap { |record| set_inverse_instance(record) }
+        end
 
         # Implemented by subclasses
         def replace(record)

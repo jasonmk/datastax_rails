@@ -10,9 +10,10 @@ describe DatastaxRails::Relation do
       it "should destroy all matching records" do
         Hobby.create(:name => "biking", :complexity => 1.0)
         Hobby.create(:name => "skydiving", :complexity => 4.0)
+        @relation.commit_solr
         @relation.where(:complexity).greater_than(2.0).destroy_all
         @relation.commit_solr
-        @relation.reset
+        @relation = DatastaxRails::Relation.new(Hobby, "hobbies")
         @relation.count.should == 1
       end
     end
@@ -27,14 +28,12 @@ describe DatastaxRails::Relation do
       it "should destroy 1 record by id" do
         @relation.destroy(@h1.id)
         @relation.commit_solr
-        @relation.reset
         @relation.count.should == 1
       end
       
       it "should destroy multiple records by id" do
         @relation.destroy([@h1.id, @h2.id])
         @relation.commit_solr
-        @relation.reset
         @relation.count.should == 0
       end
     end

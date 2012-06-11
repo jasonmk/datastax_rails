@@ -14,7 +14,7 @@ module DatastaxRails
         scope = klass.unscoped
         scope = scope.extending(*Array.wrap(options[:extend]))
         
-        scope.where(reflection.foreign_key, owner.id)
+        scope.where(reflection.foreign_key => owner.id)
       end
     end
   end

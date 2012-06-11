@@ -206,12 +206,8 @@ module DatastaxRails
     end
     
     def count_via_cql
-      cql = @cql.select("count(*)")
-      cql.using(@consistency_value) if @consistency_value
-      @where_values.each do |wv|
-        cql.conditions(wv)
-      end
-      CassandraCQL::Result.new(cql.execute).fetch.column_values.first
+      # Counting via CQL does not work
+      with_solr.count_via_solr
     end
     
     def query_via_cql

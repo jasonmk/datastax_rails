@@ -1,5 +1,5 @@
 development:
-  servers: ["192.168.101.1:9160"]
+  servers: ["localhost:9160"]
   keyspace: "datastax_rails_development"
   strategy_class: "org.apache.cassandra.locator.SimpleStrategy"
   strategy_options: {"DC1": "1"} 
@@ -10,7 +10,7 @@ development:
 test:
   servers: ["localhost:9160"]
   keyspace: "datastax_rails_test"
-  strategy_class: "org.apache.cassandra.locator.NetworkTopologyStrategy"
+  strategy_class: "org.apache.cassandra.locator.SimpleStrategy"
   strategy_options: {"DC1": "1"} 
   replication_factor: 1
   solr:

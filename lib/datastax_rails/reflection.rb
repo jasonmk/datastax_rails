@@ -20,7 +20,7 @@ module DatastaxRails
     module ClassMethods
       def create_reflection(macro, name, options, datastax_rails)
         klass = options[:through] ? ThroughReflection : AssociationReflection
-        reflection = klass.new(macro, name, options, active_record)
+        reflection = klass.new(macro, name, options, datastax_rails)
         self.reflections = self.reflections.merge(name => reflection)
         reflection
       end
@@ -112,7 +112,7 @@ module DatastaxRails
           other_aggregation.kind_of?(self.class) &&
           name == other_aggregation.name &&
           other_aggregation.options &&
-          active_record == other_aggregation.active_record
+          datastax_rails == other_aggregation.datastax_rails
       end
 
       # XXX: Do we need to sanitize our query?
@@ -306,7 +306,7 @@ module DatastaxRails
     # in the DatastaxRails class.
     class ThroughReflection < AssociationReflection #:nodoc:
       delegate :foreign_key, :foreign_type, :association_foreign_key,
-               :active_record_primary_key, :type, :to => :source_reflection
+               :datastax_rails_primary_key, :type, :to => :source_reflection
 
       # Gets the source of the through reflection.  It checks both a singularized
       # and pluralized form for <tt>:belongs_to</tt> or <tt>:has_many</tt>.

@@ -75,7 +75,6 @@ module DatastaxRails
       reset
       ret
     end
-    # TODO: Find a way to delete from both without instantiating
     alias :delete :destroy
   end
 end

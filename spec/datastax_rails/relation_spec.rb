@@ -57,6 +57,7 @@ describe DatastaxRails::Relation do
   describe "#default_scope" do
     it "should return a relation that has no scope set" do
       Hobby.create(:name => "fishing")
+      @relation.commit_solr
       relation = @relation.where("name" => "hiking")
       relation.count.should == 0
       relation.default_scope.count.should == 1

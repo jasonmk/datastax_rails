@@ -14,7 +14,11 @@ module DatastaxRails
         scope = klass.unscoped
         scope = scope.extending(*Array.wrap(options[:extend]))
         
-        scope.where(reflection.foreign_key => owner.id)
+        if reflection.source_macro == :belongs_to
+          scope.where('id' => owner.send(reflection.foreign_key))
+        else
+          scope.where(reflection.foreign_key => owner.id)
+        end
       end
     end
   end

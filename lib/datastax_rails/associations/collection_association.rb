@@ -18,7 +18,7 @@ module DatastaxRails
     class CollectionAssociation < Association #:nodoc:
       attr_reader :proxy
       
-      delegate :count, :size, :empty?, :any?, :many?, :first, :last, :to => :proxy
+      delegate :count, :size, :empty?, :any?, :many?, :first, :last, :to => :scoped
       
       def initialize(owner, reflection)
         super

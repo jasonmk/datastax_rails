@@ -43,8 +43,11 @@ class Job < DatastaxRails::Base
   
   key :uuid
   string :title
+  integer :position_number
   string :person_id
   timestamps
+  
+  validates :position_number, :uniqueness => true, :allow_blank => true
 end
 
 class Boat < DatastaxRails::Base
@@ -53,6 +56,8 @@ class Boat < DatastaxRails::Base
   key :uuid
   string :name
   timestamps
+  
+  validates :name, :uniqueness => true
 end
 
 class Hobby < DatastaxRails::Base

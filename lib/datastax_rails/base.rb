@@ -195,7 +195,7 @@ module DatastaxRails #:nodoc:
     attr_reader :attributes
     attr_accessor :key
     
-    def initialize(attributes = {})
+    def initialize(attributes = {}, options = {})
       @key = attributes.delete(:key)
       @attributes = {}
       
@@ -215,6 +215,9 @@ module DatastaxRails #:nodoc:
           raise(UnknownAttributeError, "unknown attribute: #{k}")
         end
       end
+      
+      yield self if block_given?
+      run_callbacks :initialize
     end
     
     # Freeze the attributes hash such that associations are still accessible, even on destroyed records.
@@ -246,6 +249,59 @@ module DatastaxRails #:nodoc:
       self == (comparison_object)
     end
     
+    # Allows you to set all the attributes for a particular mass-assignment
+    # security role by passing in a hash of attributes with keys matching
+    # the attribute names (which again matches the column names) and the role
+    # name using the :as option.
+    #
+    # To bypass mass-assignment security you can use the :without_protection => true
+    # option.
+    #
+    #   class User < ActiveRecord::Base
+    #     attr_accessible :name
+    #     attr_accessible :name, :is_admin, :as => :admin
+    #   end
+    #
+    #   user = User.new
+    #   user.assign_attributes({ :name => 'Josh', :is_admin => true })
+    #   user.name # => "Josh"
+    #   user.is_admin? # => false
+    #
+    #   user = User.new
+    #   user.assign_attributes({ :name => 'Josh', :is_admin => true }, :as => :admin)
+    #   user.name # => "Josh"
+    #   user.is_admin? # => true
+    #
+    #   user = User.new
+    #   user.assign_attributes({ :name => 'Josh', :is_admin => true }, :without_protection => true)
+    #   user.name # => "Josh"
+    #   user.is_admin? # => true
+    def assign_attributes(new_attributes, options = {})
+      return unless new_attributes
+
+      attributes = new_attributes.stringify_keys
+      multi_parameter_attributes = []
+      @mass_assignment_options = options
+
+      unless options[:without_protection]
+        attributes = sanitize_for_mass_assignment(attributes, mass_assignment_role)
+      end
+
+      attributes.each do |k, v|
+        if respond_to?("#{k.to_s.downcase}=")
+          send("#{k.to_s.downcase}=",v)
+        else
+          raise(UnknownAttributeError, "unknown attribute: #{k}")
+        end
+      end
+
+      @mass_assignment_options = nil
+    end
+    
+    def attribute_names
+      self.class.attribute_names
+    end
+    
     private
       def populate_with_current_scope_attributes
         return unless self.class.scope_attributes?
@@ -254,7 +310,7 @@ module DatastaxRails #:nodoc:
           send("#{att}=", value) if respond_to?("#{att}=")
         end
       end
-
+      
     class << self
       delegate :find, :first, :all, :exists?, :any?, :many?, :to => :scoped
       delegate :destroy, :destroy_all, :delete, :delete_all, :update, :update_all, :to => :scoped
@@ -262,7 +318,7 @@ module DatastaxRails #:nodoc:
       delegate :order, :limit, :where, :where_not, :page, :paginate, :to => :scoped
       delegate :per_page, :each, :group, :total_pages, :search, :fulltext, :to => :scoped
       delegate :count, :first, :first!, :last, :last!, :to => :scoped
-      delegate :cql, :with_cassandra, :with_solr, :to => :scoped
+      delegate :cql, :with_cassandra, :with_solr, :commit_solr, :to => :scoped
 
       def column_family=(column_family)
         @column_family = column_family

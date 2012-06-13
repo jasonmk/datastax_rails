@@ -199,7 +199,6 @@ module DatastaxRails
     end
     
     def respond_to?(method, include_private = false) #:nodoc:
-      sunspot_search.respond_to?(method, include_private)   ||
         Array.method_defined?(method)                       ||
         @klass.respond_to?(method, include_private)         ||
         super
@@ -232,19 +231,15 @@ module DatastaxRails
       orders = []
       @where_values.each do |wv|
         wv.each do |k,v|
-          filter_queries << "#{k}:(#{v})" 
+          # If v is blank, check that there is no value for the field in the document
+          filter_queries << v.blank? ? "-#{k}:[* TO *]" : "#{k}:(#{v})" 
         end
       end
       
       @where_not_values.each do |wnv|
         wnv.each do |k,v|
-          if v.blank?
-            # Check for any value present
-            filter_queries << "#{k}:[* TO *]"
-          else
-            # Check not the passed in value
-            filter_queries << "-#{k}:(#{v})"
-          end
+          # If v is blank, check for any value for the field in document
+          filter_queries << v.blank? ? "#{k}:[* TO *]" : filter_queries << "-#{k}:(#{v})"
         end
       end
       
@@ -360,8 +355,6 @@ module DatastaxRails
           to_a.send(method, *args, &block)
         elsif @klass.respond_to?(method)
           scoping { @klass.send(method, *args, &block) }
-        elsif sunspot_search.respond_to?(method)
-          sunspot_search.send(method, *args, &block)
         else
           super
         end

@@ -227,13 +227,7 @@ module DatastaxRails
       else
         attributes = attribute.dup
         attributes.each do |k,v|
-          attributes[k] = if v.is_a?(Date) || v.is_a?(Time)
-            v.strftime('%Y-%m-%dT%H\:%M\:%SZ')
-          elsif v.is_a?(Array)
-            v.join(" OR ")
-          else
-            v
-          end
+          attributes[k] = solr_format(v)
         end
         clone.tap do |r|
           r.where_values << attributes
@@ -250,14 +244,7 @@ module DatastaxRails
       
       attributes = attribute.dup
       attributes.each do |k,v|
-        attributes[k] = case v
-          when v.is_a?(Date), v.is_a?(Time)
-            v.strftime('%Y-%m-%dT%H\:%M\:%SZ')
-          when v.is_a?(Array)
-            v.join(" OR ")
-          else
-            v
-        end
+        attributes[k] = solr_format(v)
       end
       clone.tap do |r|
         r.where_not_values << attribute
@@ -295,6 +282,19 @@ module DatastaxRails
       raise ArgumentError, "#greater_than can only be called after an appropriate where call. e.g. where(:created_at).greater_than(1.day.ago)"
     end
     
+    def solr_format(value)
+      case value
+        when value.is_a?(Date), value.is_a?(Time)
+          value.strftime('%Y-%m-%dT%H\:%M\:%SZ')
+        when value.is_a?(Array)
+          value.join(" OR ")
+        when value.is_a?(Fixnum)
+          value < 0 ? "\\#{value}" : value
+        else
+          value
+      end
+    end
+    
     protected
       def find_by_attributes(match, attributes, *args) #:nodoc:
         conditions = Hash[attributes.map {|a| [a, args[attributes.index(a)]]}]
@@ -314,30 +314,20 @@ module DatastaxRails
       end
       
       def equal_to(value) #:nodoc:
-        value = case value
-          when value.is_a?(Date), value.is_a?(Time)
-            value.strftime('%Y-%m-%dT%H\:%M\:%SZ')
-          when value.is_a?(Array)
-            value.join(" OR ")
-          else
-            value
-        end
         @relation.clone.tap do |r|
-          r.where_values << {@attribute => value}
+          r.where_values << {@attribute => r.solr_format(value)}
         end
       end
       
       def greater_than(value) #:nodoc:
-        value = value.strftime('%Y-%m-%dT%H\:%M\:%SZ') if value.is_a?(Date) || value.is_a?(Time)
         @relation.clone.tap do |r|
-          r.greater_than_values << {@attribute => value}
+          r.greater_than_values << {@attribute => r.solr_format(value)}
         end
       end
       
       def less_than(value) #:nodoc:
-        value = value.strftime('%Y-%m-%dT%H\:%M\:%SZ') if value.is_a?(Date) || value.is_a?(Time)
         @relation.clone.tap do |r|
-          r.less_than_values << {@attribute => value}
+          r.less_than_values << {@attribute => r.solr_format(value)}
         end
       end
     end

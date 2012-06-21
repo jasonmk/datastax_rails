@@ -232,14 +232,14 @@ module DatastaxRails
       @where_values.each do |wv|
         wv.each do |k,v|
           # If v is blank, check that there is no value for the field in the document
-          filter_queries << v.blank? ? "-#{k}:[* TO *]" : "#{k}:(#{v})" 
+          filter_queries << (v.blank? ? "-#{k}:[* TO *]" : "#{k}:(#{v})")
         end
       end
       
       @where_not_values.each do |wnv|
         wnv.each do |k,v|
           # If v is blank, check for any value for the field in document
-          filter_queries << v.blank? ? "#{k}:[* TO *]" : filter_queries << "-#{k}:(#{v})"
+          filter_queries << (v.blank? ? "#{k}:[* TO *]" : "-#{k}:(#{v})")
         end
       end
       

@@ -25,7 +25,7 @@ module DatastaxRails
           scope_value = nil if scope_value.blank?
           scope = scope.where(scope_item => scope_value)
         end
-        
+
         if scope.exists?
           record.errors.add(attribute, :taken, options.except(:case_sensitive, :scope).merge(:value => value))
         end

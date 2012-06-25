@@ -46,7 +46,46 @@ describe DatastaxRails::Relation do
   end
   
   describe "#where" do
+    it "should return documents where a field is nil (does not exist)" do
+      Hobby.create(:name => 'Swimming')
+      Hobby.create(:name => nil)
+      @relation.commit_solr
+      @relation.where(:name => nil).should_not be_empty
+    end
     
+    it "should return documents where a value is greater than the given value" do
+      Hobby.create(:name => 'Swimming', :complexity => 1.1)
+      @relation.commit_solr
+      @relation.where(:complexity).greater_than(1.0).should_not be_empty
+    end
+    
+    it "should return documents where a value is less than the given value" do
+      Hobby.create(:name => 'Swimming', :complexity => 1.1)
+      @relation.commit_solr
+      @relation.where(:complexity).less_than(2.0).should_not be_empty
+    end
+    
+    it "should allow arrays to be passed as OR queries" do
+      %w[fishing hiking boating jogging swimming chess].each do |word|
+        Hobby.create(:name => word)
+      end
+      @relation.commit_solr
+      @relation.where(:name => ['boating', 'jogging', 'chess', 'skydiving']).size.should == 3
+    end
+    
+    it "should handle negative numbers without breaking" do
+      Hobby.create(:name => 'jogging', :complexity => -1.2)
+      @relation.commit_solr
+      @relation.where(:complexity).less_than(-1).should_not be_empty
+    end
+  end
+  
+  describe "#where_not" do
+    it "should return documents where a field has any value" do
+      Hobby.create(:name => 'Swimming')
+      @relation.commit_solr
+      @relation.where_not(:name => nil).should_not be_empty
+    end
   end
   
   describe "#fulltext" do

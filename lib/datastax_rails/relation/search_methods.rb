@@ -219,6 +219,10 @@ module DatastaxRails
     #
     #   Model.where(:created_at).greater_than(1.day.ago)
     #   Model.where(:age).less_than(65)
+    #
+    # NOTE: Due to the way SOLR handles range queries, all greater/less than
+    #       queries are actually greater/less than or equal to queries.
+    #       There is no way to perform a strictly greater/less than query.
     def where(attribute)
       return self if attribute.blank?
       
@@ -283,7 +287,7 @@ module DatastaxRails
     end
     
     def solr_format(value)
-      case value
+      case
         when value.is_a?(Date), value.is_a?(Time)
           value.strftime('%Y-%m-%dT%H\:%M\:%SZ')
         when value.is_a?(Array)

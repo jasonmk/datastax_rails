@@ -1,4 +1,4 @@
-namespace :dsr do
+namespace :ds do
   task :configure => :environment do
     @configs = YAML.load_file(Rails.root.join("config", "datastax.yml"))
     @config = @configs[Rails.env || 'development']

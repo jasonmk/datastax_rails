@@ -2,7 +2,7 @@ require 'rsolr'
 
 module DatastaxRails
   class Relation
-    MULTI_VALUE_METHODS = [:group, :order, :where, :where_not, :fulltext, :search, :greater_than, :less_than, :select]
+    MULTI_VALUE_METHODS = [:group, :order, :where, :where_not, :fulltext, :greater_than, :less_than, :select]
     SINGLE_VALUE_METHODS = [:page, :per_page, :reverse_order, :query_parser, :consistency, :ttl, :use_solr]
     
     Relation::MULTI_VALUE_METHODS.each do |m|

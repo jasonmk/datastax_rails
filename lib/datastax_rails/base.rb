@@ -12,6 +12,105 @@ module DatastaxRails #:nodoc:
   # row.  By specifying the attributes on the model, getters and setters are automatically
   # created, and the attribute is automatically indexed into SOLR.
   #
+  #
+  # == Primary Keys
+  #
+  # Several types of primary keys are supported in DSR. The most common type used is UUID.
+  # In general, incrementing numbers are not used as there is no way to guarantee a
+  # consistent one-up number across nodes. The following will cause a unique UUID to be
+  # generated for each model. This works best if you are using the RandomPartitioner in
+  # your Datastax cluster.
+  #
+  #   class Person < DatastaxRails::Base
+  #     key :uuid
+  #   end
+  #
+  # If you want to use a natural key (i.e., one or more of the columns of your data),
+  # the following would work.
+  #
+  #   class Person < DatastaxRails::Base
+  #     key :natural, :attributes => [:last_name, :first_name]
+  #   end
+  #
+  # Finally, you can create a custom key based on a method on your model.
+  #
+  #   class Person < DatastaxRails::Base
+  #     key :custom, :method => :my_key
+  #     
+  #     def my_key
+  #       # Some logic to generate a key
+  #     end
+  #   end
+  #
+  # == Attributes
+  #
+  # Attributes are specified near the top of the model. The following attribute types
+  # are supported:
+  #
+  # * array - an array of strings
+  # * binary - a large object that will not be indexed into SOLR (e.g., BLOB)
+  # * boolean - true/false values
+  # * date - a date without a time component
+  # * float - a number in floating point notation
+  # * integer - a whole, round number of any size
+  # * string - a generic string type that is not tokenized by default
+  # * text - like strings but will be tokenized for full-text searching by default
+  # * time - a datetime object
+  # * timestamps - a special type that instructs DSR to include created_at and updated_at
+  #
+  # The following options may be specified on the various types to control how they
+  # are indexed into SOLR:
+  #
+  # * indexed - If the attribute should the attribute be indexed into SOLR.
+  #   Defaults to true for everything but binary.
+  # * stored - If the attribute should the attribute be stored in SOLR.
+  #   Defaults to true for everything but binary. (see note)
+  # * sortable - If the attribute should be sortable by SOLR.
+  #   Defaults to true for everything but binary and text. (see note)
+  # * tokenized - If the attribute should be tokenized for full-text searching within the field.
+  #   Defaults to true for array and text. (see note)
+  # * fulltext - If the attribute should be included in the default field for full-text searches.
+  #   Defaults to true for text and string.
+  #
+  # NOTES:
+  # * No fields are actually stored in SOLR. When a field is requested from SOLR, the field
+  #   is retrieved from Cassandra behind the scenes and returned as if it were stored. The
+  #   stored parameter actually controls whether SOLR will return the field at all. If a field
+  #   is not stored then asking SOLR for it will return a nil value. It will also not be
+  #   included in the field list when all (*) fields are requested.
+  # * If you want a field both sortable and searchable (e.g., a subject) then declare it a
+  #   text field with <tt>:sortable => true</tt>. This will create two copies of the field in SOLR,
+  #   one that gets tokenized and one that is a single token for sorting. As this inflates the
+  #   size of the index, you don't want to do this for large fields (which probably don't make
+  #   sense to sort on anyways).
+  # * Arrays are tokenized specially. Each element of the array is treated as a single token.
+  #   This means that you can match against any single element, but you cannot search within
+  #   elements. This functionality may be added at a later time.
+  #
+  # EXAMPLE:
+  # 
+  #   class Person < DatastaxRails::Base
+  #     key     :uuid
+  #     string  :first_name
+  #     string  :user_name
+  #     text    :bio
+  #     date    :birthdate
+  #     boolean :active
+  #     timestamps
+  #   end
+  #
+  # == Schemas
+  #
+  # Cassandra itself is a 'schema-optional' database.  In general, DSR does not make use of
+  # Cassandra schemas.  SOLR on the other hand does use a schema to define the data and how
+  # it should be indexed.  There is a rake task to upload the latest SOLR schema based on
+  # the model files.  When this happens, if the column family does not exist yet, it will be
+  # created.  Therefore, migrations to create column families are unnecessary.  If the
+  # column family does exist, and the new schema differs, the columns that are changed will
+  # be automatically reindexed.
+  #
+  # TODO: Need a way to remove ununsed column families.
+  #
   # == Creation
   #
   # DatastaxRails objects accept constructor parameters either in a hash or as a block. The hash
@@ -36,7 +135,7 @@ module DatastaxRails #:nodoc:
   #
   # == Conditions
   #
-  # Conditions are specified as a hash representing key/value pairs that will eventually be passed to Sunspot or as
+  # Conditions are specified as a hash representing key/value pairs that will eventually be passed to SOLR or as
   # a chained call for greater_than and less_than conditions.  In addition, fulltext queries may be specified as a
   # string that will eventually be parsed by SOLR as a standard SOLR query.
   #
@@ -64,6 +163,8 @@ module DatastaxRails #:nodoc:
   # searching.
   #
   #   Post.fulltext('Apple AND "iPhone 4s"')
+  #
+  # See the documentation on DatastaxRails::SearchMethods for more information and examples.
   #
   # == Overwriting default accessors
   #

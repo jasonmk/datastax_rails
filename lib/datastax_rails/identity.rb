@@ -1,4 +1,4 @@
-module DatastaxRails
+module DatastaxRails #:nodoc:
   module Identity
     extend ActiveSupport::Concern
     extend ActiveSupport::Autoload

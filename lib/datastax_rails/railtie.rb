@@ -10,8 +10,7 @@ module DatastaxRails
     end
     
     rake_tasks do
-      load 'tasks/datastax_rails_tasks.rake'
-      load 'datastax_rails/tasks/ks.rake'
+      load 'datastax_rails/tasks/ds.rake'
     end
     
     generators do

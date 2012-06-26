@@ -88,39 +88,19 @@ module DatastaxRails
       end
     end
     
-    # Direct access to Sunspot search method.
-    #
-    #   Model.search do
-    #     fulltext 'best pizza'
-    # 
-    #     with :blog_id, 1
-    #     with(:published_at).less_than Time.now
-    #     order_by :published_at, :desc
-    #     paginate :page => 2, :per_page => 15
-    #     facet :category_ids, :author_id
-    #   end
-    #
-    # It's important to note that this will still be in the context of
-    # any other criteria you have already specified.
-    def search(&block)
-      clone.tap do |r|
-        r.search_values << block
-      end
-    end
-    
     # Works in two unique ways.
     #
-    # First: takes a block so it can be used just like Array#select.
+    # _First_: takes a block so it can be used just like Array#select.
     #
-    # Model.scoped.select { |m| m.field == value }
+    #   Model.scoped.select { |m| m.field == value }
     #
     # This will build an array of objects from the database for the scope,
     # converting them into an array and iterating through them using Array#select.
     #
-    # Second: Modifies the query so that only certain fields are retrieved:
+    # _Second_: Modifies the query so that only certain fields are retrieved:
     #
-    # >> Model.select(:field)
-    # => [#<Model field:value>]
+    #   >> Model.select(:field)
+    #   => [#<Model field:value>]
     #
     # Although in the above example it looks as though this method returns an
     # array, it actually returns a relation object and can have other query
@@ -128,14 +108,14 @@ module DatastaxRails
     #
     # This method will also take multiple parameters:
     #
-    # >> Model.select(:field, :other_field, :and_one_more)
-    # => [#<Model field: "value", other_field: "value", and_one_more: "value">]
+    #   >> Model.select(:field, :other_field, :and_one_more)
+    #   => [#<Model field: "value", other_field: "value", and_one_more: "value">]
     #
     # Any attributes that do not have fields retrieved by a select
     # will return `nil` when the getter method for that attribute is used:
     #
-    # >> Model.select(:field).first.other_field
-    # => nil
+    #   >> Model.select(:field).first.other_field
+    #   => nil
     #
     # The exception to this rule is when an attribute is lazy-loaded (e.g., binary).
     # In that case, it is never retrieved until you call the getter method.

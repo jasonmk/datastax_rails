@@ -20,7 +20,7 @@ module DatastaxRails#:nodoc:
         stmt = "CREATE KEYSPACE #{@ks_name} WITH strategy_class = '#{@strategy_class}'"
         
         @strategy_options.each do |key, value|
-          stmt << " AND #{key.to_s} = '#{value.to_s}'"
+          stmt << " AND strategy_options:#{key.to_s} = '#{value.to_s}'"
         end
         
         stmt

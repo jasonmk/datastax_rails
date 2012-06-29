@@ -8,8 +8,8 @@ namespace :ds do
   task :create do
     @configs = YAML.load_file(Rails.root.join("config", "datastax.yml"))
     @config = @configs[Rails.env || 'development']
-    DatastaxRails::Tasks::Keyspace.create @config['keyspace'], @config
-    puts "Created keyspace: #{@config['keyspace']}"
+    ret = DatastaxRails::Tasks::Keyspace.create @config['keyspace'], @config
+    puts "Created keyspace: #{@config['keyspace']}" if ret
   end
 
   namespace :create do

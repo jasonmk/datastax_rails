@@ -8,17 +8,20 @@ module DatastaxRails
   
         def create(name, options = {})
           opts = { :name => name.to_s,
-                   :strategy_class => 'NetworkTopologyStrategy',
-                   :DC1 => 1}.merge(options)
+                   :strategy_class => 'org.apache.cassandra.locator.NetworkTopologyStrategy'}.merge(options)
   
           if(exists?(name.to_s))
             puts "Keyspace #{name.to_s} already exists"
+            return false
           else
             cql = DatastaxRails::Cql::CreateKeyspace.new(opts.delete(:name))
             cql.strategy_class(opts.delete(:strategy_class))
-            cql.strategy_options(opts)
-            
+            debugger
+            strategy_options = opts.delete('strategy_options')
+            cql.strategy_options(strategy_options.symbolize_keys)
+            puts cql.to_cql
             connection.execute_cql_query(cql.to_cql)
+            return true
           end
         end
   
@@ -44,7 +47,7 @@ module DatastaxRails
   
           def connection
             unless @connection
-              config = YAML.load_file(Rails.root.join("config", "datastax.yml"))
+              config = YAML.load_file(Rails.root.join("config", "datastax.yml"))[Rails.env]
               @connection = CassandraCQL::Database.new(config["servers"], :keyspace => 'system')
             end
             @connection

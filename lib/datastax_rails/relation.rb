@@ -69,7 +69,13 @@ module DatastaxRails
     
     # Returns the total number of entries that match the given search.
     # This means the total number of matches regardless of page size.
+    # If the relation has not been populated yet, a limit of 1 will be
+    # placed on the query before it is executed.
+    #
     # Compare with #size.
+    #
+    # XXX: Count via CQL is useless unless criteria has been applied.
+    # Otherwise you get everything that has ever been in the CF.
     def count
       @count ||= self.use_solr_value ? count_via_solr : count_via_cql
     end
@@ -115,12 +121,13 @@ module DatastaxRails
       end
     end
     
-    # Constructs a new instance of the class this relation points to
+    # Constructs a new instance of the class this relation points to with
+    # any criteria from this relation applied
     def new(*args, &block)
       scoping { @klass.new(*args, &block) }
     end
     
-    # Reloads the results from Solr
+    # Reloads the results from cassandra or solr as appropriate
     def reload
       reset
       to_a
@@ -185,10 +192,12 @@ module DatastaxRails
     alias :all :to_a
     alias :results :to_a
     
+    # Create a new object with all of the criteria from this relation applied
     def create(*args, &block)
       scoping { @klass.create(*args, &block) }
     end
 
+    # Like +create+ but throws an exception on failure
     def create!(*args, &block)
       scoping { @klass.create!(*args, &block) }
     end
@@ -199,11 +208,17 @@ module DatastaxRails
         super
     end
     
+    # NOTE: This method does not actually run a count via CQL because it only
+    # works if you run against a secondary index. So this currently just
+    # delegates to the count_via_solr method.
     def count_via_cql
       # Counting via CQL does not work
       with_solr.count_via_solr
     end
     
+    # Constructs a CQL query and runs it against Cassandra directly.  For this to
+    # work, you need to run against either the primary key or a secondary index.
+    # For ad-hoc queries, you will have to use Solr.
     def query_via_cql
       cql = @cql.select(@klass.attribute_definitions.keys - @klass.lazy_attributes)
       cql.using(@consistency_value) if @consistency_value
@@ -217,10 +232,18 @@ module DatastaxRails
       results
     end
     
+    # Runs the query with a limit of 1 just to grab the total results attribute off
+    # the result set. 
     def count_via_solr
-      limit(1).to_a.total_entries
+      limit(1).select(:id).to_a.total_entries
     end
     
+    # Constructs a solr query to run against SOLR. At this point, only where, where_not, 
+    # fulltext, order and pagination are supported.  More will be added.
+    #
+    # It's also worth noting that where and where_not make use of individual filter_queries.
+    # If that's not what you want, you might be better off constructing your own fulltext
+    # query and sending that in.
     def query_via_solr
       filter_queries = []
       orders = []
@@ -308,18 +331,15 @@ module DatastaxRails
       @klass.send(:with_scope, self, :overwrite) { yield }
     end
     
-    def where_values_hash
+    def where_values_hash #:nodoc:
       where_values.inject({}) { |values,v| values.merge(v) }
     end
 
-    def scope_for_create
+    def scope_for_create #:nodoc:
       @scope_for_create ||= where_values_hash.merge(create_with_value)
     end
     
-    # def scoped #:nodoc:
-      # self
-    # end
-    
+    # Sends a commit message to SOLR
     def commit_solr
       rsolr.commit :commit_attributes => {}
     end
@@ -345,7 +365,7 @@ module DatastaxRails
     
     protected
       
-      def method_missing(method, *args, &block)
+      def method_missing(method, *args, &block) #:nodoc:
         if Array.method_defined?(method)
           to_a.send(method, *args, &block)
         elsif @klass.respond_to?(method)
@@ -355,7 +375,7 @@ module DatastaxRails
         end
       end
       
-      def rsolr
+      def rsolr #:nodoc:
         @rsolr ||= RSolr.connect :url => "#{DatastaxRails::Base.config[:solr][:url]}/#{DatastaxRails::Base.connection.keyspace}.#{@klass.column_family}"
       end
   end

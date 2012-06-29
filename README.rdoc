@@ -19,4 +19,40 @@ designed as a solution to Big Data problems.  This gem is not.  You will notice 
 We are using DSE to solve a replication problem more so than a Big Data problem.  That's not to say that this gem won't work for Big Data problems, 
 it just might not be ideal.  You've been warned...
 
+=== Getting started
 
+First add it to your Gemfile:
+
+  gem 'datastax_rails'
+
+Configure the config/datastax.yml file:
+
+	development:
+	  servers: ["localhost:9160"]
+	  keyspace: "<my_app>_development"
+	  strategy_class: "org.apache.cassandra.locator.NetworkTopologyStrategy"
+	  strategy_options: {"DC1": "1"} 
+	  solr:
+	    url: http://localhost:8983/solr
+
+The above is configured to use NetworkTopologyStrategy.  If you go with this, you'll need to configure Datastax to use the
+NetworkTopologySnitch and set up the cassandra-topology.properties file.  See the Datastax documentation for more information.
+For a more simple setup, something like this should probably work:
+
+	development:
+	  servers: ["localhost:9160"]
+	  keyspace: "<my_app>_development"
+	  strategy_class: "org.apache.cassandra.locator.SimpleStrategy"
+	  strategy_options: {"replication_factor": "1"} 
+	  solr:
+	    url: http://localhost:8983/solr
+
+Create your keyspace:
+
+  rake ds:create
+  rake ds:create RAILS_ENV=test
+
+Once you've created some models, the following will upload the solr schemas and create the column families:
+
+  rake ds:schema
+  rake ds:schema RAILS_ENV=test

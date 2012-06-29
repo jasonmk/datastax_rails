@@ -441,6 +441,12 @@ module DatastaxRails #:nodoc:
         # scoped.with_cassandra.find(keys)
       # end
       
+      def find_by_id(id)
+        scoped.with_cassandra.find(id)
+      rescue RecordNotFound
+        nil
+      end
+      
       def logger
         Rails.logger
       end
@@ -503,7 +509,7 @@ module DatastaxRails #:nodoc:
         def method_missing(method_id, *arguments, &block)
           if match = ActiveRecord::DynamicFinderMatch.match(method_id)
             attribute_names = match.attribute_names
-            super unless all_attributes_exist?(attribute_names)
+            super unless all_attributes_exists?(attribute_names)
             if !arguments.first.is_a?(Hash) && arguments.size < attribute_names.size
               ActiveSupport::Deprecation.warn(
                 "Calling dynamic finder with less number of arguments than the number of attributes in " \
@@ -520,7 +526,7 @@ module DatastaxRails #:nodoc:
             end
           elsif match = ActiveRecord::DynamicScopeMatch.match(method_id)
             attribute_names = match.attribute_names
-            super unless all_attributes_exist?(attribute_names)
+            super unless all_attributes_exists?(attribute_names)
             if arguments.size < attribute_names.size
               ActiveSupport::Deprecation.warn(
                 "Calling dynamic scope with less number of arguments than the number of attributes in " \
@@ -542,7 +548,7 @@ module DatastaxRails #:nodoc:
           end
         end
         
-        def all_attributes_exist?(attribute_names)
+        def all_attributes_exists?(attribute_names)
           (attribute_names - self.attribute_names).empty?
         end
         

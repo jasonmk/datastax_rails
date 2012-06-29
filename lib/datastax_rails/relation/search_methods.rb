@@ -274,6 +274,8 @@ module DatastaxRails
           value.join(" OR ")
         when value.is_a?(Fixnum)
           value < 0 ? "\\#{value}" : value
+        when value.is_a?(String)
+          value.gsub(/ /,"\\ ")
         else
           value
       end

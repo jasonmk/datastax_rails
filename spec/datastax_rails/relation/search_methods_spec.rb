@@ -78,6 +78,14 @@ describe DatastaxRails::Relation do
       @relation.commit_solr
       @relation.where(:complexity).less_than(-1).should_not be_empty
     end
+    
+    it "should not tokenize where queries on spaces" do
+      Hobby.create(:name => 'horseback riding')
+      @relation.commit_solr
+      @relation.where(:name => 'horseback').should be_empty
+      @relation.where(:name => 'horseback riding').should_not be_empty
+      @relation.where(:name => 'horseback ri*').should_not be_empty
+    end
   end
   
   describe "#where_not" do

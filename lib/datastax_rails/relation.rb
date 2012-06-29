@@ -142,15 +142,10 @@ module DatastaxRails
     def clone #:nodoc:
       dup.tap do |r|
         MULTI_VALUE_METHODS.each do |m|
-          if m == :search
-            # Proc's can't be dumped, but a regular clone should be all right since they aren't deep memory structures
-            r.search_values = self.search_values.clone
-          else
-            r.send("#{m}_values=", Marshal.load(Marshal.dump(self.send("#{m}_values"))))
-          end
+          r.send("#{m}_values=", Marshal.load(Marshal.dump(self.send("#{m}_values"))))
         end
         SINGLE_VALUE_METHODS.each do |m|
-          r.send("#{m}_value=", Marshal.load(Marshal.dump(self.send("#{m}_value"))))
+          r.send("#{m}_value=", Marshal.load(Marshal.dump(self.send("#{m}_value")))) if self.send("#{m}_value")
         end
       end
     end

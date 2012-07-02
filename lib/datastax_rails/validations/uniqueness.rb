@@ -27,7 +27,8 @@ module DatastaxRails
         end
 
         if scope.exists?
-          record.errors.add(attribute, :taken, options.except(:case_sensitive, :scope).merge(:value => value))
+          message = options[:message] || 'has already been taken'
+          record.errors.add(attribute, message, options.except(:case_sensitive, :scope).merge(:value => value))
         end
       end
     end

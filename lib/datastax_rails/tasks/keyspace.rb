@@ -16,7 +16,6 @@ module DatastaxRails
           else
             cql = DatastaxRails::Cql::CreateKeyspace.new(opts.delete(:name))
             cql.strategy_class(opts.delete(:strategy_class))
-            debugger
             strategy_options = opts.delete('strategy_options')
             cql.strategy_options(strategy_options.symbolize_keys)
             puts cql.to_cql

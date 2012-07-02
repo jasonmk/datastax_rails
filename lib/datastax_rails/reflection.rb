@@ -78,6 +78,9 @@ module DatastaxRails
       attr_reader :options
 
       attr_reader :datastax_rails
+      
+      # Returns a hash of all the denormalizations for this relationship (if any)
+      attr_reader :denorms
 
       attr_reader :plural_name # :nodoc:
 

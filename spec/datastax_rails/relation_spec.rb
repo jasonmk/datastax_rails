@@ -37,7 +37,7 @@ describe DatastaxRails::Relation do
     
     it "should execute a fast search to determine the count" do
       mock_relation = mock(DatastaxRails::Relation)
-      mock_relation.stub_chain(:to_a, :total_entries).and_return(37)
+      mock_relation.stub_chain(:select, :to_a, :total_entries).and_return(37)
       @relation.should_receive(:limit).with(1).and_return(mock_relation)
       @relation.count.should == 37
     end

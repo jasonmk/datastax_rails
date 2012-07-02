@@ -25,15 +25,15 @@ module DatastaxRails::Associations::Builder
           unless options[:denorm].is_a?(Hash)
             raise ArgumentError, "The :denorm option expects a hash in the form {:attr_on_other_model => :virtual_attr_on_this_model}"
           end
-    
-          method_name = "belongs_to_dependent_#{options[:dependent]}_for_#{name}"
-          model.send(:class_eval, <<-eoruby, __FILE__, __LINE__ + 1)
-            def #{method_name}
-              association = #{name}
-              association.#{options[:dependent]} if association
-            end
-            eoruby
-          model.after_destroy method_name
+          
+          # options[:denorm].each do |remote, local|
+            # # Default everything to a string.  If it should be something different, the developer can declare the attribute manually.
+            # model.send(:string, local)
+            # model.send(:class_eval, <<-eoruby, __FILE__, __LINE__ + 1)
+              # def #{local}
+              # eoruby
+          # end
+         
         end
       end
 

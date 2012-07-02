@@ -86,6 +86,12 @@ describe DatastaxRails::Relation do
       @relation.where(:name => 'horseback riding').should_not be_empty
       @relation.where(:name => 'horseback ri*').should_not be_empty
     end
+    
+    it "should not tokenize where queries on spaces inside arrays" do
+      Hobby.create(:name => 'horseback riding')
+      @relation.commit_solr
+      @relation.where(:name => ['horseback riding', 'some other hobby']).should_not be_empty
+    end
   end
   
   describe "#where_not" do

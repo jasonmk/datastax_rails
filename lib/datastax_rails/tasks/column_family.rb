@@ -68,6 +68,12 @@ module DatastaxRails
             @fulltext_fields << attr.name
           end
         end
+        # Sort the fields so that no matter what order the attributes are arranged into the
+        # same schema file gets generated
+        @fields.sort! {|a,b| a[:name] <=> b[:name]}
+        @copy_fields.sort! {|a,b| a[:source] <=> b[:source]}
+        @fulltext_fields.sort!
+        
         return ERB.new(File.read(File.join(File.dirname(__FILE__),"..","..","..","config","schema.xml.erb"))).result(binding)
       end
       
@@ -79,6 +85,9 @@ module DatastaxRails
         
         solrconfig = File.read(File.join(File.dirname(__FILE__),"..","..","..","config","solrconfig.xml"))
         stopwords = File.read(File.join(File.dirname(__FILE__),"..","..","..","config","stopwords.txt"))
+        solrconfig_digest = Digest::SHA1.hexdigest(solrconfig)
+        stopwords_digest = Digest::SHA1.hexdigest(stopwords)
+        
         models_to_upload = []
         
         if column_family == :all
@@ -96,26 +105,31 @@ module DatastaxRails
         
         models_to_upload.each do |model|
           schema = generate_solr_schema(model)
-          digest = Digest::SHA1.hexdigest(solrconfig + stopwords + schema)
-          puts "New digest: #{digest}"
+          schema_digest = Digest::SHA1.hexdigest(schema)
           
-          results = DatastaxRails::Cql::Select.new(SchemaMigration, ['digest']).conditions(:key => model.column_family).execute
-          sm_digest = CassandraCQL::Result.new(results).fetch.to_hash.values.first
-          puts "Old digest: #{sm_digest}"
-          next if digest == sm_digest
+          results = DatastaxRails::Cql::Select.new(SchemaMigration, ['*']).conditions(:key => model.column_family).execute
+          sm_digests = CassandraCQL::Result.new(results).fetch.to_hash
           
           solr_url = "#{DatastaxRails::Base.config[:solr][:url]}/resource/#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}"
           uri = URI.parse(solr_url)
           Net::HTTP.start(uri.host, uri.port) do |http|
-            puts "Posting Solr Config file to '#{uri.path}/solrconfig.xml'"
-            http.post(uri.path+"/solrconfig.xml", solrconfig)
-            puts "Posting Solr Stopwords file to '#{uri.path}/stopwords.txt'"
-            http.post(uri.path+"/stopwords.txt", stopwords)
-            puts "Posting Solr Schema file to '#{uri.path}/schema.xml'"
-            http.post(uri.path+"/schema.xml", schema)
+            if solrconfig_digest != sm_digests['solrconfig'] 
+              puts "Posting Solr Config file to '#{uri.path}/solrconfig.xml'"
+              http.post(uri.path+"/solrconfig.xml", solrconfig)
+              DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:solrconfig => solrconfig_digest).execute
+            end
+            if stopwords_digest != sm_digests['stopwords']
+              puts "Posting Solr Stopwords file to '#{uri.path}/stopwords.txt'"
+              http.post(uri.path+"/stopwords.txt", stopwords)
+              DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:stopwords => stopwords_digest).execute
+            end
+            if schema_digest != sm_digests['digest']
+              puts "Posting Solr Schema file to '#{uri.path}/schema.xml'"
+              http.post(uri.path+"/schema.xml", schema)
+              DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:digest => schema_digest).execute
+            end
           end
           
-          DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:digest => digest).execute
         end
       end
 

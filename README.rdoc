@@ -56,3 +56,6 @@ Once you've created some models, the following will upload the solr schemas and 
 
   rake ds:schema
   rake ds:schema RAILS_ENV=test
+
+It is safe to run ds:schema over and over.  In fact, it is necessary to re-run it any time you change the
+attributes on any model.  DSR will only upload schema files if they have changed.

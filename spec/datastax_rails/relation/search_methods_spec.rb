@@ -10,6 +10,7 @@ describe DatastaxRails::Relation do
       "a".upto("l") do |letter|
         Hobby.create(:name => letter)
       end
+      Hobby.commit_solr
       @relation.limit(7).all.size.should == 7
     end
   end
@@ -19,6 +20,7 @@ describe DatastaxRails::Relation do
       "a".upto("l") do |letter|
         Hobby.create(:name => letter)
       end
+      Hobby.commit_solr
       @relation.per_page(3).page(2).order(:name).all.first.name.should == "d"
     end
   end
@@ -99,6 +101,13 @@ describe DatastaxRails::Relation do
       Hobby.create(:name => 'Swimming')
       @relation.commit_solr
       @relation.where_not(:name => nil).should_not be_empty
+    end
+    
+    it "should return documents where none of the options are present" do
+      Hobby.create(:name => 'Swimming')
+      Hobby.create(:name => 'Biking')
+      @relation.commit_solr
+      @relation.where_not(:name => ['Swimming','Biking']).should be_empty
     end
   end
   

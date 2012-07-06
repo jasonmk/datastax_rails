@@ -223,15 +223,28 @@ module DatastaxRails
     # Expects a hash in the form +attribute => value+.
     #
     #   Model.where_not(:group_id => '1234', :active => 'N')
+    #
+    # Passing an array will search for records where none of the array entries
+    # are present
+    #
+    #   Model.where_not(:group_id => ['1234', '5678'])
+    #
+    # The above would find all models where group id is neither 1234 or 5678.
     def where_not(attribute)
       return self if attribute.blank?
       
-      attributes = attribute.dup
-      attributes.each do |k,v|
-        attributes[k] = solr_format(v)
+      attributes = []
+      attribute.each do |k,v|
+        if v.is_a?(Array)
+          v.each do |val|
+            attributes << {k => solr_format(val)}
+          end
+        else
+          attributes << {k => solr_format(v)}
+        end
       end
       clone.tap do |r|
-        r.where_not_values << attribute
+        r.where_not_values += attributes
       end
     end
     

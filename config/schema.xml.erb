@@ -17,7 +17,17 @@
 -->
 <schema name="datastax_rails" version="1.1">
  <types>
-  <fieldType name="string" class="solr.StrField" omitNorms="true"/>
+  <fieldType name="string_cs" class="solr.StrField" omitNorms="true"/>
+  <fieldType name="string" class="solr.TextField" omitNorms="true">
+    	<analyzer type="index">
+    		<tokenizer class="solr.KeywordTokenizerFactory"/>
+    		<filter class="solr.LowerCaseFilterFactory"/>
+    	</analyzer>
+    	<analyzer type="query">
+    		<tokenizer class="solr.KeywordTokenizerFactory"/>
+    		<filter class="solr.LowerCaseFilterFactory"/>
+    	</analyzer>
+    </fieldType>
   <fieldType name="text" class="solr.TextField" omitNorms="false" positionIncrementGap="100">
     <analyzer>
     	<tokenizer class="solr.StandardTokenizerFactory"/>

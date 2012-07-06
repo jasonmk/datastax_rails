@@ -5,6 +5,12 @@ module DatastaxRails#:nodoc:
         @cf_name = cf_name
         @columns = {}
         @storage_parameters = {}
+        @key_type = 'uuid'
+      end
+      
+      def key_type(key_type)
+        @key_type = key_type
+        self
       end
       
       def with(with)
@@ -35,7 +41,7 @@ module DatastaxRails#:nodoc:
       end
       
       def to_cql
-        stmt = "CREATE COLUMNFAMILY #{@cf_name} (key uuid PRIMARY KEY"
+        stmt = "CREATE COLUMNFAMILY #{@cf_name} (key #{@key_type} PRIMARY KEY"
         @columns.each do |name,type|
           stmt << ", #{name} #{type}"
         end

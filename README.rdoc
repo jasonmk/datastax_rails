@@ -7,10 +7,11 @@ This gem is based heavily on the excellent CassandraObject gem (https://github.c
 did in the form of SolandraObject (https://github.com/jasonmk/solandra_object).  We made the decision to move away from Solandra and to 
 Datastax Enterprise, thus datastax_rails was born.
 
-Significant changes from DatastaxRails:
+Significant changes from SolandraObject:
 
 * Cassandra communication is now entirely CQL-based
 * Solr communication is now handled directly via RSolr
+* Bifurcation of data is no longer necessary as DSE writes data to SOLR automatically 
 
 === Usage Note
 
@@ -37,7 +38,7 @@ Configure the config/datastax.yml file:
 
 The above is configured to use NetworkTopologyStrategy.  If you go with this, you'll need to configure Datastax to use the
 NetworkTopologySnitch and set up the cassandra-topology.properties file.  See the Datastax documentation for more information.
-For a more simple setup, something like this should probably work:
+For a more simple, single datacenter setup, something like this should probably work:
 
 	development:
 	  servers: ["localhost:9160"]

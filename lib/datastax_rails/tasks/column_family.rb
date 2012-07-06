@@ -1,5 +1,13 @@
+require 'digest/sha1'
+
 module DatastaxRails
   module Tasks
+    class SchemaMigration
+      def self.column_family
+        'schema_migrations'
+      end
+    end
+    
     class ColumnFamily
       COMPARATOR_TYPES = [:blob, :ascii, :text, :varint, :bigint, :uuid, :timestamp, :boolean, :float, :doublt, :decimal]
 
@@ -64,6 +72,11 @@ module DatastaxRails
       end
       
       def upload_solr_schemas(column_family = :all)
+        # Ensure schema migrations CF exists
+        unless connection.schema.column_families['schema_migrations']
+          connection.execute_cql_query(DatastaxRails::Cql::CreateColumnFamily.new('schema_migrations').key_type(:text).to_cql)
+        end
+        
         solrconfig = File.read(File.join(File.dirname(__FILE__),"..","..","..","config","solrconfig.xml"))
         stopwords = File.read(File.join(File.dirname(__FILE__),"..","..","..","config","stopwords.txt"))
         models_to_upload = []
@@ -83,6 +96,14 @@ module DatastaxRails
         
         models_to_upload.each do |model|
           schema = generate_solr_schema(model)
+          digest = Digest::SHA1.hexdigest(solrconfig + stopwords + schema)
+          puts "New digest: #{digest}"
+          
+          results = DatastaxRails::Cql::Select.new(SchemaMigration, ['digest']).conditions(:key => model.column_family).execute
+          sm_digest = CassandraCQL::Result.new(results).fetch.to_hash.values.first
+          puts "Old digest: #{sm_digest}"
+          next if digest == sm_digest
+          
           solr_url = "#{DatastaxRails::Base.config[:solr][:url]}/resource/#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}"
           uri = URI.parse(solr_url)
           Net::HTTP.start(uri.host, uri.port) do |http|
@@ -93,6 +114,8 @@ module DatastaxRails
             puts "Posting Solr Schema file to '#{uri.path}/schema.xml'"
             http.post(uri.path+"/schema.xml", schema)
           end
+          
+          DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:digest => digest).execute
         end
       end
 
@@ -120,9 +143,6 @@ module DatastaxRails
 
         cf
       end
-
     end
-
   end
-
 end

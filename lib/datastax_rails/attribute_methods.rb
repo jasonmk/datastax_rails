@@ -56,7 +56,7 @@ module DatastaxRails
     end
 
     def read_attribute(name)
-      if(lazy_attributes.include?(name.to_sym) && @attributes[name.to_s].nil?)
+      if(lazy_attributes.include?(name.to_sym) && @attributes[name.to_s].nil? && persisted?)
         @attributes[name.to_s] = self.class.select(name).with_cassandra.find(self.id).read_attribute(name)
       end
         

@@ -3,7 +3,9 @@ require 'rsolr'
 module DatastaxRails
   class Relation
     MULTI_VALUE_METHODS = [:group, :order, :where, :where_not, :fulltext, :greater_than, :less_than, :select]
-    SINGLE_VALUE_METHODS = [:page, :per_page, :reverse_order, :query_parser, :consistency, :ttl, :use_solr]
+    SINGLE_VALUE_METHODS = [:page, :per_page, :reverse_order, :query_parser, :consistency, :ttl, :use_solr, :escape]
+    
+    SOLR_CHAR_RX = /([\+\-\!\(\)\[\]\^\"\~\*\?\:\\\'\=]+)/
     
     Relation::MULTI_VALUE_METHODS.each do |m|
       attr_accessor :"#{m}_values"
@@ -37,6 +39,7 @@ module DatastaxRails
       @consistency_value = "QUORUM"
       @extensions = []
       @create_with_value = {}
+      @escape_value = true
       apply_default_scope
     end
     
@@ -212,7 +215,6 @@ module DatastaxRails
     # works if you run against a secondary index. So this currently just
     # delegates to the count_via_solr method.
     def count_via_cql
-      # Counting via CQL does not work
       with_solr.count_via_solr
     end
     
@@ -220,7 +222,8 @@ module DatastaxRails
     # work, you need to run against either the primary key or a secondary index.
     # For ad-hoc queries, you will have to use Solr.
     def query_via_cql
-      cql = @cql.select(@klass.attribute_definitions.keys - @klass.lazy_attributes)
+      select_columns = select_values.empty? ? (@klass.attribute_definitions.keys - @klass.lazy_attributes) : select_values.flatten
+      cql = @cql.select(select_columns)
       cql.using(@consistency_value) if @consistency_value
       @where_values.each do |wv|
         cql.conditions(wv)
@@ -238,6 +241,10 @@ module DatastaxRails
       limit(1).select(:id).to_a.total_entries
     end
     
+    def solr_escape(str)
+      str.gsub(SOLR_CHAR_RX, '\\\\\1')
+    end
+    
     # Constructs a solr query to run against SOLR. At this point, only where, where_not, 
     # fulltext, order and pagination are supported.  More will be added.
     #
@@ -250,26 +257,26 @@ module DatastaxRails
       @where_values.each do |wv|
         wv.each do |k,v|
           # If v is blank, check that there is no value for the field in the document
-          filter_queries << (v.blank? ? "-#{k}:[* TO *]" : "#{k}:(#{v})")
+          filter_queries << (v.blank? ? "-#{k}:[* TO *]" : "#{k}:(#{solr_escape(v)})")
         end
       end
       
       @where_not_values.each do |wnv|
         wnv.each do |k,v|
           # If v is blank, check for any value for the field in document
-          filter_queries << (v.blank? ? "#{k}:[* TO *]" : "-#{k}:(#{v})")
+          filter_queries << (v.blank? ? "#{k}:[* TO *]" : "-#{k}:(#{solr_escape(v)})")
         end
       end
       
       @greater_than_values.each do |gtv|
         gtv.each do |k,v|
-          filter_queries << "#{k}:[#{v} TO *]"
+          filter_queries << "#{k}:[#{solr_escape(v)} TO *]"
         end
       end
       
       @less_than_values.each do |ltv|
         ltv.each do |k,v|
-          filter_queries << "#{k}:[* TO #{v}]"
+          filter_queries << "#{k}:[* TO #{solr_escape(v)}]"
         end
       end
       

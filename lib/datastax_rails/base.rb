@@ -416,7 +416,7 @@ module DatastaxRails #:nodoc:
       delegate :find, :first, :all, :exists?, :any?, :many?, :to => :scoped
       delegate :destroy, :destroy_all, :delete, :delete_all, :update, :update_all, :to => :scoped
       # delegate :find_each, :find_in_batches, :to => :scoped
-      delegate :order, :limit, :where, :where_not, :page, :paginate, :to => :scoped
+      delegate :order, :limit, :where, :where_not, :page, :paginate, :select, :to => :scoped
       delegate :per_page, :each, :group, :total_pages, :search, :fulltext, :to => :scoped
       delegate :count, :first, :first!, :last, :last!, :to => :scoped
       delegate :cql, :with_cassandra, :with_solr, :commit_solr, :to => :scoped

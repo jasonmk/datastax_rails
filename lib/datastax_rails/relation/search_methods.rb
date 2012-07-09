@@ -1,5 +1,20 @@
 module DatastaxRails
   module SearchMethods
+    
+    # Normally special characters (other than wild cards) are escaped before the search
+    # is submitted.  If you want to handle escaping yourself because you need to use
+    # those special characters, then just include this in your chain.
+    #
+    #   Model.dont_escape.where("(some stuff I don\'t want escaped)")
+    #
+    # Note that fulltext searches are NEVER escaped.  Use Relation.solr_escape if you
+    # want that done.
+    def dont_escape
+      clone.tap do |r|
+        r.escape_value = false
+      end
+    end
+    
     # Used to extend a scope with additional methods, either through 
     # a module or a block provided
     #

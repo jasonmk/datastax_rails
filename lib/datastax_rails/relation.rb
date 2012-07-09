@@ -5,7 +5,7 @@ module DatastaxRails
     MULTI_VALUE_METHODS = [:group, :order, :where, :where_not, :fulltext, :greater_than, :less_than, :select]
     SINGLE_VALUE_METHODS = [:page, :per_page, :reverse_order, :query_parser, :consistency, :ttl, :use_solr, :escape]
     
-    SOLR_CHAR_RX = /([\+\-\!\(\)\[\]\^\"\~\*\?\:\\\'\=]+)/
+    SOLR_CHAR_RX = /([\+\!\(\)\[\]\^\"\~\:\'\=]+)/
     
     Relation::MULTI_VALUE_METHODS.each do |m|
       attr_accessor :"#{m}_values"
@@ -242,7 +242,11 @@ module DatastaxRails
     end
     
     def solr_escape(str)
-      str.gsub(SOLR_CHAR_RX, '\\\\\1')
+      if str.is_a?(String) && escape_value
+        str.gsub(SOLR_CHAR_RX, '\\\\\1')
+      else
+        str
+      end
     end
     
     # Constructs a solr query to run against SOLR. At this point, only where, where_not, 

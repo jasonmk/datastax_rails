@@ -13,7 +13,8 @@ describe DatastaxRails::Base do
       it "should look up the owning model by id" do
         person = Person.create(:name => "John")
         job = Job.create(:title => "Developer", :person_id => person.id)
-        Person.scoped.commit_solr
+        Person.commit_solr
+        Job.commit_solr
         Job.first.person.should == person
       end
     end

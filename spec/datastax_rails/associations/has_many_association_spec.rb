@@ -5,8 +5,10 @@ describe DatastaxRails::Base do
     it "should destroy all objects with :dependent => :destroy" do
       p = Person.create(:name => "jason")
       Car.create(:name => "Jeep", :person_id => p.id)
+      Car.commit_solr
       p.destroy
       Car.commit_solr
+      Person.commit_solr
       Car.count.should == 0
     end
     
@@ -28,6 +30,7 @@ describe DatastaxRails::Base do
       p = Person.create(:name => 'jason')
       p.cars.create(:name => 'Jeep')
       Car.commit_solr
+      Person.commit_solr
       Car.first.person.should == p
     end
   end

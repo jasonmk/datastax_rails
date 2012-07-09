@@ -4,7 +4,7 @@ namespace :ds do
     @config = @configs[Rails.env || 'development']
   end
 
-  desc 'Create the keyspace in config/cassandra.yml for the current environment'
+  desc 'Create the keyspace in config/datastax.yml for the current environment'
   task :create do
     @configs = YAML.load_file(Rails.root.join("config", "datastax.yml"))
     @config = @configs[Rails.env || 'development']
@@ -13,7 +13,7 @@ namespace :ds do
   end
 
   namespace :create do
-    desc 'Create keyspaces in config/cassandra.yml for all environments'
+    desc 'Create keyspaces in config/datastax.yml for all environments'
     task :all => :configure do
       created = []
       @configs.values.each do |config|
@@ -24,14 +24,14 @@ namespace :ds do
     end
   end
 
-  desc 'Drop keyspace in config/cassandra.yml for the current environment'
+  desc 'Drop keyspace in config/datastax.yml for the current environment'
   task :drop => :configure do
     DatastaxRails::Tasks::Keyspace.drop @config['keyspace']
     puts "Dropped keyspace: #{@config['keyspace']}"
   end
 
   namespace :drop do
-    desc 'Drop keyspaces in config/cassandra.yml for all environments'
+    desc 'Drop keyspaces in config/datastax.yml for all environments'
     task :all => :configure do
       dropped = []
       @configs.values.each do |config|
@@ -47,14 +47,7 @@ namespace :ds do
     cf.upload_solr_schemas
   end
 
-  desc 'Migrate the keyspace (options: VERSION=x)'
-  task :migrate => :configure do
-    version = ( ENV['VERSION'] ? ENV['VERSION'].to_i : nil )
-    DatastaxRails::Schema::Migrator.migrate DatastaxRails::Schema::Migrator.migrations_path, version
-    schema_dump
-  end
-
-  desc 'Load the seed data from ks/seeds.rb'
+  desc 'Load the seed data from ds/seeds.rb'
   task :seed => :environment do
     seed_file = Rails.root.join("ks","seeds.rb")
     load(seed_file) if seed_file.exist?

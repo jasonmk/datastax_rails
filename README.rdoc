@@ -28,25 +28,29 @@ First add it to your Gemfile:
 
 Configure the config/datastax.yml file:
 
-	development:
-	  servers: ["localhost:9160"]
-	  keyspace: "<my_app>_development"
-	  strategy_class: "org.apache.cassandra.locator.NetworkTopologyStrategy"
-	  strategy_options: {"DC1": "1"} 
-	  solr:
-	    url: http://localhost:8983/solr
+  development:
+    servers: ["localhost:9160"]
+    keyspace: "<my_app>_development"
+    strategy_class: "org.apache.cassandra.locator.NetworkTopologyStrategy"
+    strategy_options: {"DC1": "1"} 
+    connection_options:
+      timeout: 2
+    solr:
+      url: http://localhost:8983/solr
 
 The above is configured to use NetworkTopologyStrategy.  If you go with this, you'll need to configure Datastax to use the
 NetworkTopologySnitch and set up the cassandra-topology.properties file.  See the Datastax documentation for more information.
 For a more simple, single datacenter setup, something like this should probably work:
 
-	development:
-	  servers: ["localhost:9160"]
-	  keyspace: "<my_app>_development"
-	  strategy_class: "org.apache.cassandra.locator.SimpleStrategy"
-	  strategy_options: {"replication_factor": "1"} 
-	  solr:
-	    url: http://localhost:8983/solr
+  development:
+    servers: ["localhost:9160"]
+    keyspace: "<my_app>_development"
+    strategy_class: "org.apache.cassandra.locator.SimpleStrategy"
+    strategy_options: {"replication_factor": "1"}
+    connection_options:
+      timeout: 2 
+    solr:
+      url: http://localhost:8983/solr
 
 Create your keyspace:
 

@@ -14,7 +14,8 @@ module DatastaxRails
       def establish_connection(spec)
         DatastaxRails::Base.config = spec.with_indifferent_access
         spec.reverse_merge!(DEFAULT_OPTIONS)
-        self.connection = CassandraCQL::Database.new(spec[:servers], :keyspace => spec[:keyspace])
+        connection_options = spec[:connection_options] || {}
+        self.connection = CassandraCQL::Database.new(spec[:servers], {:keyspace => spec[:keyspace]}, connection_options.symbolize_keys)
       end
     end
   end

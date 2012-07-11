@@ -60,3 +60,8 @@ Once you've created some models, the following will upload the solr schemas and 
 
 It is safe to run ds:schema over and over.  In fact, it is necessary to re-run it any time you change the
 attributes on any model.  DSR will only upload schema files if they have changed.
+
+=== Known issues
+
+Calling :find on a model with a bogus ID returns an empty model instead of RecordNotFound.  This is due to a bug
+in DSE that is supposedly fixed in the upcoming 2.2 release.

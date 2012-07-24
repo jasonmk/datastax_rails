@@ -94,6 +94,13 @@ describe DatastaxRails::Relation do
       @relation.commit_solr
       @relation.where(:name => ['horseback riding', 'some other hobby']).should_not be_empty
     end
+    
+    it "should search for values within a range" do
+      Hobby.create(:name => 'jobbing', :complexity => 1.2)
+      @relation.commit_solr
+      @relation.where(:complexity => 1..2).should_not be_empty
+      @relation.where(:complexity => 2..3).should be_empty
+    end
   end
   
   describe "#where_not" do

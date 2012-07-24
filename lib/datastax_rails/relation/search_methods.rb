@@ -297,13 +297,15 @@ module DatastaxRails
     def solr_format(value)
       case
         when value.is_a?(Date), value.is_a?(Time)
-          value.strftime('%Y-%m-%dT%H\:%M\:%SZ')
+          value.strftime('%Y-%m-%dT%H:%M:%SZ')
         when value.is_a?(Array)
           value.collect {|v| v.gsub(/ /,"\\ ") }.join(" OR ")
         when value.is_a?(Fixnum)
           value < 0 ? "\\#{value}" : value
+        when value.is_a?(Range)
+          "[#{solr_format(value.first)} TO #{solr_format(value.last)}]"
         when value.is_a?(String)
-          value.gsub(/ /,"\\ ")
+          solr_escape(downcase_query(value.gsub(/ /,"\\ ")))
         else
           value
       end

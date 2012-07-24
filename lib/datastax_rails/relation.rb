@@ -261,26 +261,26 @@ module DatastaxRails
       @where_values.each do |wv|
         wv.each do |k,v|
           # If v is blank, check that there is no value for the field in the document
-          filter_queries << (v.blank? ? "-#{k}:[* TO *]" : "#{k}:(#{solr_escape(v)})")
+          filter_queries << (v.blank? ? "-#{k}:[* TO *]" : "#{k}:(#{v})")
         end
       end
       
       @where_not_values.each do |wnv|
         wnv.each do |k,v|
           # If v is blank, check for any value for the field in document
-          filter_queries << (v.blank? ? "#{k}:[* TO *]" : "-#{k}:(#{solr_escape(v)})")
+          filter_queries << (v.blank? ? "#{k}:[* TO *]" : "-#{k}:(#{v})")
         end
       end
       
       @greater_than_values.each do |gtv|
         gtv.each do |k,v|
-          filter_queries << "#{k}:[#{solr_escape(v)} TO *]"
+          filter_queries << "#{k}:[#{v} TO *]"
         end
       end
       
       @less_than_values.each do |ltv|
         ltv.each do |k,v|
-          filter_queries << "#{k}:[* TO #{solr_escape(v)}]"
+          filter_queries << "#{k}:[* TO #{v}]"
         end
       end
       
@@ -360,7 +360,7 @@ module DatastaxRails
     # then analysis isn't performed.  This means that the query does not get downcased.
     # We therefore need to perform the downcasing ourselves.  This does it while still
     # leaving boolean operations (AND, OR, NOT) upcased.
-    def self.downcase_query(value)
+    def downcase_query(value)
       if(value.is_a?(String))
         value.split(/\bAND\b/).collect do |a|
           a.split(/\bOR\b/).collect do |o| 

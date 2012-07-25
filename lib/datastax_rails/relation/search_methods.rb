@@ -277,7 +277,7 @@ module DatastaxRails
     def fulltext(query, opts = {})
       return self if query.blank?
       
-      opts[:query] = query
+      opts[:query] = downcase_query(query)
       
       clone.tap do |r|
         r.fulltext_values << opts

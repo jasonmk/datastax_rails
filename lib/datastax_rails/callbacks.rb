@@ -22,11 +22,11 @@ module DatastaxRails
     end
 
     private
-      def create_or_update #:nodoc:
+      def create_or_update(*) #:nodoc:
         _run_save_callbacks { super }
       end
 
-      def create #:nodoc:
+      def create(*) #:nodoc:
         _run_create_callbacks { super }
       end
 

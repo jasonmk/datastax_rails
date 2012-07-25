@@ -119,6 +119,10 @@ describe DatastaxRails::Relation do
   end
   
   describe "#fulltext" do
-    
+    it "should allow case-insensitive wildcard searches" do
+      Hobby.create(:name => "Swimming")
+      @relation.commit_solr
+      @relation.fulltext("swimming").should_not be_empty
+    end
   end
 end

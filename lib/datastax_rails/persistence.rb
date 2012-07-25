@@ -2,25 +2,32 @@ module DatastaxRails
   module Persistence
     extend ActiveSupport::Concern
     
+    included do
+      attr_accessor :ds_consistency_level
+    end
+    
     module ClassMethods
+      # Removes one or more records with corresponding keys
       def remove(*keys)
         ActiveSupport::Notifications.instrument("remove.datastax_rails", :column_family => column_family, :key => key) do
           cql.delete(keys).using(thrift_write_consistency).execute
         end
       end
 
+      # Truncates the column_family associated with this class
       def delete_all
         ActiveSupport::Notifications.instrument("truncate.datastax_rails", :column_family => column_family) do
           cql.truncate.execute
         end
       end
+      alias :truncate :delete_all
 
-      def create(attributes = {})
-        new(attributes).tap do |object|
-          object.save
+      def create(attributes = {}, options = {}, &block)
+        new(attributes, &block).tap do |object|
+          object.save(options)
         end
       end
-
+      
       def write(key, attributes, schema_version)
         key.tap do |key|
           attributes = encode_attributes(attributes, schema_version)
@@ -70,16 +77,16 @@ module DatastaxRails
       !(new_record? || destroyed?)
     end
 
-    def save(*)
+    def save(options = {})
       begin
-        create_or_update
+        create_or_update(options)
       rescue DatastaxRails::RecordInvalid
         false
       end
     end
 
-    def save!
-      create_or_update || raise(RecordNotSaved)
+    def save!(options = {})
+      create_or_update(options) || raise(RecordNotSaved)
     end
 
     def destroy
@@ -88,20 +95,20 @@ module DatastaxRails
       freeze
     end
 
-    def update_attribute(name, value)
+    def update_attribute(name, value, options = {})
       name = name.to_s
       send("#{name}=", value)
-      save(:validate => false)
+      save(options.merge(:validate => false))
     end
 
-    def update_attributes(attributes)
+    def update_attributes(attributes, options = {})
       self.attributes = attributes
-      save
+      save(options)
     end
 
-    def update_attributes!(attributes)
+    def update_attributes!(attributes, options = {})
       self.attributes = attributes
-      save!
+      save!(options)
     end
 
     def reload
@@ -109,23 +116,23 @@ module DatastaxRails
     end
 
     private
-      def create_or_update
-        result = new_record? ? create : update
+      def create_or_update(options)
+        result = new_record? ? create(options) : update(options)
         result != false
       end
 
-      def create
+      def create(options)
         @key ||= self.class.next_key(self)
-        write
+        write(options)
         @new_record = false
         @key
       end
     
-      def update
-        write
+      def update(options)
+        write(options)
       end
       
-      def write #:nodoc:
+      def write(options) #:nodoc:
         changed_attributes = changed.inject({}) { |h, n| h[n] = read_attribute(n); h }
         self.class.write(key, changed_attributes, schema_version)
       end

@@ -42,9 +42,10 @@ namespace :ds do
     end
   end
   
-  task :schema => :configure do
+  desc 'Upload SOLR schemas -- pass in CF name to force an upload (all uploads everything).'
+  task :schema, [:force_cf] => :configure do |t, args|
     cf = DatastaxRails::Tasks::ColumnFamily.new(@config['keyspace'])
-    cf.upload_solr_schemas
+    cf.upload_solr_schemas(args[:force_cf])
   end
 
   desc 'Load the seed data from ds/seeds.rb'

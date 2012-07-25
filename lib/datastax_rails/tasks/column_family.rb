@@ -77,7 +77,9 @@ module DatastaxRails
         return ERB.new(File.read(File.join(File.dirname(__FILE__),"..","..","..","config","schema.xml.erb"))).result(binding)
       end
       
-      def upload_solr_schemas(column_family = :all)
+      def upload_solr_schemas(column_family)
+        force = !column_family.nil?
+        column_family ||= :all
         # Ensure schema migrations CF exists
         unless connection.schema.column_families['schema_migrations']
           connection.execute_cql_query(DatastaxRails::Cql::CreateColumnFamily.new('schema_migrations').key_type(:text).to_cql)
@@ -90,7 +92,7 @@ module DatastaxRails
         
         models_to_upload = []
         
-        if column_family == :all
+        if column_family.to_sym == :all
           # Ensure all models are loaded
           Dir[Rails.root.join("app","models",'*.rb').to_s].each do |file| 
             require File.basename(file, File.extname(file))
@@ -113,23 +115,22 @@ module DatastaxRails
           solr_url = "#{DatastaxRails::Base.config[:solr][:url]}/resource/#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}"
           uri = URI.parse(solr_url)
           Net::HTTP.start(uri.host, uri.port) do |http|
-            if solrconfig_digest != sm_digests['solrconfig'] 
+            if force || solrconfig_digest != sm_digests['solrconfig'] 
               puts "Posting Solr Config file to '#{uri.path}/solrconfig.xml'"
               http.post(uri.path+"/solrconfig.xml", solrconfig)
               DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:solrconfig => solrconfig_digest).execute
             end
-            if stopwords_digest != sm_digests['stopwords']
+            if force || stopwords_digest != sm_digests['stopwords']
               puts "Posting Solr Stopwords file to '#{uri.path}/stopwords.txt'"
               http.post(uri.path+"/stopwords.txt", stopwords)
               DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:stopwords => stopwords_digest).execute
             end
-            if schema_digest != sm_digests['digest']
+            if force || schema_digest != sm_digests['digest']
               puts "Posting Solr Schema file to '#{uri.path}/schema.xml'"
               http.post(uri.path+"/schema.xml", schema)
               DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:digest => schema_digest).execute
             end
           end
-          
         end
       end
 

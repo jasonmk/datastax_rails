@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
   s.add_dependency "cassandra-cql"
   s.add_dependency "rsolr", "~> 1.0.7"
   
-  s.add_development_dependency "rspec-rails", "~> 2.9.0"
+  s.add_development_dependency "rspec-rails"
   s.add_development_dependency "ruby-debug"
   s.add_development_dependency "rcov"
 end

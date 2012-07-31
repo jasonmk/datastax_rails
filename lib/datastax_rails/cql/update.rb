@@ -34,6 +34,7 @@ module DatastaxRails
       end
       
       def to_cql
+        columns = @columns.dup
         values = []
         
         stmt = "update #{@klass.column_family} using consistency #{@consistency} "
@@ -46,16 +47,18 @@ module DatastaxRails
           stmt << "AND TIMESTAMP #{@timestamp}"
         end
         
-        stmt << "SET "
-        
-        first_entry = @columns.shift
-        
-        stmt << "#{first_entry.first.to_s} = ? "
-        values << first_entry.last
-        
-        @columns.each do |k,v|
-          stmt << ", #{k.to_s} = ? "
-          values << v
+        unless columns.empty?
+          stmt << "SET "
+          
+          first_entry = columns.shift
+          
+          stmt << "#{first_entry.first.to_s} = ? "
+          values << first_entry.last
+          
+          columns.each do |k,v|
+            stmt << ", #{k.to_s} = ? "
+            values << v
+          end
         end
         
         stmt << "WHERE KEY IN (?)"

@@ -28,11 +28,13 @@ module DatastaxRails
         end
       end
       
-      def write(key, attributes, schema_version)
+      def write(key, attributes, options = {})
         key.tap do |key|
-          attributes = encode_attributes(attributes, schema_version)
+          attributes = encode_attributes(attributes, options[:schema_version])
+          consistency = options[:consistency] || thrift_write_consistency
           ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => key, :attributes => attributes) do
-            cql.update(key.to_s).columns(attributes).using(thrift_write_consistency).execute
+            c = cql.update(key.to_s).columns(attributes).using(consistency)
+            c.execute
           end
         end
       end
@@ -134,7 +136,7 @@ module DatastaxRails
       
       def write(options) #:nodoc:
         changed_attributes = changed.inject({}) { |h, n| h[n] = read_attribute(n); h }
-        self.class.write(key, changed_attributes, schema_version)
+        self.class.write(key, changed_attributes, options.merge(:schema_version => schema_version))
       end
   end
 end

@@ -36,7 +36,6 @@ module DatastaxRails
       @per_page_value = @klass.default_page_size
       @page_value = 1
       @use_solr_value = true
-      @consistency_value = "QUORUM"
       @extensions = []
       @create_with_value = {}
       @escape_value = true
@@ -241,6 +240,9 @@ module DatastaxRails
       limit(1).select(:id).to_a.total_entries
     end
     
+    # Escapes values that might otherwise mess up the URL or confuse SOLR.
+    # If you want to handle escaping yourself for a particular query then
+    # SearchMethods#dont_escape is what you're looking for.
     def solr_escape(str)
       if str.is_a?(String) && escape_value
         str.gsub(SOLR_CHAR_RX, '\\\\\1')
@@ -317,9 +319,17 @@ module DatastaxRails
       response = rsolr.paginate(@page_value, @per_page_value, 'select', :params => params)["response"]
       results = DatastaxRails::Collection.new
       results.total_entries = response['numFound'].to_i
-      response['docs'].each do |doc|
-        key = doc.delete('id')
-        results << @klass.instantiate(key,doc)
+      if @consistency_value
+        response['docs'].each do |doc|
+          id = doc['id']
+          obj = @klass.with_cassandra.consistency(@consistency_value).find_by_id(id)
+          results << obj if obj
+        end
+      else
+        response['docs'].each do |doc|
+          key = doc.delete('id')
+          results << @klass.instantiate(key,doc)
+        end
       end
       results
     end

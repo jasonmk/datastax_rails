@@ -5,6 +5,24 @@ describe DatastaxRails::Relation do
     @relation = DatastaxRails::Relation.new(Hobby, "hobbies")
   end
   
+  describe "#consistency" do
+    it "should throw an ArgumentError for invalid consistency levels" do
+      lambda { @relation.consistency(:foo) }.should raise_exception(ArgumentError)
+    end
+    
+    it "should not raise an exception for a valid consistency level" do
+      lambda { @relation.consistency(:local_quorum) }.should_not raise_exception
+    end
+    
+    it "should call cassandra to enforce consistency" do
+      h=Hobby.create(:name => 'swimming')
+      Hobby.commit_solr
+      Hobby.stub_chain(:with_cassandra,:consistency).and_return(@relation)
+      @relation.should_receive(:find_by_id).with(h.id)
+      @relation.consistency(:all).where(:name => 'swimming').all
+    end
+  end
+  
   describe "#limit" do
     it "should limit the page size" do
       "a".upto("l") do |letter|

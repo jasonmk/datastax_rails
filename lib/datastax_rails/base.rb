@@ -133,6 +133,25 @@ module DatastaxRails #:nodoc:
   #   user.name = "David"
   #   user.occupation = "Code Artist"
   #
+  # == Consistency
+  #
+  # Cassandra has a concept of consistency levels when it comes to saving records.  For a
+  # detailed discussion on Cassandra data consistency, see:
+  # http://www.datastax.com/docs/1.0/dml/data_consistency
+  #
+  # DatastaxRails allows you to specify the consistency when you save and retrieve objects.
+  #
+  #   user = User.new(:name => 'David')
+  #   user.save(:consistency => 'ALL')
+  #
+  #   User.create(params[:user], {:consistency => :local_quorum})
+  #
+  #   User.consistency(:local_quorum).where(:name => 'David')
+  #
+  # The default consistency level in DatastaxRails is QUORUM for writes and for retrieval
+  # by ID.  SOLR only supports a consistency level of ONE.  See the documentation for
+  # SearchMethods#consistency for a more detailed explanation.
+  #
   # == Conditions
   #
   # Conditions are specified as a hash representing key/value pairs that will eventually be passed to SOLR or as
@@ -403,6 +422,10 @@ module DatastaxRails #:nodoc:
       self.class.attribute_names
     end
     
+    def valid_consistency?(level) #:nodoc:
+      self.class.validate_consistency(level)
+    end
+    
     private
       def populate_with_current_scope_attributes
         return unless self.class.scope_attributes?
@@ -484,6 +507,10 @@ module DatastaxRails #:nodoc:
       def search_ids(&block)
         search = solr_search(&block)
         search.raw_results.map { |result| result.primary_key }
+      end
+      
+      def valid_consistency?(level) #:nodoc:
+        DatastaxRails::Cql::Consistency::VALID_CONSISTENCY_LEVELS.include?(level)
       end
       
       protected

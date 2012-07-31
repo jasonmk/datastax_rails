@@ -1,6 +1,31 @@
 module DatastaxRails
   module SearchMethods
     
+    # The default consistency level for DSR is QUORUM when searching by ID.
+    # For all searches using SOLR, the default consistency is ONE.  Use this
+    # to override it in either case.
+    # 
+    #   Model.consistency(:local_quorum).find("12345")
+    #
+    # Note that Solr searches (basically anything but find by id) don't allow you
+    # to specify the consistency level.  DSR sort of gets around this by taking the
+    # search results and then going to Cassandra to retrieve the objects by ID using
+    # the consistency you specified.  However, it is possible that you might not get
+    # all of the records you are expecting if the SOLR node you were talking to hasn't
+    # been updated yet with the results.  In practice, this should not happen for
+    # records that were created over your connection, but it is possible for other
+    # connections to create records that you can't see yet.
+    def consistency(level)
+      level = level.to_s.upcase
+      unless self.valid_consistency?(level)
+        raise ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
+      end
+      
+      clone.tap do |r|
+        r.consistency_value = level
+      end
+    end 
+    
     # Normally special characters (other than wild cards) are escaped before the search
     # is submitted.  If you want to handle escaping yourself because you need to use
     # those special characters, then just include this in your chain.

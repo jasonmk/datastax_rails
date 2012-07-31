@@ -1,3 +1,4 @@
-module DatastaxRails #:nodoc:
-  VERSION = "1.0.7" #:nodoc:
+module DatastaxRails
+  # The current version of the gem
+  VERSION = "1.0.7"
 end

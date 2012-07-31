@@ -1,6 +1,7 @@
 require 'active_support/all'
 require 'cassandra-cql/1.0'
 
+# Welcome to DatastaxRails.  DatastaxRails::Base is probably a good place to start.
 module DatastaxRails
   extend ActiveSupport::Autoload
   

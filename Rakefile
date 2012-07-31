@@ -16,6 +16,7 @@ RDoc::Task.new(:rdoc) do |rdoc|
   rdoc.rdoc_dir = 'rdoc'
   rdoc.title    = 'DatastaxRails'
   rdoc.options << '--line-numbers'
+  rdoc.options << '--main=README.rdoc'
   rdoc.rdoc_files.include('README.rdoc')
   rdoc.rdoc_files.include('lib/**/*.rb')
 end

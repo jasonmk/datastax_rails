@@ -1,16 +1,16 @@
 module DatastaxRails
-  class DatastaxRailsError < StandardError
+  class DatastaxRailsError < StandardError #:nodoc:
   end
   
-  class AssociationTypeMismatch < DatastaxRailsError
+  class AssociationTypeMismatch < DatastaxRailsError #:nodoc:
   end
   
-  class RecordNotSaved < DatastaxRailsError
+  class RecordNotSaved < DatastaxRailsError #:nodoc:
   end
   
-  class DeleteRestrictionError < DatastaxRailsError
+  class DeleteRestrictionError < DatastaxRailsError #:nodoc:
   end
   
-  class RecordNotFound < DatastaxRailsError
+  class RecordNotFound < DatastaxRailsError #:nodoc:
   end
 end

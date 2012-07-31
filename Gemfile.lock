@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    datastax_rails (1.0.6)
+    datastax_rails (1.0.7)
       cassandra-cql
       rails (~> 3.2.1)
       rsolr (~> 1.0.7)

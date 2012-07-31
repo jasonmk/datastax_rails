@@ -1,8 +1,8 @@
 require 'active_support/core_ext/class/attribute'
 require 'active_support/core_ext/object/inclusion'
 
-# This is shamelessly ripped from Active Record 3.1
 module DatastaxRails
+  # This is shamelessly ripped from Active Record 3.1
   # = DatastaxRails Reflection
   module Reflection # :nodoc:
     extend ActiveSupport::Concern

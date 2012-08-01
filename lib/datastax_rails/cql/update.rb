@@ -4,8 +4,8 @@ module DatastaxRails
       def initialize(klass, key)
         @klass = klass
         @key = key
-        @consistency = DatastaxRails::Cql::Consistency::QUORUM
         @columns = {}
+        super
       end
       
       def using(consistency)
@@ -52,16 +52,16 @@ module DatastaxRails
           
           first_entry = columns.shift
           
-          stmt << "#{first_entry.first.to_s} = ? "
+          stmt << "#{first_entry.first.to_s} = ?"
           values << first_entry.last
           
           columns.each do |k,v|
-            stmt << ", #{k.to_s} = ? "
+            stmt << ", #{k.to_s} = ?"
             values << v
           end
         end
         
-        stmt << "WHERE KEY IN (?)"
+        stmt << " WHERE KEY IN (?)"
         values << @key
         
         CassandraCQL::Statement.sanitize(stmt, values)

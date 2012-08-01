@@ -3,10 +3,10 @@ module DatastaxRails
     class Insert < Base
       def initialize(klass)
         @klass = klass
-        @consistency = DatastaxRails::Cql::Consistency::QUORUM
         @ttl = nil
         @timestamp = nil
         @columns = {}
+        super
       end
       
       def using(consistency)

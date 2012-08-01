@@ -12,7 +12,6 @@ module DatastaxRails
   autoload :Callbacks
   autoload :Collection
   autoload :Connection
-  autoload :Consistency
   autoload :Cql
   autoload :Cursor
   autoload :Identity

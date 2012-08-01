@@ -17,7 +17,7 @@ module DatastaxRails
       define_model_callbacks :save, :create, :update, :destroy
     end
 
-    def destroy #:nodoc:
+    def destroy(*) #:nodoc:
       _run_destroy_callbacks { super }
     end
 

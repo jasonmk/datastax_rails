@@ -9,8 +9,21 @@ module DatastaxRails
     module ClassMethods
       # Removes one or more records with corresponding keys
       def remove(*keys)
+        options = {}
+        if keys.last.is_a?(Hash)
+          options = keys.pop
+        end
         ActiveSupport::Notifications.instrument("remove.datastax_rails", :column_family => column_family, :key => key) do
-          cql.delete(keys).using(thrift_write_consistency).execute
+          c = cql.delete(keys)
+          if(options[:consistency])
+            level = options[:consistency].to_s.upcase
+            if(valid_consistency?(level))
+              c.using(level)
+            else
+              raise ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
+            end
+          end
+          c.execute
         end
       end
 
@@ -31,9 +44,16 @@ module DatastaxRails
       def write(key, attributes, options = {})
         key.tap do |key|
           attributes = encode_attributes(attributes, options[:schema_version])
-          consistency = options[:consistency] || thrift_write_consistency
           ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => key, :attributes => attributes) do
-            c = cql.update(key.to_s).columns(attributes).using(consistency)
+            c = cql.update(key.to_s).columns(attributes)
+            if(options[:consistency])
+              level = options[:consistency].to_s.upcase
+              if(valid_consistency?(level))
+                c.using(options[:consistency])
+              else
+                raise ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
+              end
+            end
             c.execute
           end
         end
@@ -91,8 +111,8 @@ module DatastaxRails
       create_or_update(options) || raise(RecordNotSaved)
     end
 
-    def destroy
-      self.class.remove(key)
+    def destroy(options = {})
+      self.class.remove(key, options)
       @destroyed = true
       freeze
     end

@@ -3,6 +3,7 @@ module DatastaxRails
     class Truncate < Base
       def initialize(klass)
         @klass = klass
+        super
       end
       
       def to_cql

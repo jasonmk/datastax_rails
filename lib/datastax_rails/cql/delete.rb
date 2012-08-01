@@ -4,9 +4,9 @@ module DatastaxRails
       def initialize(klass, keys)
         @klass = klass
         @keys = keys
-        @consistency = DatastaxRails::Cql::Consistency::QUORUM
         @timestamp = nil
         @columns = []
+        super
       end
       
       def using(consistency)

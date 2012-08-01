@@ -17,7 +17,6 @@ module DatastaxRails
   autoload :Cursor
   autoload :Identity
   autoload :Migrations
-  #autoload :Mocking
   autoload :Persistence
   autoload :Reflection
   autoload :Relation
@@ -70,8 +69,9 @@ module DatastaxRails
   end
 end
 
-# Fixup the thrift library
 require "thrift"
+# Thrift is how we communicate with Cassandra.  We need to do a little fixup
+# work to handle UTF-8 properly in Ruby 1.8.6.
 module Thrift
   class BinaryProtocol
     def write_string(str)
@@ -83,6 +83,5 @@ end
 
 require 'datastax_rails/railtie' if defined?(Rails)
 require 'datastax_rails/errors'
-# require 'solr_no_escape'
 
 ActiveSupport.run_load_hooks(:datastax_rails, DatastaxRails::Base)

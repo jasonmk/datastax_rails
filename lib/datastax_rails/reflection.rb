@@ -131,7 +131,7 @@ module DatastaxRails
 
     # Holds all the meta-data about an association as it was specified in the
     # DatastaxRails class.
-    class AssociationReflection < MacroReflection #:nodoc:
+    class AssociationReflection < MacroReflection
       # Returns the target association's class.
       #
       #   class Author < DatastaxRails::Base

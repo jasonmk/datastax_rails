@@ -7,7 +7,18 @@ module DatastaxRails
     end
     
     module ClassMethods
-      # Removes one or more records with corresponding keys
+      # Removes one or more records with corresponding keys.  Last parameter can be a hash
+      # specifying the consistency level.
+      #
+      #   Model.remove('12345','67890', :consistency => 'LOCAL_QUORUM)
+      #
+      # @overload remove(*keys, options)
+      #   Removes one or more keys with the given options
+      #   @param [String] keys one or more keys to delete
+      #   @param [Hash] options generally the consistency level to set
+      # @overload remove(*keys)
+      #   Removes one or more keys with the default options
+      #   @param [String] keys one or more keys to delete
       def remove(*keys)
         options = {}
         if keys.last.is_a?(Hash)
@@ -28,12 +39,12 @@ module DatastaxRails
       end
 
       # Truncates the column_family associated with this class
-      def delete_all
+      def truncate
         ActiveSupport::Notifications.instrument("truncate.datastax_rails", :column_family => column_family) do
           cql.truncate.execute
         end
       end
-      alias :truncate :delete_all
+      alias :delete_all :truncate
 
       def create(attributes = {}, options = {}, &block)
         new(attributes, &block).tap do |object|
@@ -41,6 +52,13 @@ module DatastaxRails
         end
       end
       
+      # Write a record to cassandra.  Can be either an insert or an update (they are exactly the same to cassandra)
+      #
+      # @param [String] key the primary key for the record
+      # @param [Hash] attributes a hash containing the columns to set on the record
+      # @param [Hash] options a hash containing various options
+      # @option options [Symbol] :consistency the consistency to set for the Cassandra operation (e.g., ALL)
+      # @option options [String] :schema_version the version of the schema to set for this record
       def write(key, attributes, options = {})
         key.tap do |key|
           attributes = encode_attributes(attributes, options[:schema_version])

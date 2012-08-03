@@ -53,11 +53,13 @@ module DatastaxRails
     
     def write_attribute(name, value)
       @attributes[name.to_s] = self.class.typecast_attribute(self, name, value)
+      loaded_attributes[name] = true
     end
 
     def read_attribute(name)
-      if(lazy_attributes.include?(name.to_sym) && @attributes[name.to_s].nil? && persisted?)
+      if(!loaded_attributes[name] && persisted?)
         @attributes[name.to_s] = self.class.select(name).with_cassandra.find(self.id).read_attribute(name)
+        loaded_attributes[name] = true
       end
         
       @attributes[name.to_s]

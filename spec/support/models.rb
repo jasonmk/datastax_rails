@@ -33,6 +33,7 @@ class Car < DatastaxRails::Base
   key :uuid
   string :name
   string :person_id
+  binary :picture
   timestamps
 end
 

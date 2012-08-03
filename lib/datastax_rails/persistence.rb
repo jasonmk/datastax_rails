@@ -77,13 +77,14 @@ module DatastaxRails
         end
       end
 
-      def instantiate(key, attributes)
+      def instantiate(key, attributes, selected_attributes = [])
         allocate.tap do |object|
+          object.instance_variable_set("@loaded_attributes", {}.with_indifferent_access)
           object.instance_variable_set("@schema_version", attributes.delete('schema_version'))
           object.instance_variable_set("@key", parse_key(key)) if key
           object.instance_variable_set("@new_record", false)
           object.instance_variable_set("@destroyed", false)
-          object.instance_variable_set("@attributes", typecast_attributes(object, attributes))
+          object.instance_variable_set("@attributes", typecast_attributes(object, attributes, selected_attributes))
         end
       end
 
@@ -93,15 +94,37 @@ module DatastaxRails
           if value.nil?
             encoded[column_name.to_s] = ""
           else
-            encoded[column_name.to_s] = attribute_definitions[column_name.to_sym].coder.encode(value)
+            encoded_value = attribute_definitions[column_name.to_sym].coder.encode(value)
+            if(encoded_value.is_a?(Array))
+              encoded_value.each_with_index do |chunk,i|
+                encoded[column_name.to_s + "_chunk_#{'%05d' % i}"] = chunk
+              end
+            else
+              encoded[column_name.to_s] = encoded_value
+            end
           end
         end
         encoded
       end
 
-      def typecast_attributes(object, attributes)
+      def typecast_attributes(object, attributes, selected_attributes = [])
         attributes = attributes.symbolize_keys
-        Hash[attribute_definitions.map { |k, attribute_definition| [k.to_s, attribute_definition.instantiate(object, attributes[k])] }]
+        casted = {}
+        
+        selected_attributes.each do |att|
+          object.loaded_attributes[att] = true
+        end
+        
+        attribute_definitions.each do |k,definition|
+          if(definition.coder.is_a?(DatastaxRails::Types::BinaryType))
+            # Need to handle possibly chunked data
+            chunks = attributes.select {|key,value| key.to_s =~ /#{k.to_s}_chunk_\d+/ }.sort {|a,b| a.first.to_s <=> b.first.to_s}.collect {|c| c.last}
+            casted[k.to_s] = definition.instantiate(object, chunks)
+          else
+            casted[k.to_s] = definition.instantiate(object, attributes[k])
+          end
+        end
+        casted
       end
     end
 

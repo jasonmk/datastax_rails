@@ -222,14 +222,22 @@ module DatastaxRails
     # For ad-hoc queries, you will have to use Solr.
     def query_via_cql
       select_columns = select_values.empty? ? (@klass.attribute_definitions.keys - @klass.lazy_attributes) : select_values.flatten
-      cql = @cql.select(select_columns)
+      select = []
+      select_columns.each do |col|
+        if @klass.attribute_definitions[col.to_sym] && @klass.attribute_definitions[col.to_sym].coder.is_a?(DatastaxRails::Types::BinaryType)
+          select << "'#{col}_chunk_00000' .. '#{col}_chunk_99999'"
+        else
+          select << col
+        end
+      end
+      cql = @cql.select(select)
       cql.using(@consistency_value) if @consistency_value
       @where_values.each do |wv|
         cql.conditions(wv)
       end
       results = []
       CassandraCQL::Result.new(cql.execute).fetch do |row|
-        results << @klass.instantiate(row.row.key,row.to_hash)
+        results << @klass.instantiate(row.row.key, row.to_hash, select_columns)
       end
       results
     end
@@ -315,6 +323,8 @@ module DatastaxRails
         params[:fq] = filter_queries
       end
       
+      select_columns = select_values.empty? ? (@klass.attribute_definitions.keys - @klass.lazy_attributes) : select_values.flatten
+      
       #TODO Need to escape URL stuff (I think)
       response = rsolr.paginate(@page_value, @per_page_value, 'select', :params => params)["response"]
       results = DatastaxRails::Collection.new
@@ -328,7 +338,7 @@ module DatastaxRails
       else
         response['docs'].each do |doc|
           key = doc.delete('id')
-          results << @klass.instantiate(key,doc)
+          results << @klass.instantiate(key,doc, select_columns)
         end
       end
       results

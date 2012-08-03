@@ -318,11 +318,13 @@ module DatastaxRails #:nodoc:
     self.models = []
     
     attr_reader :attributes
+    attr_reader :loaded_attributes
     attr_accessor :key
     
     def initialize(attributes = {}, options = {})
       @key = attributes.delete(:key)
-      @attributes = {}
+      @attributes = {}.with_indifferent_access
+      @loaded_attributes = {}.with_indifferent_access
       
       @relation = nil
       @new_record = true

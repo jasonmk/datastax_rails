@@ -51,11 +51,14 @@ module DatastaxRails
       end
     end
     
+    # Casts the attribute and stores it in the attribute hash.
     def write_attribute(name, value)
       @attributes[name.to_s] = self.class.typecast_attribute(self, name, value)
       loaded_attributes[name] = true
     end
 
+    # Returns the attribute out of the attribute hash.  If the attribute is lazy loaded and hasn't
+    # been loaded yet it will be done so now.
     def read_attribute(name)
       if(!loaded_attributes[name] && persisted?)
         @attributes[name.to_s] = self.class.select(name).with_cassandra.find(self.id).read_attribute(name)

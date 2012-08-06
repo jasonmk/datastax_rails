@@ -29,6 +29,7 @@ module DatastaxRails
         end
         
         def replace_keys(record)
+          owner.loaded_attributes[reflection.foreign_key] = true
           owner.send("#{reflection.foreign_key}_will_change!")
           if record
             owner[reflection.foreign_key] = record.id

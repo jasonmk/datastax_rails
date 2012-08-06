@@ -44,6 +44,7 @@ module DatastaxRails#:nodoc:
         if @limit
           stmt << "LIMIT #{@limit}"
         end
+        
         CassandraCQL::Statement.sanitize(stmt, values)
       end
     end

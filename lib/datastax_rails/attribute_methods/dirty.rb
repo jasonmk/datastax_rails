@@ -31,6 +31,7 @@ module DatastaxRails
 
       def write_attribute(name, value)
         name = name.to_s
+        loaded_attributes[name] = true
         old = read_attribute(name)
         super
 

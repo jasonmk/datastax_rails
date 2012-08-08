@@ -84,7 +84,7 @@ module DatastaxRails
           object.instance_variable_set("@key", parse_key(key)) if key
           object.instance_variable_set("@new_record", false)
           object.instance_variable_set("@destroyed", false)
-          object.instance_variable_set("@attributes", typecast_attributes(object, attributes, selected_attributes))
+          object.instance_variable_set("@attributes", typecast_attributes(object, attributes, selected_attributes).with_indifferent_access)
         end
       end
 

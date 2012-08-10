@@ -445,18 +445,32 @@ module DatastaxRails #:nodoc:
     class << self
       delegate :find, :first, :all, :exists?, :any?, :many?, :to => :scoped
       delegate :destroy, :destroy_all, :delete, :update, :update_all, :to => :scoped
-      # delegate :find_each, :find_in_batches, :to => :scoped
       delegate :order, :limit, :where, :where_not, :page, :paginate, :select, :to => :scoped
       delegate :per_page, :each, :group, :total_pages, :search, :fulltext, :to => :scoped
       delegate :count, :first, :first!, :last, :last!, :to => :scoped
       delegate :cql, :with_cassandra, :with_solr, :commit_solr, :to => :scoped
 
+      # Sets the column family name
+      #
+      # @param [String] column_family the name of the column family in cassandra
       def column_family=(column_family)
         @column_family = column_family
       end
 
+      # Returns the column family name.  If it has been set manually, the set name is returned.
+      # Otherwise returns the pluralized version of the class name.
+      #
+      # Returns [String] the name of the column family
       def column_family
         @column_family || name.pluralize
+      end
+      
+      # Returns the current server that we are talking to.  This is useful when you are talking to a
+      # cluster, and we want to know which server specifically we are connected to.
+      #
+      # Used by Relation to calculate the SOLR URL so that it follows the Cassandra connection.
+      def current_server
+        self.connection.instance_variable_get(:@connection).instance_variable_get(:@current_server).to_s
       end
 
       def base_class

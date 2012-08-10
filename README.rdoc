@@ -40,6 +40,7 @@ Configure the config/datastax.yml file:
 
 The above is configured to use NetworkTopologyStrategy.  If you go with this, you'll need to configure Datastax to use the
 NetworkTopologySnitch and set up the cassandra-topology.properties file.  See the Datastax documentation for more information.
+
 For a more simple, single datacenter setup, something like this should probably work:
 
   development:
@@ -51,6 +52,8 @@ For a more simple, single datacenter setup, something like this should probably 
       timeout: 2 
     solr:
       url: http://localhost:8983/solr
+
+See DatastaxRails::Connection::ClassMethods for a description of what options are available.
 
 Create your keyspace:
 

@@ -13,8 +13,8 @@ module DatastaxRails
       load 'datastax_rails/tasks/ds.rake'
     end
     
-    generators do
-      require 'datastax_rails/generators/migration_generator'
-    end
+    # generators do
+      # require 'datastax_rails/generators/migration_generator'
+    # end
   end
 end

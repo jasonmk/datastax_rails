@@ -1,5 +1,7 @@
 require 'active_support/all'
 require 'cassandra-cql/1.0'
+require 'blankslate'
+require 'schema_migration'
 
 # Welcome to DatastaxRails.  DatastaxRails::Base is probably a good place to start.
 module DatastaxRails
@@ -27,6 +29,7 @@ module DatastaxRails
     autoload :SpawnMethods
   end
   
+  autoload :RSolrClientWrapper, 'datastax_rails/rsolr_client_wrapper'
   autoload :Schema
   autoload :Scoping
   autoload :Serialization

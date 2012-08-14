@@ -36,7 +36,8 @@ Configure the config/datastax.yml file:
     connection_options:
       timeout: 2
     solr:
-      url: http://localhost:8983/solr
+  	  port: 8983
+  	  path: /solr
 
 The above is configured to use NetworkTopologyStrategy.  If you go with this, you'll need to configure Datastax to use the
 NetworkTopologySnitch and set up the cassandra-topology.properties file.  See the Datastax documentation for more information.
@@ -51,7 +52,8 @@ For a more simple, single datacenter setup, something like this should probably 
     connection_options:
       timeout: 2 
     solr:
-      url: http://localhost:8983/solr
+  	  port: 8983
+  	  path: /solr
 
 See DatastaxRails::Connection::ClassMethods for a description of what options are available.
 

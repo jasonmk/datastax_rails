@@ -465,14 +465,6 @@ module DatastaxRails #:nodoc:
         @column_family || name.pluralize
       end
       
-      # Returns the current server that we are talking to.  This is useful when you are talking to a
-      # cluster, and we want to know which server specifically we are connected to.
-      #
-      # Used by Relation to calculate the SOLR URL so that it follows the Cassandra connection.
-      def current_server
-        self.connection.instance_variable_get(:@connection).instance_variable_get(:@current_server).to_s
-      end
-
       def base_class
         klass = self
         while klass.superclass != Base

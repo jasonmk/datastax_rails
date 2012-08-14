@@ -408,13 +408,7 @@ module DatastaxRails
       
       # Calculates the solr URL and sets up an RSolr connection
       def rsolr
-        cassandra_server = @klass.current_server.split(/\:/).first
-        if @rsolr
-          if @rsolr.uri.host != cassandra_server
-            @rsolr = nil
-          end
-        end
-        @rsolr ||= RSolr.connect :url => "http://#{cassandra_server}:#{DatastaxRails::Base.config[:solr][:port]}#{DatastaxRails::Base.config[:solr][:path]}/#{DatastaxRails::Base.connection.keyspace}.#{@klass.column_family}"
+        @klass.solr_connection
       end
   end
 end

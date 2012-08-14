@@ -2,12 +2,6 @@ require 'digest/sha1'
 
 module DatastaxRails
   module Tasks
-    class SchemaMigration
-      def self.column_family
-        'schema_migrations'
-      end
-    end
-    
     class ColumnFamily
       COMPARATOR_TYPES = [:blob, :ascii, :text, :varint, :bigint, :uuid, :timestamp, :boolean, :float, :doublt, :decimal]
 

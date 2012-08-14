@@ -3,16 +3,20 @@ development:
   keyspace: "datastax_rails_development"
   strategy_class: "org.apache.cassandra.locator.SimpleStrategy"
   strategy_options: {"DC1": "1"} 
-  replication_factor: 1
+  connection_options:
+    timeout: 10
   solr:
-    url: http://localhost:8983/solr
+    port: 8983
+    path: /solr
     
 test:
   servers: ["localhost:9160"]
   keyspace: "datastax_rails_test"
   strategy_class: "org.apache.cassandra.locator.SimpleStrategy"
   strategy_options: {"DC1": "1"} 
-  replication_factor: 1
+  connection_options:
+    timeout: 10
   solr:
-    url: http://localhost:8983/solr
+    port: 8983
+    path: /solr
         

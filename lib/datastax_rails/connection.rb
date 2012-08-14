@@ -1,3 +1,4 @@
+# require 'datastax_rails/rsolr_client_wrapper'
 module DatastaxRails
   # The connection module holds all the code for establishing and maintaining a connection to
   # Datastax Exterprise.  This includes both the Cassandra and Solr connections.
@@ -14,6 +15,19 @@ module DatastaxRails
         :servers => "127.0.0.1:9160",
         :thrift => {}
       }
+      
+      # Returns the current server that we are talking to.  This is useful when you are talking to a
+      # cluster, and we want to know which server specifically we are connected to.
+      #
+      # Used by Relation to calculate the SOLR URL so that it follows the Cassandra connection.
+      def current_server
+        thrift_client.instance_variable_get(:@current_server).to_s.split(/\:/).first
+      end
+      
+      # Returns the thrift client object
+      def thrift_client
+        self.connection.instance_variable_get(:@connection)
+      end
       
       # Establish a Cassandra connection to DSE.  datastax.yml will be read and the current environment's
       # settings passed to this method.
@@ -64,7 +78,7 @@ module DatastaxRails
       # * *transport* - The thrift transport to use (advanced). Defaults to Thrift::Socket.
       # * *transport_wrapper* - The thrift transport wrapper to use (advanced). Defaults to Thrift::FramedTransport.
       #
-      # See +establish_solr_connection+ for a description of the solr options in datastax.yml
+      # See +solr_connection+ for a description of the solr options in datastax.yml
       def establish_connection(spec)
         DatastaxRails::Base.config = spec.with_indifferent_access
         spec.reverse_merge!(DEFAULT_OPTIONS)
@@ -75,8 +89,11 @@ module DatastaxRails
       # Similar to +establish_connection+, this method creates a connection object for Solr.  Since HTTP is stateless, this doesn't
       # actually launch the connection, but it gets everything set up so that RSolr can do its work.  It's important to note that
       # unlike the cassandra connection which is global to all of DSR, each model will have its own solr_connection.
-      def establish_solr_connection(spec)
-        
+      def solr_connection
+        DatastaxRails::Base.establish_connection unless self.connection 
+        port = DatastaxRails::Base.config[:solr][:port]
+        path = DatastaxRails::Base.config[:solr][:path]
+        @rsolr ||= DatastaxRails::RSolrClientWrapper.new(RSolr.connect :url => "http://#{self.current_server}:#{port}#{path}/#{DatastaxRails::Base.connection.keyspace}.#{self.column_family}")
       end
     end
   end

@@ -3,7 +3,12 @@ require 'active_support/core_ext/object/inclusion'
 
 module DatastaxRails
   # This is shamelessly ripped from Active Record 3.1
-  # = DatastaxRails Reflection
+  #
+  # Reflection enables interrogation of DatastaxRails classes and objects
+  # about their associations and aggregations. This information can,
+  # for example, be used in a form builder that takes an DatastaxRails object
+  # and creates input fields for all of the attributes depending on their type
+  # and displays the associations to other objects.
   module Reflection # :nodoc:
     extend ActiveSupport::Concern
 
@@ -12,11 +17,6 @@ module DatastaxRails
       self.reflections = {}
     end
 
-    # Reflection enables interrogation of DatastaxRails classes and objects
-    # about their associations and aggregations. This information can,
-    # for example, be used in a form builder that takes an DatastaxRails object
-    # and creates input fields for all of the attributes depending on their type
-    # and displays the associations to other objects.
     module ClassMethods
       def create_reflection(macro, name, options, datastax_rails)
         klass = options[:through] ? ThroughReflection : AssociationReflection

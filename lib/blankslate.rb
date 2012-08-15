@@ -67,7 +67,7 @@ module Kernel
 end
 
 ######################################################################
-# Same as above, except in Object.
+# @see Kernel
 class Object
   class << self
     alias_method :blank_slate_method_added, :method_added

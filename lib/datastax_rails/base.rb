@@ -152,12 +152,17 @@ module DatastaxRails #:nodoc:
   # by ID.  SOLR only supports a consistency level of ONE.  See the documentation for
   # SearchMethods#consistency for a more detailed explanation.
   #
-  # The overall default consistency for a given model can be overridden by adding a method
-  # to the model like so:
+  # The overall default consistency for a given model can be overridden by setting the
+  # +default_consistency+ property.
   #
-  #   def default_consistency
-  #     :local_quorum
+  #   class Model < DatastaxRails::Base
+  #     self.default_consistency = :local_quorum
   #   end
+  #
+  # The default consistency for all models can be selected by setting the property on
+  # DatastaxRails::Base.
+  #
+  #   DatastaxRails::Base.default_consistency = :one
   #
   # == Conditions
   #
@@ -313,6 +318,9 @@ module DatastaxRails #:nodoc:
     
     # Stores the configuration information
     class_attribute :config
+    
+    class_attribute :default_consistency
+    self.default_consistency = :quorum
     
     class_attribute :models
     self.models = []

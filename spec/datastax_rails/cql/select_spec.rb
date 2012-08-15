@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe DatastaxRails::Cql::Select do
   before(:each) do
-    @model_class = mock("Model Class", :column_family => 'users')
+    @model_class = mock("Model Class", :column_family => 'users', :default_consistency => DatastaxRails::Cql::Consistency::QUORUM)
   end
   
   it "should generate valid CQL" do

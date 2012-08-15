@@ -3,7 +3,7 @@ module DatastaxRails
     class Base
       # Base initialize that sets the default consistency.
       def initialize(klass, *args)
-        @consistency = klass.respond_to?(:default_consistency) ? klass.default_consistency.to_s.upcase : DatastaxRails::Cql::Consistency::QUORUM
+        @consistency = klass.default_consistency.to_s.upcase
       end
 
       # Abstract.  Should be overridden by subclasses

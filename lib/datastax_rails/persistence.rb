@@ -2,10 +2,6 @@ module DatastaxRails
   module Persistence
     extend ActiveSupport::Concern
     
-    included do
-      attr_accessor :ds_consistency_level
-    end
-    
     module ClassMethods
       # Removes one or more records with corresponding keys.  Last parameter can be a hash
       # specifying the consistency level.

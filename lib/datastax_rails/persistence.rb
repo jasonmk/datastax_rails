@@ -73,6 +73,13 @@ module DatastaxRails
         end
       end
 
+      # Instantiates a new object without calling +initialize+.
+      #
+      # @param [String] key the primary key for the record
+      # @param [Hash] attributes a hash containing the columns to set on the record
+      # @param [Array] selected_attributes an array containing the attributes that were originally selected from cassandra
+      #   to build this object.  Used so that we can avoid lazy-loading attributes that don't exist.
+      # @return [DatastaxRails::Base] a model with the given attributes
       def instantiate(key, attributes, selected_attributes = [])
         allocate.tap do |object|
           object.instance_variable_set("@loaded_attributes", {}.with_indifferent_access)
@@ -84,6 +91,12 @@ module DatastaxRails
         end
       end
 
+      # Encodes the attributes in preparation for storing in cassandra. Calls the coders on the various type classes
+      # to do the heavy lifting.
+      #
+      # @param [Hash] attributes a hash containing the attributes to be encoded for storage
+      # @param [String] schema_version the schema version to set in Cassandra.  Not currently used.
+      # @return [Hash] a new hash with attributes encoded for storage
       def encode_attributes(attributes, schema_version)
         encoded = {"schema_version" => schema_version.to_s}
         attributes.each do |column_name, value|

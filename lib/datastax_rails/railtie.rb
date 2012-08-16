@@ -6,7 +6,7 @@ module DatastaxRails
       ActiveSupport.on_load(:datastax_rails) do
       end
       config = YAML.load_file(Rails.root.join("config", "datastax.yml"))
-      DatastaxRails::Base.establish_connection(config[Rails.env].symbolize_keys)
+      DatastaxRails::Base.establish_connection(config[Rails.env].with_indifferent_access)
     end
     
     rake_tasks do

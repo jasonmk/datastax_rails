@@ -66,7 +66,7 @@ module DatastaxRails
       def decode(str)
         return [] if str.blank?
         
-        str.split(/&&&&/)
+        str.is_a?(Array) ? str.flatten : str.split(/&&&&/) 
       end
 
       def wrap(record, name, value)

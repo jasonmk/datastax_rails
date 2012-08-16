@@ -43,7 +43,7 @@ module DatastaxRails
         # @param [String] name the name of the attribute
         # @param [Object] value the value of the attribute prior to typecasting
         #
-        # @return the typecasted value
+        # @return the typecast value
         # @raise [NoMethodError] if the attribute is unknown
         def typecast_attribute(record, name, value)
           if attribute_definition = attribute_definitions[name.to_sym]

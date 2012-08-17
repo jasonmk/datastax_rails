@@ -14,6 +14,9 @@ module DatastaxRails
       end
 
       module ClassMethods
+        # We need to ensure that inherited classes get their own attribute definitions.
+        # In addition, we take the opportunity to track all the DatastaxRails::Base decendents.
+        # This will be useful when it comes to things like schema generation.
         def inherited(child)
           super
           child.attribute_definitions = attribute_definitions.dup

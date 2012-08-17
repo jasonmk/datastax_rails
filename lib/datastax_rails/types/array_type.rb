@@ -1,7 +1,16 @@
 module DatastaxRails
   module Types
+    # ArrayType is used for storing arrays in Datastax Enterprise.
+    # They are indexed into SOLR as discrete values so that you can do something like this:
+    #
+    #   Post.where(:tags => 'Technology')
+    #
+    # That would give you all the posts that have Technology somewhere in the tags array. 
     class ArrayType < BaseType
       DEFAULTS = {:solr_type => 'array', :indexed => true, :stored => true, :multi_valued => false, :sortable => false, :tokenized => true, :fulltext => false}
+      
+      # An extension to normal arrays that allow for tracking of dirty values.  This is
+      # used by ActiveModel's change tracking framework.
       class DirtyArray < Array
         attr_accessor :record, :name, :options
         def initialize(record, name, array, options)

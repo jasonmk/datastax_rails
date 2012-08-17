@@ -86,14 +86,21 @@ module DatastaxRails
         self.connection = CassandraCQL::Database.new(spec[:servers], {:keyspace => spec[:keyspace]}, connection_options.symbolize_keys)
       end
       
+      # Returns the base portion of the URL for connecting to SOLR based on the current Cassandra server.
+      #
+      # @return [String] in the form of 'http://localhost:8983/solr'
+      def solr_base_url
+        DatastaxRails::Base.establish_connection unless self.connection 
+        port = DatastaxRails::Base.config[:solr][:port]
+        path = DatastaxRails::Base.config[:solr][:path]
+        "http://#{self.current_server}:#{port}#{path}"
+      end
+      
       # Similar to +establish_connection+, this method creates a connection object for Solr.  Since HTTP is stateless, this doesn't
       # actually launch the connection, but it gets everything set up so that RSolr can do its work.  It's important to note that
       # unlike the cassandra connection which is global to all of DSR, each model will have its own solr_connection.
       def solr_connection
-        DatastaxRails::Base.establish_connection unless self.connection 
-        port = DatastaxRails::Base.config[:solr][:port]
-        path = DatastaxRails::Base.config[:solr][:path]
-        @rsolr ||= DatastaxRails::RSolrClientWrapper.new(RSolr.connect :url => "http://#{self.current_server}:#{port}#{path}/#{DatastaxRails::Base.connection.keyspace}.#{self.column_family}")
+        @rsolr ||= DatastaxRails::RSolrClientWrapper.new(RSolr.connect :url => "#{solr_base_url}/#{DatastaxRails::Base.connection.keyspace}.#{self.column_family}")
       end
     end
   end

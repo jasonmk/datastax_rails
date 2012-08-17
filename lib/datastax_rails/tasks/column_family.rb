@@ -106,7 +106,7 @@ module DatastaxRails
           results = DatastaxRails::Cql::Select.new(SchemaMigration, ['*']).conditions(:key => model.column_family).execute
           sm_digests = CassandraCQL::Result.new(results).fetch.to_hash
           
-          solr_url = "#{DatastaxRails::Base.config[:solr][:url]}/resource/#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}"
+          solr_url = "#{DatastaxRails::Base.solr_base_url}/resource/#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}"
           uri = URI.parse(solr_url)
           Net::HTTP.start(uri.host, uri.port) do |http|
             if force || solrconfig_digest != sm_digests['solrconfig'] 

@@ -20,6 +20,8 @@ module DatastaxRails
       # cluster, and we want to know which server specifically we are connected to.
       #
       # Used by Relation to calculate the SOLR URL so that it follows the Cassandra connection.
+      #
+      # @return [String] the hostname or ip address of the current server
       def current_server
         thrift_client.instance_variable_get(:@current_server).to_s.split(/\:/).first
       end
@@ -99,6 +101,8 @@ module DatastaxRails
       # Similar to +establish_connection+, this method creates a connection object for Solr.  Since HTTP is stateless, this doesn't
       # actually launch the connection, but it gets everything set up so that RSolr can do its work.  It's important to note that
       # unlike the cassandra connection which is global to all of DSR, each model will have its own solr_connection.
+      #
+      # @return [DatastaxRails::RSolrClientWrapper] a wrapped RSolr connection
       def solr_connection
         @rsolr ||= DatastaxRails::RSolrClientWrapper.new(RSolr.connect :url => "#{solr_base_url}/#{DatastaxRails::Base.connection.keyspace}.#{self.column_family}")
       end

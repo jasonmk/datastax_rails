@@ -271,7 +271,7 @@ module DatastaxRails
       @where_values.each do |wv|
         wv.each do |k,v|
           # If v is blank, check that there is no value for the field in the document
-          filter_queries << (v.blank? ? "-#{k}:[* TO *]" : "#{k}:(#{v})")
+          filter_queries << (v.blank? ? "-#{k}:[\"\" TO *]" : "#{k}:(#{v})")
         end
       end
       

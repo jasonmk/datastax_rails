@@ -75,6 +75,9 @@ attributes on any model.  DSR will only upload schema files if they have changed
 Calling +find+ on a model with a bogus ID returns an empty model instead of RecordNotFound.  This is due to a bug
 in DSE that is supposedly fixed in the upcoming 2.2 release.
 
+Setting an integer field to something other than an integer results in nothing being set and no validation error
+(if you were using one).
+
 === More information
 
 The documentation for DatastaxRails::Base and DatastaxRails::SearchMethods will give you quite a few examples

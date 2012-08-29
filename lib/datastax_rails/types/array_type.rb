@@ -69,13 +69,13 @@ module DatastaxRails
         raise ArgumentError.new("#{self} requires an Array") unless array.kind_of?(Array)
         ar = Array(array)
         ar.uniq! if options[:unique]
-        ar.join("&&&&")
+        ar.join("$$$$")
       end
 
       def decode(str)
         return [] if str.blank?
         
-        str.is_a?(Array) ? str.flatten : str.split(/&&&&/) 
+        str.is_a?(Array) ? str.flatten : str.split(/(&&&&|$$$$)/) 
       end
 
       def wrap(record, name, value)

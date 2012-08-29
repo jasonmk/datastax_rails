@@ -2,6 +2,7 @@ module DatastaxRails
   # Wraps the RSolr Client class so that exceptions such as Connection Refused can be caught and
   # a new server tried (if one is available)
   class RSolrClientWrapper < BlankSlate
+    # @param [RSolr::Client] rsolr the initial RSolr client object to wrap
     def initialize(rsolr)
       @rsolr = rsolr
     end

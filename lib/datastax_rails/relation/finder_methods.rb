@@ -59,7 +59,6 @@ module DatastaxRails
       return to_a.find { |*block_args| yield(*block_args) } if block_given?
 
       options = args.extract_options!
-
       if options.present?
         apply_finder_options(options).find(*args)
       else

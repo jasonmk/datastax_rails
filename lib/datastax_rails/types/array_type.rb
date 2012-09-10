@@ -70,12 +70,12 @@ module DatastaxRails
         ar = Array(array)
         ar.uniq! if options[:unique]
         ar.join("$$$$")
+      end
 
       def decode(str)
         return [] if str.blank?
-        # Temporary fix
-        str.gsub!(/&&&&/,'$$$$')
-        str.is_a?(Array) ? str.flatten : str.split(/\$\$\$\$/).reject{|a|a.blank?} 
+        #                                         Temporary fix
+        str.is_a?(Array) ? str.flatten : str.gsub(/&&&&/,'$$$$').split(/\$\$\$\$/).reject{|a|a.blank?} 
       end
 
       def wrap(record, name, value)

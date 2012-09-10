@@ -309,34 +309,35 @@ module DatastaxRails
       end
     end
     
-    # See documentation for +where+
+    # @see where
     def less_than(value)
       raise ArgumentError, "#less_than can only be called after an appropriate where call. e.g. where(:created_at).less_than(1.day.ago)"
     end
     
-    # See documentation for +where+
+    # @see where
     def greater_than(value)
       raise ArgumentError, "#greater_than can only be called after an appropriate where call. e.g. where(:created_at).greater_than(1.day.ago)"
     end
     
-    def solr_format(value)
-      case
-        when value.is_a?(Date), value.is_a?(Time)
-          value.strftime('%Y-%m-%dT%H:%M:%SZ')
-        when value.is_a?(Array)
-          value.collect {|v| v.gsub(/ /,"\\ ") }.join(" OR ")
-        when value.is_a?(Fixnum)
-          value < 0 ? "\\#{value}" : value
-        when value.is_a?(Range)
-          "[#{solr_format(value.first)} TO #{solr_format(value.last)}]"
-        when value.is_a?(String)
-          solr_escape(downcase_query(value.gsub(/ /,"\\ ")))
-        else
-          value
-      end
-    end
-    
     protected
+      def solr_format(value)
+        return value unless use_solr_value
+        case
+          when value.is_a?(Date), value.is_a?(Time)
+            value.strftime('%Y-%m-%dT%H:%M:%SZ')
+          when value.is_a?(Array)
+            value.collect {|v| v.gsub(/ /,"\\ ") }.join(" OR ")
+          when value.is_a?(Fixnum)
+            value < 0 ? "\\#{value}" : value
+          when value.is_a?(Range)
+            "[#{solr_format(value.first)} TO #{solr_format(value.last)}]"
+          when value.is_a?(String)
+            solr_escape(downcase_query(value.gsub(/ /,"\\ ")))
+          else
+            value
+        end
+      end
+    
       def find_by_attributes(match, attributes, *args) #:nodoc:
         conditions = Hash[attributes.map {|a| [a, args[attributes.index(a)]]}]
         result = where(conditions).send(match.finder)

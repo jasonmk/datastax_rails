@@ -99,7 +99,7 @@ module DatastaxRails
         relation = relation.send(finder, finders[finder])
       end
       
-      relation.where(finders[:conditions]) if options.has_key?(:conditions)
+      relation = relation.where(finders[:conditions]) if options.has_key?(:conditions)
       
       relation
     end

@@ -16,7 +16,7 @@ module DatastaxRails
       module ClassMethods
         # Provide some measure of compatibility with things that expect this from ActiveRecord.
         def columns_hash
-          self.attribute_defintions
+          self.attribute_definitions
         end 
         
         # We need to ensure that inherited classes get their own attribute definitions.

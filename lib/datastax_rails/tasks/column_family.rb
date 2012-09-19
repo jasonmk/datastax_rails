@@ -56,10 +56,10 @@ module DatastaxRails
                            :indexed => true,
                            :stored => false,
                            :multi_valued => false })
-            @copy_fields.push({ :source => attr.name, :dest => "sort_" + attr.name })
+            @copy_fields.push({ :source => attr.name, :dest => "sort_" + attr.name }) if (coder.options[:indexed] || coder.options[:stored])
           end
           if coder.options[:fulltext]
-            @fulltext_fields << attr.name
+            @fulltext_fields << attr.name if (coder.options[:indexed] || coder.options[:stored])
           end
         end
         # Sort the fields so that no matter what order the attributes are arranged into the
@@ -112,16 +112,19 @@ module DatastaxRails
             if force || solrconfig_digest != sm_digests['solrconfig'] 
               puts "Posting Solr Config file to '#{uri.path}/solrconfig.xml'"
               http.post(uri.path+"/solrconfig.xml", solrconfig)
+              sleep(5) if Rails.env.production?
               DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:solrconfig => solrconfig_digest).execute
             end
             if force || stopwords_digest != sm_digests['stopwords']
               puts "Posting Solr Stopwords file to '#{uri.path}/stopwords.txt'"
               http.post(uri.path+"/stopwords.txt", stopwords)
+              sleep(5) if Rails.env.production?
               DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:stopwords => stopwords_digest).execute
             end
             if force || schema_digest != sm_digests['digest']
               puts "Posting Solr Schema file to '#{uri.path}/schema.xml'"
               http.post(uri.path+"/schema.xml", schema)
+              sleep(5) if Rails.env.production?
               DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:digest => schema_digest).execute
             end
           end

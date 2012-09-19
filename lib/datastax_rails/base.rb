@@ -329,6 +329,11 @@ module DatastaxRails #:nodoc:
     attr_reader :loaded_attributes
     attr_accessor :key
     
+    # Returns a hash of all the attributes that have been specified for serialization as
+    # keys and their class restriction as values.
+    class_attribute :serialized_attributes
+    self.serialized_attributes = {}
+    
     def initialize(attributes = {}, options = {})
       @key = attributes.delete(:key)
       @attributes = {}.with_indifferent_access
@@ -347,7 +352,7 @@ module DatastaxRails #:nodoc:
         if respond_to?("#{k.to_s.downcase}=")
           send("#{k.to_s.downcase}=",v)
         else
-          raise(UnknownAttributeError, "unknown attribute: #{k}")
+          raise(DatastaxRails::UnknownAttributeError, "unknown attribute: #{k}")
         end
       end
       

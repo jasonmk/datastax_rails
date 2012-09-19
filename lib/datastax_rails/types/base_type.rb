@@ -27,6 +27,10 @@ module DatastaxRails
       def wrap(record, name, value)
         value
       end
+      
+      def type
+        self.class.name.sub(/^DatastaxRails::Types::/,'').sub(/Type$/,'').underscore.to_sym
+      end
     end
   end
 end

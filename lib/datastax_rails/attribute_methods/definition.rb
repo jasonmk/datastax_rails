@@ -15,6 +15,10 @@ module DatastaxRails
         value = (value.kind_of?(String) || value.kind_of?(Array)) ? coder.decode(value) : value
         coder.wrap(record, name, value)
       end
+      
+      def type
+        coder.type
+      end
     end
   end
 end

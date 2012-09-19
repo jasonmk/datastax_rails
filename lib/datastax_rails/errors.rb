@@ -13,4 +13,7 @@ module DatastaxRails
   
   class RecordNotFound < DatastaxRailsError #:nodoc:
   end
+  
+  class UnknownAttributeError < DatastaxRailsError
+  end
 end

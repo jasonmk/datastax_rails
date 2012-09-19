@@ -205,9 +205,9 @@ module DatastaxRails
     end
     
     def respond_to?(method, include_private = false) #:nodoc:
-        Array.method_defined?(method)                       ||
-        @klass.respond_to?(method, include_private)         ||
-        super
+      Array.method_defined?(method)                       ||
+      @klass.respond_to?(method, include_private)         ||
+      super
     end
     
     # NOTE: This method does not actually run a count via CQL because it only

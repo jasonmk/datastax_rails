@@ -104,7 +104,7 @@ module DatastaxRails
       return self if attrs.blank?
       
       clone.tap do |r|
-        r.group_values += args.flatten
+        r.group_values += attrs.flatten
       end
     end
     

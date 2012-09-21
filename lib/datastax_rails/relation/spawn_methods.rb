@@ -86,7 +86,7 @@ module DatastaxRails
       result
     end
     
-    VALID_FIND_OPTIONS = [:conditions, :limit, :offset, :order, :group, :page, :per_page]
+    VALID_FIND_OPTIONS = [:conditions, :limit, :select, :offset, :order, :group, :page, :per_page]
     def apply_finder_options(options) #:nodoc:
       relation = clone
       return relation unless options

@@ -172,6 +172,9 @@ module DatastaxRails
     #     end
     #   end
     def to_xml(options = {}, &block)
+      options[:methods] ||= []
+      options[:methods] << :id
+      options[:methods].uniq!
       XmlSerializer.new(self, options).serialize(&block)
     end
   end

@@ -95,12 +95,11 @@ module DatastaxRails
       finders = options.dup
       finders.delete_if { |key, value| value.nil? }
       
-      ([:group, :order, :limit, :offset, :page, :per_page] & finders.keys).each do |finder|
+      ([:group, :order, :limit, :offset, :page, :per_page, :select] & finders.keys).each do |finder|
         relation = relation.send(finder, finders[finder])
       end
       
       relation = relation.where(finders[:conditions]) if options.has_key?(:conditions)
-      
       relation
     end
   end

@@ -10,6 +10,7 @@ module DatastaxRails
       end
 
       def decode(str)
+        return str if str.kind_of?(Time)
         Time.parse(str) rescue nil
       end
     end

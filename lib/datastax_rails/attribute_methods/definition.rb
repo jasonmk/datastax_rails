@@ -12,7 +12,7 @@ module DatastaxRails
         value ||= coder.default
         return unless value
       
-        value = (value.kind_of?(String) || value.kind_of?(Array)) ? coder.decode(value) : value
+        value = coder.decode(value)
         coder.wrap(record, name, value)
       end
       

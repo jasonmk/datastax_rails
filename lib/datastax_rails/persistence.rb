@@ -100,9 +100,9 @@ module DatastaxRails
       def encode_attributes(attributes, schema_version)
         encoded = {"schema_version" => schema_version.to_s}
         attributes.each do |column_name, value|
-          if value.nil?
-            encoded[column_name.to_s] = ""
-          else
+          # if value.nil?
+            # encoded[column_name.to_s] = ""
+          # else
             encoded_value = attribute_definitions[column_name.to_sym].coder.encode(value)
             if(encoded_value.is_a?(Array))
               encoded_value.each_with_index do |chunk,i|
@@ -111,7 +111,7 @@ module DatastaxRails
             else
               encoded[column_name.to_s] = encoded_value
             end
-          end
+          # end
         end
         encoded
       end

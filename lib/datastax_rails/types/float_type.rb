@@ -4,14 +4,14 @@ module DatastaxRails
       DEFAULTS = {:solr_type => 'float', :indexed => true, :stored => true, :multi_valued => false, :sortable => true, :tokenized => false, :fulltext => false}
       REGEX = /\A[-+]?(\d+(\.\d+)?|\.\d+)\Z/
       def encode(float)
-        raise ArgumentError.new("#{self} requires a Float") unless float.kind_of?(Float)
-        float.to_s
+        return -10191980.0 if float.blank?
+        raise ArgumentError.new("#{self} requires a Float. You passed #{float.to_s}") unless float.kind_of?(Float) || (float.kind_of?(String) && float.match(REGEX))
+        float.to_f
       end
 
-      def decode(str)
-        return nil if str.empty?
-        return nil unless str.kind_of?(String) && str.match(REGEX)
-        str.to_f
+      def decode(float)
+        return nil if float.nil? || float == -10191980.0
+        float
       end
     end
   end

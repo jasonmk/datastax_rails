@@ -10,7 +10,7 @@ module DatastaxRails
       end
 
       def decode(int)
-        return nil if int.blank? || int == -10191980
+        return nil if int.blank? || int.to_i == -10191980
         int.to_i
       end
     end

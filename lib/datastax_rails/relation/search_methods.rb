@@ -71,7 +71,7 @@ module DatastaxRails
     #   end
     def limit(value)
       clone.tap do |r|
-        r.per_page_value = value
+        r.per_page_value = value.to_i
       end
     end
     alias :per_page :limit
@@ -81,7 +81,7 @@ module DatastaxRails
     #   Model.page(2)
     def page(value)
       clone.tap do |r|
-        r.page_value = value
+        r.page_value = value.to_i
       end
     end
     

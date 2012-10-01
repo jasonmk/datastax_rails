@@ -146,12 +146,14 @@ module DatastaxRails
       @results = []
     end
     
-    def initialize_copy(other) #:nodoc:
+    # Copies will have changes made to the criteria and so need to be reset.
+    def initialize_copy(other)
       reset
       @search = nil
     end
     
-    def clone #:nodoc:
+    # Performs a deep copy using Marshal when cloning.
+    def clone
       dup.tap do |r|
         MULTI_VALUE_METHODS.each do |m|
           r.send("#{m}_values=", Marshal.load(Marshal.dump(self.send("#{m}_values"))))
@@ -210,7 +212,8 @@ module DatastaxRails
       scoping { @klass.create!(*args, &block) }
     end
     
-    def respond_to?(method, include_private = false) #:nodoc:
+    # Override respond_to? so that it matches method_missing
+    def respond_to?(method, include_private = false)
       Array.method_defined?(method)                       ||
       @klass.respond_to?(method, include_private)         ||
       super
@@ -354,7 +357,12 @@ module DatastaxRails
       results
     end
     
-    
+    # Parse out a set of documents and return the results
+    #
+    # @param response [Hash] the response hash from SOLR with a set of documents
+    # @param select_columns [Array] the columns that we actually selected from SOLR
+    #
+    # @return [DatastaxRails::Collection] the resulting collection
     def parse_docs(response, select_columns)
       results = DatastaxRails::Collection.new
       results.total_entries = response['numFound'].to_i

@@ -15,6 +15,9 @@ module DatastaxRails
     # been updated yet with the results.  In practice, this should not happen for
     # records that were created over your connection, but it is possible for other
     # connections to create records that you can't see yet.
+    #
+    # @param level [Symbol, String] the level to set the consistency at
+    # @return [DatastaxRails::Relation] a new Relation object
     def consistency(level)
       level = level.to_s.upcase
       unless self.valid_consistency?(level)
@@ -34,6 +37,8 @@ module DatastaxRails
     #
     # Note that fulltext searches are NEVER escaped.  Use Relation.solr_escape if you
     # want that done.
+    #
+    # @return [DatastaxRails::Relation] a new Relation object
     def dont_escape
       clone.tap do |r|
         r.escape_value = false
@@ -44,6 +49,9 @@ module DatastaxRails
     # a module or a block provided
     #
     # The object returned is a relation which can be further extended
+    #
+    # @param modules [Proc] one or more proc objects
+    # @return [DatastaxRails::Relation] a new Relation object
     def extending(*modules)
       modules << Module.new(&Proc.new) if block_given?
 
@@ -69,6 +77,9 @@ module DatastaxRails
     #       30
     #     end
     #   end
+    #
+    # @param value [String, Fixnum] the number of records to include on a page
+    # @return [DatastaxRails::Relation] a new Relation object
     def limit(value)
       clone.tap do |r|
         r.per_page_value = value.to_i
@@ -79,6 +90,9 @@ module DatastaxRails
     # Sets the page number to retrieve
     #
     #   Model.page(2)
+    #
+    # @param value [String, Fixnum] the page number to retrieve
+    # @return [DatastaxRails::Relation] a new Relation object
     def page(value)
       clone.tap do |r|
         r.page_value = value.to_i
@@ -88,6 +102,10 @@ module DatastaxRails
     # WillPaginate compatible method for paginating
     #
     #   Model.paginate(:page => 2, :per_page => 10)
+    # @param options [Hash] the options to pass to paginate
+    # @option options [String, Fixnum] :page the page number to retrieve
+    # @option options [String, Fixnum] :per_page the number of records to include on a page
+    # @return [DatastaxRails::Relation] a new Relation object
     def paginate(options = {})
       options = options.reverse_merge({:page => 1, :per_page => 30})
       clone.tap do |r|
@@ -115,6 +133,9 @@ module DatastaxRails
     # NOTE: Group names will be lower-cased
     #
     #   Model.group(:program_id)
+    #
+    # @param attribute [Symbol, String] the attribute to group by
+    # @return [DatastaxRails::Relation] a new Relation object
     def group(attribute)
       return self if attribute.blank?
       
@@ -133,6 +154,9 @@ module DatastaxRails
     #
     #   Model.order(:name)
     #   Model.order(:name => :desc)
+    #
+    # @param attribute [Symbol, String, Hash] the attribute to sort by and optionally the direction to sort in
+    # @return [DatastaxRails::Relation] a new Relation object
     def order(attribute)
       return self if attribute.blank?
 
@@ -193,6 +217,8 @@ module DatastaxRails
     #   Model.order(:name).reverse_order.reverse_order
     #     is equivalent to
     #   Model.order(:name => :asc)
+    #
+    # @return [DatastaxRails::Relation] a new Relation object
     def reverse_order
       clone.tap do |r|
         r.reverse_order_value == !r.reverse_order_value
@@ -206,11 +232,14 @@ module DatastaxRails
     # *This only applies to fulltext queries*
     #
     #   Model.query_parser('disMax').fulltext("john smith")
-    def query_parser(attribute)
-      return self if attribute.blank?
+    #
+    # @param parser [String] the parser to use for the fulltext query 
+    # @return [DatastaxRails::Relation] a new Relation object
+    def query_parser(parser)
+      return self if parser.blank?
       
       clone.tap do |r|
-        r.query_parser_value = attribute
+        r.query_parser_value = parser
       end
     end
     
@@ -221,6 +250,8 @@ module DatastaxRails
     # it becomes available in SOLR is not guaranteed to be insignificant.  It's
     # very possible to insert a new record and not find it when immediately doing
     # a SOLR search for it.
+    #
+    # @return [DatastaxRails::Relation] a new Relation object
     def with_solr
       clone.tap do |r|
         r.use_solr_value = true
@@ -232,7 +263,9 @@ module DatastaxRails
     # cassandra.
     #
     # NOTE that this method assumes that you have all the proper secondary indexes
-    # in place before you attempt to use it.  If not, you will get an error. 
+    # in place before you attempt to use it.  If not, you will get an error.
+    #
+    # @return [DatastaxRails::Relation] a new Relation object
     def with_cassandra
       clone.tap do |r|
         r.use_solr_value = false
@@ -256,8 +289,12 @@ module DatastaxRails
     #   Model.where(:age).less_than(65)
     #
     # NOTE: Due to the way SOLR handles range queries, all greater/less than
-    #       queries are actually greater/less than or equal to queries.
-    #       There is no way to perform a strictly greater/less than query.
+    # queries are actually greater/less than or equal to queries.
+    # There is no way to perform a strictly greater/less than query.
+    #
+    # @param attribute [Symbol, String, Hash] a hash of conditions or a single attribute that will be followed by
+    #   greater_than or less_than
+    # @return [DatastaxRails::Relation] a new Relation object
     def where(attribute)
       return self if attribute.blank?
       
@@ -285,6 +322,11 @@ module DatastaxRails
     #   Model.where_not(:group_id => ['1234', '5678'])
     #
     # The above would find all models where group id is neither 1234 or 5678.
+    #
+    # @param attribute [Symbol, String, Hash] a hash of conditions or a single attribute that will be followed by
+    #   greater_than or less_than
+    # @return [DatastaxRails::Relation, DatastaxRails::SearchMethods::WhereProxy] a new Relation object
+    #   or a proxy object if just an attribute was passed
     def where_not(attribute)
       return self if attribute.blank?
       
@@ -314,6 +356,12 @@ module DatastaxRails
     #
     #   Model.fulltext("john smith", :fields => [:title])
     #   Model.fulltext("john smith", :hightlight => [:body])
+    #
+    # @param query [String] a fulltext query to pass to solr
+    # @param opts [Hash] an optional options hash to modify the fulltext query
+    # @option opts [Array] :fields list of fields to search instead of the default of all text fields (not-implemented)
+    # @option opts [Array] :highlight list of fields to retrieve highlights for (not-implemented)
+    # @return [DatastaxRails::Relation] a new Relation object
     def fulltext(query, opts = {})
       return self if query.blank?
       

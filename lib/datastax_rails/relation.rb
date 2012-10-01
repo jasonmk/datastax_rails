@@ -2,8 +2,8 @@ require 'rsolr'
 
 module DatastaxRails
   class Relation
-    MULTI_VALUE_METHODS = [:group, :order, :where, :where_not, :fulltext, :greater_than, :less_than, :select]
-    SINGLE_VALUE_METHODS = [:page, :per_page, :reverse_order, :query_parser, :consistency, :ttl, :use_solr, :escape]
+    MULTI_VALUE_METHODS = [:order, :where, :where_not, :fulltext, :greater_than, :less_than, :select]
+    SINGLE_VALUE_METHODS = [:page, :per_page, :reverse_order, :query_parser, :consistency, :ttl, :use_solr, :escape, :group]
     
     SOLR_CHAR_RX = /([\+\!\(\)\[\]\^\"\~\:\'\=]+)/
     
@@ -73,6 +73,9 @@ module DatastaxRails
     # This means the total number of matches regardless of page size.
     # If the relation has not been populated yet, a limit of 1 will be
     # placed on the query before it is executed.
+    #
+    # For a grouped query, this still returns the total number of 
+    # matching documents
     #
     # Compare with #size.
     #
@@ -164,9 +167,12 @@ module DatastaxRails
     # the number of results in the current page.  DatastaxRails models
     # can have a +default_page_size+ set which will cause them to be
     # paginated all the time.
+    #
+    # For a grouped query, this returns the size of the largest group.
+    #
     # Compare with #count
     def size
-      return @results.size if loaded?
+      return @results.size if loaded? && !@group_value
       total_entries = count
       (per_page_value && total_entries > per_page_value) ? per_page_value : total_entries
     end
@@ -184,7 +190,7 @@ module DatastaxRails
       return @results if loaded?
       if use_solr_value
         @results = query_via_solr
-        @count = @results.total_entries
+        @count = @group_value ? @results.total_for_all : @results.total_entries
       else
         @results = query_via_cql
       end
@@ -245,7 +251,8 @@ module DatastaxRails
     # Runs the query with a limit of 1 just to grab the total results attribute off
     # the result set. 
     def count_via_solr
-      limit(1).select(:id).to_a.total_entries
+      results = limit(1).select(:id).to_a
+      @group_value ? results.total_for_all : results.total_entries
     end
     
     # Escapes values that might otherwise mess up the URL or confuse SOLR.
@@ -325,24 +332,44 @@ module DatastaxRails
       
       select_columns = select_values.empty? ? (@klass.attribute_definitions.keys - @klass.lazy_attributes) : select_values.flatten
       
-      #TODO Need to escape URL stuff (I think)
-      response = rsolr.paginate(@page_value, @per_page_value, 'select', :params => params)["response"]
-      results = DatastaxRails::Collection.new
-      results.total_entries = response['numFound'].to_i
-      if @consistency_value
-        response['docs'].each do |doc|
-          id = doc['id']
-          obj = @klass.with_cassandra.consistency(@consistency_value).find_by_id(id)
-          results << obj if obj
+      if(@group_value)
+        results = DatastaxRails::GroupedCollection.new
+        params[:group] = 'true'
+        params['group.field'] = @group_value
+        params['group.limit'] = @per_page_value
+        params['group.offset'] = (@page_value - 1) * @per_page_value
+        params['group.ngroups'] = 'true'
+        response = rsolr.post('select', :params => params)["grouped"][@group_value.to_s]
+        results.total_groups = response['ngroups'].to_i
+        results.total_for_all = response['matches'].to_i
+        results.total_entries = 0
+        response['groups'].each do |group|
+          results[group['groupValue']] = parse_docs(group['doclist'], select_columns)
+          results.total_entries = results[group['groupValue']].total_entries if results[group['groupValue']].total_entries > results.total_entries
         end
       else
-        response['docs'].each do |doc|
-          key = doc.delete('id')
-          results << @klass.instantiate(key,doc, select_columns)
+        response = rsolr.paginate(@page_value, @per_page_value, 'select', :params => params)["response"]
+        results = parse_docs(response, select_columns)
+      end
+      results
+    end
+    
+    
+    def parse_docs(response, select_columns)
+      results = DatastaxRails::Collection.new
+      results.total_entries = response['numFound'].to_i
+      response['docs'].each do |doc|
+        id = doc['id']
+        if(@consistency_value)
+          obj = @klass.with_cassandra.consistency(@consistency_value).find_by_id(id)
+          results << obj if obj
+        else
+          results << @klass.instantiate(id, doc, select_columns)
         end
       end
       results
     end
+    protected(:parse_docs)
     
     def inspect(just_me = false)
       just_me ? super() : to_a.inspect

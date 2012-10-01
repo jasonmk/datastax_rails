@@ -127,4 +127,32 @@ describe DatastaxRails::Relation do
       relation.total_pages.should == 4
     end
   end
+  
+  describe "grouped queries" do
+    before(:each) do
+      Person.create(:name => 'John', :nickname => 'J')
+      Person.create(:name => 'Jason', :nickname => 'J')
+      Person.create(:name => 'James', :nickname => 'J')
+      Person.create(:name => 'Kathrine', :nickname => 'Kat')
+      Person.create(:name => 'Kathy', :nickname => 'Kat')
+      Person.create(:name => 'Steven', :nickname => 'Steve')
+      Person.commit_solr
+    end
+    
+    it "should return matching documents grouped by an attribute" do
+      results = Person.group(:nickname).all
+      results['j'].should have(3).items
+      results['kat'].should have(2).items
+      results['steve'].should have(1).item
+    end
+    
+    it "should return total_entires as the highest value of any group" do
+      results = Person.group(:nickname).all
+      results.total_entries.should eq(3)
+    end
+    
+    it "should still return a total count when using the count method" do
+      results = Person.group(:nickname).count.should eq(6)
+    end
+  end
 end

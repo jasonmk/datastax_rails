@@ -15,6 +15,7 @@ module DatastaxRails
   autoload :Collection
   autoload :Connection
   autoload :Cql
+  autoload :GroupedCollection
   autoload :Identity
   autoload :Migrations
   autoload :Persistence

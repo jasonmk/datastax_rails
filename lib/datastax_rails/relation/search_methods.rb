@@ -96,15 +96,30 @@ module DatastaxRails
       end
     end
     
-    # Group results by one or more attributes only returning the top result
-    # for each group.
+    # Group results by a given attribute only returning the top results
+    # for each group. In Lucene, this is often referred to as Field Collapsing.
+    #
+    # This modifies the behavior of pagination. When using a group, +per_page+ will
+    # specify the number of results returned *for each group*. In addition, +page+
+    # will move all groups forward by one page possibly resulting in some groups
+    # getting dropped off if they have fewer matching entires than others.
+    #
+    # When grouping is being used, the sort values will be used to sort results within
+    # a given group. Any sorting of the groups themselves will need to be handled
+    # after-the-fact as the groups are returned as hash of Collection objects.
+    #
+    # Because SOLR is doing the grouping work, we can only group on single-valued
+    # fields (i.e., not +text+ or +array+ attributes). In the future, SOLR may
+    # support grouping on multi-valued fields.
+    #
+    # NOTE: Group names will be lower-cased
     #
     #   Model.group(:program_id)
-    def group(*attrs)
-      return self if attrs.blank?
+    def group(attribute)
+      return self if attribute.blank?
       
       clone.tap do |r|
-        r.group_values += attrs.flatten
+        r.group_value = attribute
       end
     end
     

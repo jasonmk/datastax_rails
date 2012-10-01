@@ -109,6 +109,7 @@ module DatastaxRails
           solr_url = "#{DatastaxRails::Base.solr_base_url}/resource/#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}"
           uri = URI.parse(solr_url)
           Net::HTTP.start(uri.host, uri.port) do |http|
+            http.read_timeout(300)
             if force || solrconfig_digest != sm_digests['solrconfig'] 
               puts "Posting Solr Config file to '#{solr_url}/solrconfig.xml'"
               http.post(uri.path+"/solrconfig.xml", solrconfig)

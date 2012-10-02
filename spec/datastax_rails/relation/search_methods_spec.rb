@@ -79,10 +79,22 @@ describe DatastaxRails::Relation do
       @relation.where(:complexity).greater_than(1.0).should_not be_empty
     end
     
+    it "should allow :greater_than to be specified in a single call" do
+      Hobby.create(:name => 'Swimming', :complexity => 1.1)
+      @relation.commit_solr
+      @relation.where(:complexity => {:greater_than => 1.0}).should_not be_empty
+    end
+    
     it "should return documents where a value is less than the given value" do
       Hobby.create(:name => 'Swimming', :complexity => 1.1)
       @relation.commit_solr
       @relation.where(:complexity).less_than(2.0).should_not be_empty
+    end
+    
+    it "should allow :less_than to be specified in a single call" do
+      Hobby.create(:name => 'Swimming', :complexity => 1.1)
+      @relation.commit_solr
+      @relation.where(:complexity => {:less_than => 2.0}).should_not be_empty
     end
     
     it "should allow arrays to be passed as OR queries" do
@@ -114,7 +126,7 @@ describe DatastaxRails::Relation do
     end
     
     it "should search for values within a range" do
-      Hobby.create(:name => 'jobbing', :complexity => 1.2)
+      Hobby.create(:name => 'jogging', :complexity => 1.2)
       @relation.commit_solr
       @relation.where(:complexity => 1..2).should_not be_empty
       @relation.where(:complexity => 2..3).should be_empty
@@ -133,6 +145,37 @@ describe DatastaxRails::Relation do
       Hobby.create(:name => 'Biking')
       @relation.commit_solr
       @relation.where_not(:name => ['Swimming','Biking']).should be_empty
+    end
+    
+    it "should return documents where a value is not greater than the given value" do
+      Hobby.create(:name => 'Swimming', :complexity => 1.1)
+      @relation.commit_solr
+      @relation.where_not(:complexity).greater_than(2.0).should_not be_empty
+    end
+    
+    it "should allow :greater_than to be specified in a single call" do
+      Hobby.create(:name => 'Swimming', :complexity => 1.1)
+      @relation.commit_solr
+      @relation.where_not(:complexity => {:greater_than => 2.0}).should_not be_empty
+    end
+    
+    it "should return documents where a value is not less than the given value" do
+      Hobby.create(:name => 'Swimming', :complexity => 1.1)
+      @relation.commit_solr
+      @relation.where_not(:complexity).less_than(1.0).should_not be_empty
+    end
+    
+    it "should allow :less_than to be specified in a single call" do
+      Hobby.create(:name => 'Swimming', :complexity => 1.1)
+      @relation.commit_solr
+      @relation.where_not(:complexity => {:less_than => 1.0}).should_not be_empty
+    end
+    
+    it "should search for values outside a range" do
+      Hobby.create(:name => 'jogging', :complexity => 1.2)
+      @relation.commit_solr
+      @relation.where_not(:complexity => 1..2).should be_empty
+      @relation.where_not(:complexity => 2..3).should_not be_empty
     end
   end
   

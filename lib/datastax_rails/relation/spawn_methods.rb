@@ -86,7 +86,7 @@ module DatastaxRails
       result
     end
     
-    VALID_FIND_OPTIONS = [:conditions, :limit, :select, :offset, :order, :group, :page, :per_page]
+    VALID_FIND_OPTIONS = [:conditions, :limit, :select, :offset, :order, :group, :page, :per_page, :fulltext, :consistency, :with_solr, :with_cassandra, :where, :where_not]
     def apply_finder_options(options) #:nodoc:
       relation = clone
       return relation unless options
@@ -95,7 +95,7 @@ module DatastaxRails
       finders = options.dup
       finders.delete_if { |key, value| value.nil? }
       
-      ([:group, :order, :limit, :offset, :page, :per_page, :select] & finders.keys).each do |finder|
+      ((VALID_FIND_OPTIONS - [:conditions]) & finders.keys).each do |finder|
         relation = relation.send(finder, finders[finder])
       end
       

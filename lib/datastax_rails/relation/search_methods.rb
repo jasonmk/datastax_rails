@@ -208,14 +208,12 @@ module DatastaxRails
       end
     end
     
-    # Reverses the order of the results
+    # Reverses the order of the results. The following are equivalent:
     # 
     #   Model.order(:name).reverse_order
-    #     is equivalent to
-    #   Model.order(:name => :desc)
+    #   Model.order(:name => :desc) 
     #
     #   Model.order(:name).reverse_order.reverse_order
-    #     is equivalent to
     #   Model.order(:name => :asc)
     #
     # @return [DatastaxRails::Relation] a new Relation object
@@ -288,6 +286,13 @@ module DatastaxRails
     #   Model.where(:created_at).greater_than(1.day.ago)
     #   Model.where(:age).less_than(65)
     #
+    # There is an alternate form of specifying greater than/less than queries
+    # that can be done with a single call.  This is useful for remote APIs and
+    # such.
+    #
+    #   Model.where(:created_at => {:greater_than => 1.day.ago})
+    #   Model.where(:age => {:less_than => 65})
+    #
     # NOTE: Due to the way SOLR handles range queries, all greater/less than
     # queries are actually greater/less than or equal to queries.
     # There is no way to perform a strictly greater/less than query.
@@ -297,16 +302,27 @@ module DatastaxRails
     # @return [DatastaxRails::Relation] a new Relation object
     def where(attribute)
       return self if attribute.blank?
-      
       if attribute.is_a?(Symbol)
         WhereProxy.new(self, attribute)
       else
-        attributes = attribute.dup
-        attributes.each do |k,v|
-          attributes[k] = solr_format(v)
-        end
         clone.tap do |r|
-          r.where_values << attributes
+          attributes = attribute.dup
+          attributes.each do |k,v|
+            if(v.is_a?(Hash))
+              comp, value = v.first
+              if(comp.to_s == 'greater_than')
+                r.greater_than_values << {k => value}
+              elsif(comp.to_s == 'less_than')
+                r.less_than_values << {k => value}
+              else
+                r.where_values << {k => value}
+              end
+              attributes.delete(k)
+            else
+              attributes[k] = solr_format(v)
+            end
+          end
+          r.where_values << attributes unless attributes.empty?
         end
       end
     end
@@ -330,18 +346,28 @@ module DatastaxRails
     def where_not(attribute)
       return self if attribute.blank?
       
-      attributes = []
-      attribute.each do |k,v|
-        if v.is_a?(Array)
-          v.each do |val|
-            attributes << {k => solr_format(val)}
+      if attribute.is_a?(Symbol)
+        WhereProxy.new(self, attribute, true)
+      else
+        clone.tap do |r|
+          attributes = attribute.dup
+          attributes.each do |k,v|
+            if(v.is_a?(Hash))
+              comp, value = v.first
+              if(comp.to_s == 'greater_than')
+                r.less_than_values << {k => value}
+              elsif(comp.to_s == 'less_than')
+                r.greater_than_values << {k => value}
+              else
+                r.where_not_values << {k => value}
+              end
+              attributes.delete(k)
+            else
+              attributes[k] = solr_format(v)
+            end
           end
-        else
-          attributes << {k => solr_format(v)}
+          r.where_not_values << attributes unless attributes.empty?
         end
-      end
-      clone.tap do |r|
-        r.where_not_values += attributes
       end
     end
     
@@ -415,25 +441,37 @@ module DatastaxRails
       end
     
     class WhereProxy #:nodoc:
-      def initialize(relation, attribute) #:nodoc:
-        @relation, @attribute = relation, attribute
+      def initialize(relation, attribute, invert = false) #:nodoc:
+        @relation, @attribute, @invert = relation, attribute, invert
       end
       
       def equal_to(value) #:nodoc:
         @relation.clone.tap do |r|
-          r.where_values << {@attribute => r.solr_format(value)}
+          if @invert
+            r.where_not_values << {@attribute => r.solr_format(value)}
+          else
+            r.where_values << {@attribute => r.solr_format(value)}
+          end
         end
       end
       
       def greater_than(value) #:nodoc:
         @relation.clone.tap do |r|
-          r.greater_than_values << {@attribute => r.solr_format(value)}
+          if @invert
+            r.less_than_values << {@attribute => r.solr_format(value)}
+          else
+            r.greater_than_values << {@attribute => r.solr_format(value)}
+          end
         end
       end
       
       def less_than(value) #:nodoc:
         @relation.clone.tap do |r|
-          r.less_than_values << {@attribute => r.solr_format(value)}
+          if @invert
+            r.greater_than_values << {@attribute => r.solr_format(value)}
+          else
+            r.less_than_values << {@attribute => r.solr_format(value)}
+          end
         end
       end
     end

@@ -109,23 +109,44 @@ module DatastaxRails
           solr_url = "#{DatastaxRails::Base.solr_base_url}/resource/#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}"
           uri = URI.parse(solr_url)
           Net::HTTP.start(uri.host, uri.port) do |http|
-            http.read_timeout(300)
-            if force || solrconfig_digest != sm_digests['solrconfig'] 
-              puts "Posting Solr Config file to '#{solr_url}/solrconfig.xml'"
-              http.post(uri.path+"/solrconfig.xml", solrconfig)
-              sleep(5) if Rails.env.production?
+            http.read_timeout = 300
+            if force || solrconfig_digest != sm_digests['solrconfig']
+              loop do 
+                puts "Posting Solr Config file to '#{solr_url}/solrconfig.xml'"
+                http.post(uri.path+"/solrconfig.xml", solrconfig)
+                if Rails.env.production?
+                  sleep(5)
+                  resp = http.get(uri.path+"/solrconfig.xml")
+                  continue unless resp.message == 'OK'                  
+                end
+                break
+              end
               DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:solrconfig => solrconfig_digest).execute
             end
             if force || stopwords_digest != sm_digests['stopwords']
-              puts "Posting Solr Stopwords file to '#{solr_url}/stopwords.txt'"
-              http.post(uri.path+"/stopwords.txt", stopwords)
-              sleep(5) if Rails.env.production?
+              loop do
+                puts "Posting Solr Stopwords file to '#{solr_url}/stopwords.txt'"
+                http.post(uri.path+"/stopwords.txt", stopwords)
+                if Rails.env.production?
+                  sleep(5)
+                  resp = http.get(uri.path+"/stopwords.txt")
+                  continue unless resp.message == 'OK'
+                end
+                break
+              end
               DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:stopwords => stopwords_digest).execute
             end
             if force || schema_digest != sm_digests['digest']
-              puts "Posting Solr Schema file to '#{solr_url}/schema.xml'"
-              http.post(uri.path+"/schema.xml", schema)
-              sleep(5) if Rails.env.production?
+              loop do
+                puts "Posting Solr Schema file to '#{solr_url}/schema.xml'"
+                http.post(uri.path+"/schema.xml", schema)
+                if Rails.env.production?
+                  sleep(5)
+                  resp = http.get(uri.path+"/schema.xml")
+                  continue unless resp.message == 'OK'
+                end
+                break
+              end
               DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:digest => schema_digest).execute
             end
           end

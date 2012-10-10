@@ -87,8 +87,29 @@ module DatastaxRails
     end
     
     VALID_FIND_OPTIONS = [:conditions, :limit, :select, :offset, :order, :group, :page, :per_page, :fulltext, :consistency, :with_solr, :with_cassandra, :where, :where_not]
-    def apply_finder_options(options) #:nodoc:
-      relation = clone
+    # Applies the passed in finder options and returns a new Relation.
+    # Takes any of the options below and calls them on the relation as if they
+    # were methods (+conditions+ is passed to +where+).
+    #
+    # @param [Hash] options the options hash
+    # @option options [Hash] :conditions
+    # @option options [Symbol, String] :consistency
+    # @option options [String] :fulltext
+    # @option options [Symbol, String] :group
+    # @option options [Integer, String] :limit
+    # @option options [Integer, String] :offset
+    # @option options [String, Hash] :order
+    # @option options [Integer, String] :page
+    # @option options [Integer, String] :per_page
+    # @option options [Array] :select
+    # @option options [Hash] :where
+    # @option options [Hash] :where_not
+    # @option options [Boolean] :with_cassandra
+    # @option options [Boolean] :with_solr
+    # @return [DatastaxRails::Relation] relation with all options applied
+    # @raise [ArgumentError] if an invalid option is passed in
+    def apply_finder_options(options)
+      relation = self
       return relation unless options
       
       options.assert_valid_keys(VALID_FIND_OPTIONS)
@@ -96,10 +117,14 @@ module DatastaxRails
       finders.delete_if { |key, value| value.nil? }
       
       ((VALID_FIND_OPTIONS - [:conditions]) & finders.keys).each do |finder|
-        relation = relation.send(finder, finders[finder])
+        if(finder.to_s =~ /(with_solr|with_cassandra)/)
+          relation = relation.send(finder)
+        else
+          relation = relation.send(finder, finders[finder])
+        end
       end
       
-      relation = relation.where(finders[:conditions]) if options.has_key?(:conditions)
+      relation = relation.where(finders[:conditions]) if finders.has_key?(:conditions)
       relation
     end
   end

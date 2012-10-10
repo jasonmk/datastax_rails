@@ -1,3 +1,4 @@
+require 'rubygems'
 require 'datastax_rails'
 require 'rails'
 module DatastaxRails

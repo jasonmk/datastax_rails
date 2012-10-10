@@ -13,9 +13,9 @@ describe DatastaxRails::Base do
     end
     
     it "should allow an update to a model without triggering a uniqueness error" do
-      p=Person.create!(:name => "Jason", :birthdate => Date.parse("10/19/1985"))
+      p=Person.create!(:name => "Jason", :birthdate => Date.strptime("10/19/1985", '%m/%d/%Y'))
       Person.commit_solr
-      p.birthdate = Date.parse("10/19/1980")
+      p.birthdate = Date.strptime("10/19/1980", '%m/%d/%Y')
       p.save!
     end
     

@@ -43,6 +43,13 @@ GEM
       thrift_client (>= 0.7.1)
     coderay (1.0.8)
     columnize (0.3.6)
+    debugger (1.2.0)
+      columnize (>= 0.3.1)
+      debugger-linecache (~> 1.1.1)
+      debugger-ruby_core_source (~> 1.1.3)
+    debugger-linecache (1.1.2)
+      debugger-ruby_core_source (>= 1.1.1)
+    debugger-ruby_core_source (1.1.3)
     diff-lcs (1.1.3)
     erubis (2.7.0)
     hike (1.2.1)
@@ -90,7 +97,6 @@ GEM
       thor (>= 0.14.6, < 2.0)
     rake (0.9.2.2)
     rbx-require-relative (0.0.9)
-    rcov (1.0.0)
     rdoc (3.12)
       json (~> 1.4)
     rsolr (1.0.8)
@@ -125,7 +131,7 @@ GEM
     thrift_client (0.8.2)
       thrift (~> 0.8.0)
     tilt (1.3.3)
-    treetop (1.4.10)
+    treetop (1.4.11)
       polyglot
       polyglot (>= 0.3.1)
     tzinfo (0.3.33)
@@ -135,9 +141,9 @@ PLATFORMS
 
 DEPENDENCIES
   datastax_rails!
+  debugger
   jquery-rails
   pry
-  rcov
   rspec-rails
   ruby-debug
   ruby18_source_location

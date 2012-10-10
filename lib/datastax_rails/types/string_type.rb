@@ -4,8 +4,7 @@ module DatastaxRails
       DEFAULTS = {:solr_type => 'string', :indexed => true, :stored => true, :multi_valued => false, :sortable => true, :tokenized => false, :fulltext => true}
       def encode(str)
         str = "" unless str
-        raise ArgumentError.new("#{self} requires a String") unless str.kind_of?(String)
-        str.dup
+        str.to_s
       end
 
       def wrap(record, name, value)

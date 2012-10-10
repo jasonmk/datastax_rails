@@ -8,7 +8,7 @@ module DatastaxRails
   
         def create(name, options = {})
           opts = { :name => name.to_s,
-                   :strategy_class => 'org.apache.cassandra.locator.NetworkTopologyStrategy'}.merge(options)
+                   :strategy_class => 'org.apache.cassandra.locator.NetworkTopologyStrategy'}.with_indifferent_access.merge(options)
   
           if(exists?(name.to_s))
             puts "Keyspace #{name.to_s} already exists"

@@ -1,8 +1,8 @@
 development:
-  servers: ["localhost:9160"]
+  servers: ["127.0.0.1:9160"]
   keyspace: "datastax_rails_development"
   strategy_class: "org.apache.cassandra.locator.SimpleStrategy"
-  strategy_options: {"DC1": "1"} 
+  strategy_options: {"replication_factor": "1"}
   connection_options:
     timeout: 10
   solr:
@@ -10,10 +10,10 @@ development:
     path: /solr
     
 test:
-  servers: ["localhost:9160"]
+  servers: ["127.0.0.1:9160"]
   keyspace: "datastax_rails_test"
   strategy_class: "org.apache.cassandra.locator.SimpleStrategy"
-  strategy_options: {"DC1": "1"} 
+  strategy_options: {"replication_factor": "1"}
   connection_options:
     timeout: 10
   solr:

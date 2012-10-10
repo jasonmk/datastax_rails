@@ -24,7 +24,13 @@ module DatastaxRails
     alias :loaded? :loaded
     alias :default_scoped? :default_scoped
     
-    def initialize(klass, column_family) #:nodoc:
+    # Initializes the Relation.  Defaults page value to 1, per_page to the class
+    # default, and solr use to true.  Everything else gets defaulted to nil or
+    # empty.
+    #
+    # @param [Class] klass the child of DatastaxRails::Base that this relation searches
+    # @param [String, Symbol] column_family the name of the column family this relation searches
+    def initialize(klass, column_family)
       @klass, @column_family = klass, column_family
       @loaded = false
       @results = []
@@ -379,6 +385,10 @@ module DatastaxRails
     end
     protected(:parse_docs)
     
+    # Inspects the results of the search instead of the Relation itself.
+    # Passing true causes the Relation to be inspected.
+    #
+    # @param [Boolean] just_me if true, inspect the Relation, otherwise the results
     def inspect(just_me = false)
       just_me ? super() : to_a.inspect
     end
@@ -397,11 +407,14 @@ module DatastaxRails
       @klass.send(:with_scope, self, :overwrite) { yield }
     end
     
-    def where_values_hash #:nodoc:
+    # Merges all of the where values together into a single hash
+    def where_values_hash
       where_values.inject({}) { |values,v| values.merge(v) }
     end
 
-    def scope_for_create #:nodoc:
+    # Creates a scope that includes all of the where values plus anything
+    # that is in +create_with_value+.
+    def scope_for_create
       @scope_for_create ||= where_values_hash.merge(create_with_value)
     end
     

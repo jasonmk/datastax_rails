@@ -92,7 +92,7 @@ module DatastaxRails
       #
       # @return [String] in the form of 'http://localhost:8983/solr'
       def solr_base_url
-        DatastaxRails::Base.establish_connection unless self.connection 
+        DatastaxRails::Base.establish_connection unless self.connection
         port = DatastaxRails::Base.config[:solr][:port]
         path = DatastaxRails::Base.config[:solr][:path]
         "http://#{self.current_server}:#{port}#{path}"

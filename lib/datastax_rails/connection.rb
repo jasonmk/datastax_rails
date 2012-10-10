@@ -13,7 +13,8 @@ module DatastaxRails
     module ClassMethods
       DEFAULT_OPTIONS = {
         :servers => "127.0.0.1:9160",
-        :thrift => {}
+        :thrift => {},
+        :cql_version => '3.0.0'
       }
       
       # Returns the current server that we are talking to.  This is useful when you are talking to a
@@ -85,7 +86,7 @@ module DatastaxRails
         DatastaxRails::Base.config = spec.with_indifferent_access
         spec.reverse_merge!(DEFAULT_OPTIONS)
         connection_options = spec[:connection_options] || {}
-        self.connection = CassandraCQL::Database.new(spec[:servers], {:keyspace => spec[:keyspace]}, connection_options.symbolize_keys)
+        self.connection = CassandraCQL::Database.new(spec[:servers], {:keyspace => spec[:keyspace], :cql_version => spec[:cql_version]}, connection_options.symbolize_keys)
       end
       
       # Returns the base portion of the URL for connecting to SOLR based on the current Cassandra server.

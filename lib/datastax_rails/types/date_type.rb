@@ -5,6 +5,7 @@ module DatastaxRails
       FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 
       def encode(value)
+        return unless value
         raise ArgumentError.new("#{self} requires a Date") unless value.kind_of?(Date) || value.kind_of?(Time)
         value.to_date.strftime(FORMAT)
       end

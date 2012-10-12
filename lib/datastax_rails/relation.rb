@@ -348,7 +348,7 @@ module DatastaxRails
         params['group.limit'] = @per_page_value
         params['group.offset'] = (@page_value - 1) * @per_page_value
         params['group.ngroups'] = 'true'
-        response = rsolr.post('select', :params => params)["grouped"][@group_value.to_s]
+        response = rsolr.post('select', :data => params)["grouped"][@group_value.to_s]
         results.total_groups = response['ngroups'].to_i
         results.total_for_all = response['matches'].to_i
         results.total_entries = 0
@@ -357,7 +357,7 @@ module DatastaxRails
           results.total_entries = results[group['groupValue']].total_entries if results[group['groupValue']].total_entries > results.total_entries
         end
       else
-        response = rsolr.paginate(@page_value, @per_page_value, 'select', :params => params)["response"]
+        response = rsolr.paginate(@page_value, @per_page_value, 'select', :data => params)["response"]
         results = parse_docs(response, select_columns)
       end
       results

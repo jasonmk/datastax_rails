@@ -10,7 +10,7 @@ module DatastaxRails
     def method_missing(sym, *args, &block)
       if @rsolr.uri.host != DatastaxRails::Base.current_server
         @rsolr.uri.host = DatastaxRails::Base.current_server
-        @rsolr = RSolr.connect(:url => @rsolr.uri.to_s)
+        @rsolr = DatastaxRails::Base.establish_solr_connection
       end
       @rsolr.__send__(sym, *args, &block)
     rescue Errno::ECONNREFUSED

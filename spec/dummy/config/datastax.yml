@@ -6,8 +6,12 @@ development:
   connection_options:
     timeout: 10
   solr:
-    port: 8983
+    port: 8984
     path: /solr
+    ssl:
+      use_ssl: true
+      cert: config/datastax_rails.crt
+      key: config/datastax_rails.key
     
 test:
   servers: ["127.0.0.1:9160"]
@@ -17,6 +21,9 @@ test:
   connection_options:
     timeout: 10
   solr:
-    port: 8983
+    port: 8984
     path: /solr
-        
+    ssl:
+      use_ssl: true
+      cert: config/datastax_rails.crt
+      key: config/datastax_rails.key

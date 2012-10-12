@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
   s.add_dependency "rails", "~> 3.2.1"
   s.add_dependency "cassandra-cql", "~> 1.1.0"
   s.add_dependency "rsolr", "~> 1.0.7"
+  s.add_dependency "rsolr-client-cert"
   
   s.add_development_dependency "rspec-rails"
   #s.add_development_dependency "ruby-debug"

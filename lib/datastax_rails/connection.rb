@@ -1,4 +1,6 @@
 # require 'datastax_rails/rsolr_client_wrapper'
+require 'rsolr/client_cert'
+require 'rest_client'
 module DatastaxRails
   # The connection module holds all the code for establishing and maintaining a connection to
   # Datastax Exterprise.  This includes both the Cassandra and Solr connections.
@@ -49,6 +51,11 @@ module DatastaxRails
       #   solr:
       #     port: 8983
       #     path: /solr
+      #     ssl:
+      #       use_ssl: true
+      #       cert: config/datastax_rails.crt
+      #       key: config/datastax_rails.key
+      #       keypass: changeme
       #
       # The +servers+ entry should be a list of all of the servers in your local datacenter.  These
       # are the servers that DSR will attempt to connect to and will round-robin through.
@@ -96,16 +103,44 @@ module DatastaxRails
         DatastaxRails::Base.establish_connection unless self.connection
         port = DatastaxRails::Base.config[:solr][:port]
         path = DatastaxRails::Base.config[:solr][:path]
-        "http://#{self.current_server}:#{port}#{path}"
+        protocol = DatastaxRails::Base.config[:solr].has_key?(:ssl) && DatastaxRails::Base.config[:solr][:ssl][:use_ssl] ? 'https' : 'http'
+        "#{protocol}://#{self.current_server}:#{port}#{path}"
+      end
+      
+      # Wraps and caches a solr connection object
+      #
+      # @params [Boolean] reconnect force a new connection
+      # @return [DatastaxRails::RSolrClientWrapper] a wrapped RSolr connection      
+      def solr_connection(reconnect = false)
+        if(!@rsolr || reconnect)
+          @rsolr = DatastaxRails::RSolrClientWrapper.new(establish_solr_connection)
+        end
+        @rsolr
       end
       
       # Similar to +establish_connection+, this method creates a connection object for Solr.  Since HTTP is stateless, this doesn't
       # actually launch the connection, but it gets everything set up so that RSolr can do its work.  It's important to note that
       # unlike the cassandra connection which is global to all of DSR, each model will have its own solr_connection.
       #
-      # @return [DatastaxRails::RSolrClientWrapper] a wrapped RSolr connection
-      def solr_connection
-        @rsolr ||= DatastaxRails::RSolrClientWrapper.new(RSolr.connect :url => "#{solr_base_url}/#{DatastaxRails::Base.connection.keyspace}.#{self.column_family}")
+      # @return [RSolr::Client] RSolr client object
+      def establish_solr_connection
+        opts = {:url => "#{solr_base_url}/#{DatastaxRails::Base.connection.keyspace}.#{self.column_family}"}
+        if DatastaxRails::Base.config[:solr].has_key?(:ssl) && 
+            DatastaxRails::Base.config[:solr][:ssl].has_key?(:cert) && 
+            DatastaxRails::Base.config[:solr][:ssl][:use_ssl]
+          cert = Pathname.new(DatastaxRails::Base.config[:solr][:ssl][:cert])
+          key = Pathname.new(DatastaxRails::Base.config[:solr][:ssl][:key])
+          pass = DatastaxRails::Base.config[:solr][:ssl][:keypass]
+          cert = Rails.root.join(cert) unless cert.absolute?
+          key = Rails.root.join(key) unless key.absolute?
+          opts[:ssl_cert_file] = cert.to_s
+          opts[:ssl_key_file] = key.to_s
+          opts[:ssl_key_pass] = pass if pass
+          
+          RSolr::ClientCert.connect opts
+        else
+          RSolr.connect opts
+        end
       end
     end
   end

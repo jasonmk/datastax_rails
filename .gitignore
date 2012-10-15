@@ -7,6 +7,7 @@ capybara-*.html
 /vendor/bundle
 /log/*
 /tmp/*
+/doc/
 /db/*.sqlite3
 /spec/dummy/log/*
 /public/system/*
@@ -15,3 +16,7 @@ capybara-*.html
 **.orig
 rerun.txt
 pickle-email-*.html
+*.gem
+/spec/dummy/config/datastax_rails.crt
+/spec/dummy/config/datastax_rails.key
+/.yardoc

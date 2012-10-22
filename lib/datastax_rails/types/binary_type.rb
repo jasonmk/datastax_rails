@@ -5,6 +5,7 @@ module DatastaxRails
       def encode(str)
         raise ArgumentError.new("#{self} requires a String") unless str.kind_of?(String)
         io = StringIO.new(Base64.encode64(str))
+        #io = StringIO.new(str)
         chunks = []
         while chunk = io.read(1.megabyte)
           chunks << chunk
@@ -20,6 +21,7 @@ module DatastaxRails
           end
           io.rewind
           Base64.decode64(io.read)
+          #io.read
         else
           arr
         end

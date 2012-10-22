@@ -34,38 +34,40 @@ module DatastaxRails
       end
       
       def to_cql
-        columns = @columns.dup
-        values = []
-        
-        stmt = "update #{@klass.column_family} using consistency #{@consistency} "
-        
-        if(@ttl)
-          stmt << "AND TTL #{@ttl} "
-        end
-        
-        if(@timestamp)
-          stmt << "AND TIMESTAMP #{@timestamp}"
-        end
-        
-        unless columns.empty?
-          stmt << "SET "
+        column_names = @columns.keys
+        cql = ""
+        Tempfile.open('cql', Rails.root.join("tmp")) do |stmt|
+          stmt << "update #{@klass.column_family} using consistency #{@consistency} "
           
-          first_entry = columns.shift
-          
-          stmt << "#{first_entry.first.to_s} = ?"
-          values << first_entry.last
-          
-          columns.each do |k,v|
-            stmt << ", #{k.to_s} = ?"
-            values << v
+          if(@ttl)
+            stmt << "AND TTL #{@ttl} "
           end
+          
+          if(@timestamp)
+            stmt << "AND TIMESTAMP #{@timestamp}"
+          end
+          
+          unless @columns.empty?
+            stmt << "SET "
+            
+            first_entry = column_names.first
+            
+            stmt << CassandraCQL::Statement.sanitize("#{first_entry.to_s} = ?", [@columns[first_entry]])
+            column_names[1..-1].each do |col|
+              stmt << CassandraCQL::Statement.sanitize(", #{col.to_s} = ?", [@columns[col]])
+            end
+          end
+          
+          stmt << CassandraCQL::Statement.sanitize(" WHERE KEY IN (?)", [@key])
+          stmt.rewind
+          cql = stmt.read
         end
-        
-        stmt << " WHERE KEY IN (?)"
-        values << @key
-        
-        CassandraCQL::Statement.sanitize(stmt, values)
+        cql
       end
+      
+      # def execute
+        # puts to_cql.truncate(50)
+      # end
     end
   end
 end

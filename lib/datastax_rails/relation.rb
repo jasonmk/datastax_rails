@@ -357,7 +357,7 @@ module DatastaxRails
           results.total_entries = results[group['groupValue']].total_entries if results[group['groupValue']].total_entries > results.total_entries
         end
       else
-        response = rsolr.paginate(@page_value, @per_page_value, 'select', :data => params)["response"]
+        response = rsolr.paginate(@page_value, @per_page_value, 'select', :data => params, :method => :post)["response"]
         results = parse_docs(response, select_columns)
       end
       results

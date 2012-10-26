@@ -72,6 +72,28 @@ module DatastaxRails
           end
         end
       end
+      
+      def store_file(key, column, file, options = {})
+        timestamp = Time.now.stamp
+        mutations = []
+        i = 0
+        io = StringIO.new(file)
+        while chunk = io.read(1.megabyte)
+          mutations << CassandraCQL::Thrift::Mutation.new(
+            :column_or_supercolumn => CassandraCQL::Thrift::ColumnOrSuperColumn.new(
+              :column => CassandraCQL::Thrift::Column.new(
+                :name      => column.to_s + "_chunk_#{'%05d' % i}",
+                :value     => Base64.encode64(chunk),
+                :timestamp => timestamp,
+                :ttl       => options[:ttl]
+              )
+            )
+          )
+          i += 1
+        end
+        self.connection.connection.batch_mutate({key => {column_family => mutations}}, 1)
+        key
+      end
 
       # Instantiates a new object without calling +initialize+.
       #

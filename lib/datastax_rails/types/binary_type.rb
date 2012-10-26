@@ -4,10 +4,10 @@ module DatastaxRails
       DEFAULTS = {:solr_type => false, :indexed => false, :stored => false, :multi_valued => false, :sortable => false, :tokenized => false, :fulltext => false}
       def encode(str)
         raise ArgumentError.new("#{self} requires a String") unless str.kind_of?(String)
-        io = StringIO.new(Base64.encode64(str))
+        io = StringIO.new(str)
         #io = StringIO.new(str)
         chunks = []
-        while chunk = io.read(1.megabyte)
+        while chunk = io.read(Base64.encode64(1.megabyte))
           chunks << chunk
         end
         chunks
@@ -17,7 +17,7 @@ module DatastaxRails
         if(arr.is_a?(Array))
           io = StringIO.new("","w+")
           arr.each do |chunk|
-            io.write(chunk)
+            io.write(Base64.decode64(chunk))
           end
           io.rewind
           Base64.decode64(io.read)

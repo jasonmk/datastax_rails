@@ -7,7 +7,7 @@ module DatastaxRails
         io = StringIO.new(str)
         #io = StringIO.new(str)
         chunks = []
-        while chunk = io.read(Base64.encode64(1.megabyte))
+        while chunk = Base64.encode64(io.read(1.megabyte))
           chunks << chunk
         end
         chunks
@@ -16,12 +16,11 @@ module DatastaxRails
       def decode(arr)
         if(arr.is_a?(Array))
           io = StringIO.new("","w+")
-          arr.each do |chunk|
+          while chunk = arr.shift
             io.write(Base64.decode64(chunk))
           end
           io.rewind
-          Base64.decode64(io.read)
-          #io.read
+          io.read
         else
           arr
         end

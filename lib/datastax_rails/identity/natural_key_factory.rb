@@ -4,6 +4,7 @@ module DatastaxRails
       class NaturalKey
         attr_reader :value
 
+        delegate :size, :bytesize, :to => :value
         def initialize(value)
           @value = value
         end

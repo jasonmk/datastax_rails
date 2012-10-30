@@ -27,5 +27,24 @@ describe "DatastaxRails::Base" do
         p.destroy(:consistency => :local_quorum)
       end
     end
+    
+    describe "#store_file" do
+      it "should store a file" do
+        file = "abcd"*1.megabyte
+        Car.create(:name => 'limo', :picture => file)
+        Car.commit_solr
+        Car.find_by_name('limo').picture.should == file
+      end
+      
+      it "should successfully overwrite a larger file with a smaller one" do
+        file = "abcd"*1.megabyte
+        car = Car.create(:name => 'limo', :picture => file)
+        Car.commit_solr
+        smallfile = "e"*1.kilobyte
+        car.picture = smallfile
+        car.save
+        Car.find_by_name('limo').picture.should == smallfile
+      end
+    end
   end
 end

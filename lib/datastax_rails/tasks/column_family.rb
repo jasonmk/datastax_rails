@@ -111,8 +111,8 @@ module DatastaxRails
           http = Net::HTTP.new(uri.host, uri.port)
           if uri.scheme == 'https'
             http.use_ssl = true
-            http.cert = OpenSSL::X509::Certificate.new(Rails.root.join("config","pow.crt").read)
-            http.key = OpenSSL::PKey::RSA.new(Rails.root.join("config","pow.key").read)
+            http.cert = OpenSSL::X509::Certificate.new(Rails.root.join("config","datastax_rails.crt").read)
+            http.key = OpenSSL::PKey::RSA.new(Rails.root.join("config","datastax_rails.key").read)
             http.ca_path = Rails.root.join("config","sade_ca.crt").to_s
             http.verify_mode = OpenSSL::SSL::VERIFY_NONE
           end

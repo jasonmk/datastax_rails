@@ -57,6 +57,13 @@ module DatastaxRails
       # @option options [String] :schema_version the version of the schema to set for this record
       def write(key, attributes, options = {})
         key.tap do |key|
+          binary_attributes = {}
+          attributes.each do |column_name, value|
+            if attribute_definitions[column_name.to_sym].coder.class.to_s == 'DatastaxRails::Types::BinaryType'
+              binary_attributes[column_name] = value
+              attributes.delete(column_name)
+            end
+          end
           attributes = encode_attributes(attributes, options[:schema_version])
           ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => key, :attributes => attributes) do
             c = cql.update(key.to_s).columns(attributes)
@@ -69,6 +76,9 @@ module DatastaxRails
               end
             end
             c.execute
+            binary_attributes.each do |column_name, value|
+              store_file(key, column_name, value, options)
+            end
           end
         end
       end
@@ -91,7 +101,21 @@ module DatastaxRails
           )
           i += 1
         end
-        self.connection.connection.batch_mutate({key => {column_family => mutations}}, 1)
+        mutations << CassandraCQL::Thrift::Mutation.new(
+          :column_or_supercolumn => CassandraCQL::Thrift::ColumnOrSuperColumn.new(
+            :column => CassandraCQL::Thrift::Column.new(
+              :name      => column.to_s + "_chunk_count",
+              :value     => i,
+              :timestamp => timestamp,
+              :ttl       => options[:ttl]
+            )
+          )
+        )
+        delete_range = CassandraCQL::Thrift::SliceRange.new(:start => "#{column}_chunk_#{'%05d' % i}", :finish => "#{column}_chunk_99999", :count => 100000)
+        deletion_hash = {:timestamp => timestamp}
+        deletion_hash[:predicate] = CassandraCQL::Thrift::SlicePredicate.new(:slice_range => delete_range)
+        mutations << CassandraCQL::Thrift::Mutation.new(:deletion => CassandraCQL::Thrift::Deletion.new(deletion_hash))
+        self.connection.connection.batch_mutate({key.to_s => {column_family => mutations}}, 1)
         key
       end
 

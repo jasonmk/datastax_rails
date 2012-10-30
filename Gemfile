@@ -13,8 +13,6 @@ gem "jquery-rails"
 # your gem to rubygems.org.
 
 # To use debugger
-gem 'pry'
+#gem 'pry'
 #gem 'debugger', :platforms => :ruby_19
-gem 'ruby-debug', :platforms => :ruby_18
-gem 'ruby18_source_location', :platforms => :ruby_18
 #gem 'ruby-debug-base19', :platforms => :ruby_19

@@ -16,3 +16,4 @@ gem "jquery-rails"
 #gem 'pry'
 #gem 'debugger', :platforms => :ruby_19
 #gem 'ruby-debug-base19', :platforms => :ruby_19
+gem 'ruby-debug'

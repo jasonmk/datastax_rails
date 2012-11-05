@@ -101,20 +101,30 @@ module DatastaxRails
           )
           i += 1
         end
+        
         mutations << CassandraCQL::Thrift::Mutation.new(
           :column_or_supercolumn => CassandraCQL::Thrift::ColumnOrSuperColumn.new(
             :column => CassandraCQL::Thrift::Column.new(
               :name      => column.to_s + "_chunk_count",
-              :value     => i,
+              :value     => i.to_s,
               :timestamp => timestamp,
               :ttl       => options[:ttl]
             )
           )
         )
-        delete_range = CassandraCQL::Thrift::SliceRange.new(:start => "#{column}_chunk_#{'%05d' % i}", :finish => "#{column}_chunk_99999", :count => 100000)
-        deletion_hash = {:timestamp => timestamp}
-        deletion_hash[:predicate] = CassandraCQL::Thrift::SlicePredicate.new(:slice_range => delete_range)
-        mutations << CassandraCQL::Thrift::Mutation.new(:deletion => CassandraCQL::Thrift::Deletion.new(deletion_hash))
+        
+        cql = self.cql.select("#{column.to_s}_chunk_count").conditions(:key => key)
+        count = CassandraCQL::Result.new(cql.execute).fetch.to_hash["#{column.to_s}_chunk_count"]
+        if count
+          column_names = []
+          i.upto(count.to_i) do |j|
+            column_names << "#{column.to_s}_chunk_#{'%05d' % j}"
+          end
+          deletion_hash = {:timestamp => timestamp}
+          deletion_hash[:predicate] = CassandraCQL::Thrift::SlicePredicate.new(:column_names => column_names)
+          mutations << CassandraCQL::Thrift::Mutation.new(:deletion => CassandraCQL::Thrift::Deletion.new(deletion_hash))
+        end
+        
         self.connection.connection.batch_mutate({key.to_s => {column_family => mutations}}, 1)
         key
       end

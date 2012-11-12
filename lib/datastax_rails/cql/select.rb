@@ -6,6 +6,7 @@ module DatastaxRails#:nodoc:
         @select = select.join(",")
         @limit = nil
         @conditions = {}
+        @order = nil
         super
       end
       
@@ -24,6 +25,11 @@ module DatastaxRails#:nodoc:
         self
       end
       
+      def order(order)
+        @order = order
+        self
+      end
+      
       def to_cql
         conditions = []
         values = []
@@ -31,9 +37,9 @@ module DatastaxRails#:nodoc:
         @conditions.each do |k,v|
           values << v
           if v.kind_of?(Array)
-            conditions << "#{k.to_s} IN (?)"
+            conditions << "\"#{k.to_s}\" IN (?)"
           else
-            conditions << "#{k.to_s} = ?"
+            conditions << "\"#{k.to_s}\" = ?"
           end
         end
         
@@ -42,7 +48,11 @@ module DatastaxRails#:nodoc:
         end
         
         if @limit
-          stmt << "LIMIT #{@limit}"
+          stmt << "LIMIT #{@limit} "
+        end
+        
+        if @order
+          stmt << "ORDER BY #{@order}"
         end
         
         CassandraCQL::Statement.sanitize(stmt, values)

@@ -35,9 +35,9 @@ module DatastaxRails
       
       def to_cql
         column_names = @columns.keys
-        cql = ""
-        Tempfile.open('cql', Rails.root.join("tmp")) do |stmt|
-          stmt << "update #{@klass.column_family} using consistency #{@consistency} "
+        
+        
+          stmt = "update #{@klass.column_family} using consistency #{@consistency} "
           
           if(@ttl)
             stmt << "AND TTL #{@ttl} "
@@ -52,17 +52,14 @@ module DatastaxRails
             
             first_entry = column_names.first
             
-            stmt << CassandraCQL::Statement.sanitize("#{first_entry.to_s} = ?", [@columns[first_entry]])
+            stmt << CassandraCQL::Statement.sanitize("\"#{first_entry.to_s}\" = ?", [@columns[first_entry]])
             column_names[1..-1].each do |col|
-              stmt << CassandraCQL::Statement.sanitize(", #{col.to_s} = ?", [@columns[col]])
+              stmt << CassandraCQL::Statement.sanitize(", \"#{col.to_s}\" = ?", [@columns[col]])
             end
           end
           
-          stmt << CassandraCQL::Statement.sanitize(" WHERE KEY IN (?)", [@key])
-          stmt.rewind
-          cql = stmt.read
-        end
-        cql
+          stmt << CassandraCQL::Statement.sanitize(" WHERE \"KEY\" IN (?)", [@key])
+        stmt
       end
       
       # def execute

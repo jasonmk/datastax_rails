@@ -33,8 +33,12 @@ class Car < DatastaxRails::Base
   key :uuid
   string :name
   string :person_id
-  binary :picture
+  string :car_payload_id
   timestamps
+end
+
+class CarPayload < DatastaxRails::PayloadModel
+  self.column_family = "car_payloads"
 end
 
 class Job < DatastaxRails::Base

@@ -44,11 +44,11 @@ module DatastaxRails
         model.attribute_definitions.values.each do |attr|
           coder = attr.coder
           if coder.options[:solr_type] && (coder.options[:indexed] || coder.options[:stored])
-          @fields.push({ :name => attr.name,
-                         :type => coder.options[:solr_type].to_s,
-                         :indexed => coder.options[:indexed].to_s,
-                         :stored => coder.options[:stored].to_s,
-                         :multi_valued => coder.options[:multi_valued].to_s })
+            @fields.push({ :name => attr.name,
+                           :type => coder.options[:solr_type].to_s,
+                           :indexed => coder.options[:indexed].to_s,
+                           :stored => coder.options[:stored].to_s,
+                           :multi_valued => coder.options[:multi_valued].to_s })
           end
           if coder.options[:sortable] && coder.options[:tokenized]
             @fields.push({ :name => "sort_" + attr.name,
@@ -76,7 +76,7 @@ module DatastaxRails
         column_family ||= :all
         # Ensure schema migrations CF exists
         unless connection.schema.column_families['schema_migrations']
-          connection.execute_cql_query(DatastaxRails::Cql::CreateColumnFamily.new('schema_migrations').key_type(:text).to_cql)
+          connection.execute_cql_query(DatastaxRails::Cql::CreateColumnFamily.new('schema_migrations').key_type(:text).columns(:digest => :text, :solrconfig => :text, :stopwords => :text).to_cql)
         end
         
         solrconfig = File.read(File.join(File.dirname(__FILE__),"..","..","..","config","solrconfig.xml"))
@@ -100,61 +100,89 @@ module DatastaxRails
         puts "models: #{models_to_upload.collect(&:to_s).join(",")}"
         
         models_to_upload.each do |model|
-          schema = generate_solr_schema(model)
-          schema_digest = Digest::SHA1.hexdigest(schema)
-          
-          results = DatastaxRails::Cql::Select.new(SchemaMigration, ['*']).conditions(:key => model.column_family).execute
-          sm_digests = CassandraCQL::Result.new(results).fetch.to_hash
-          
-          solr_url = "#{DatastaxRails::Base.solr_base_url}/resource/#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}"
-          uri = URI.parse(solr_url)
-          http = Net::HTTP.new(uri.host, uri.port)
-          if uri.scheme == 'https'
-            http.use_ssl = true
-            http.cert = OpenSSL::X509::Certificate.new(Rails.root.join("config","datastax_rails.crt").read)
-            http.key = OpenSSL::PKey::RSA.new(Rails.root.join("config","datastax_rails.key").read)
-            http.ca_path = Rails.root.join("config","sade_ca.crt").to_s
-            http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-          end
-          http.read_timeout = 300
-          if force || solrconfig_digest != sm_digests['solrconfig']
-            loop do 
-              puts "Posting Solr Config file to '#{solr_url}/solrconfig.xml'"
-              http.post(uri.path+"/solrconfig.xml", solrconfig)
-              if Rails.env.production?
-                sleep(5)
-                resp = http.get(uri.path+"/solrconfig.xml")
-                continue unless resp.message == 'OK'                  
-              end
-              break
+          if model.payload_model?
+            next if model == DatastaxRails::PayloadModel
+            unless connection.schema.column_families[model.column_family.to_s]
+              puts "Creating payload model #{model.column_family}"
+              columns = {:chunk => :int, :payload => :text}
+              cql = DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).key_name(:digest).key_columns("digest\", \"chunk").key_type(:text).columns(columns).with("COMPACT STORAGE").to_cql
+              puts cql
+              connection.execute_cql_query(cql)
             end
-            DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:solrconfig => solrconfig_digest).execute
-          end
-          if force || stopwords_digest != sm_digests['stopwords']
-            loop do
-              puts "Posting Solr Stopwords file to '#{solr_url}/stopwords.txt'"
-              http.post(uri.path+"/stopwords.txt", stopwords)
-              if Rails.env.production?
-                sleep(5)
-                resp = http.get(uri.path+"/stopwords.txt")
-                continue unless resp.message == 'OK'
-              end
-              break
+          else
+            unless connection.schema.column_families[model.column_family.to_s]
+              puts "Creating normal model #{model.column_family}"
+              cql = DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).key_type(:text).columns(:updated_at => :text, :created_at => :text).to_cql
+              puts cql
+              connection.execute_cql_query(cql)
             end
-            DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:stopwords => stopwords_digest).execute
-          end
-          if force || schema_digest != sm_digests['digest']
-            loop do
-              puts "Posting Solr Schema file to '#{solr_url}/schema.xml'"
-              http.post(uri.path+"/schema.xml", schema)
-              if Rails.env.production?
-                sleep(5)
-                resp = http.get(uri.path+"/schema.xml")
-                continue unless resp.message == 'OK'
-              end
-              break
+            schema = generate_solr_schema(model)
+            schema_digest = Digest::SHA1.hexdigest(schema)
+            
+            results = DatastaxRails::Cql::Select.new(SchemaMigration, ['*']).conditions(:KEY => model.column_family).execute
+            sm_digests = CassandraCQL::Result.new(results).fetch.try(:to_hash) || {}
+            
+            solr_url = "#{DatastaxRails::Base.solr_base_url}/resource/#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}"
+            uri = URI.parse(solr_url)
+            http = Net::HTTP.new(uri.host, uri.port)
+            if uri.scheme == 'https'
+              http.use_ssl = true
+              http.cert = OpenSSL::X509::Certificate.new(Rails.root.join("config","datastax_rails.crt").read)
+              http.key = OpenSSL::PKey::RSA.new(Rails.root.join("config","datastax_rails.key").read)
+              http.ca_path = Rails.root.join("config","sade_ca.crt").to_s
+              http.verify_mode = OpenSSL::SSL::VERIFY_NONE
             end
-            DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:digest => schema_digest).execute
+            http.read_timeout = 300
+            if force || solrconfig_digest != sm_digests['solrconfig']
+              loop do 
+                puts "Posting Solr Config file to '#{solr_url}/solrconfig.xml'"
+                http.post(uri.path+"/solrconfig.xml", solrconfig)
+                if Rails.env.production?
+                  sleep(5)
+                  resp = http.get(uri.path+"/solrconfig.xml")
+                  continue unless resp.message == 'OK'                  
+                end
+                break
+              end
+              DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:solrconfig => solrconfig_digest).execute
+            end
+            if force || stopwords_digest != sm_digests['stopwords']
+              loop do
+                puts "Posting Solr Stopwords file to '#{solr_url}/stopwords.txt'"
+                http.post(uri.path+"/stopwords.txt", stopwords)
+                if Rails.env.production?
+                  sleep(5)
+                  resp = http.get(uri.path+"/stopwords.txt")
+                  continue unless resp.message == 'OK'
+                end
+                break
+              end
+              DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:stopwords => stopwords_digest).execute
+            end
+            if force || schema_digest != sm_digests['digest']
+              loop do
+                puts "Posting Solr Schema file to '#{solr_url}/schema.xml'"
+                http.post(uri.path+"/schema.xml", schema)
+                if Rails.env.production?
+                  sleep(5)
+                  resp = http.get(uri.path+"/schema.xml")
+                  continue unless resp.message == 'OK'
+                end
+                break
+              end
+              DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:digest => schema_digest).execute
+            end
+            
+            # Check for unindexed columns
+            model.attribute_definitions.each do |attribute, definition|
+              if !connection.schema.column_families[model.column_family.to_s].columns.has_key?(attribute.to_s)# && 
+                 #!definition.coder.options[:stored] && 
+                 #!definition.coder.options[:indexed]
+                 
+                puts "Adding column '#{attribute}' to '#{model.column_family}'"
+                DatastaxRails::Cql::AlterColumnFamily.new(model.column_family).add(attribute => :text).execute
+              end
+            end
           end
         end
       end

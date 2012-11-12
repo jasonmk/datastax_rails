@@ -478,6 +478,10 @@ module DatastaxRails #:nodoc:
         @column_family || name.pluralize
       end
       
+      def payload_model?
+        self.ancestors.include?(DatastaxRails::PayloadModel)
+      end
+      
       def base_class
         klass = self
         while klass.superclass != Base

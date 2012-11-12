@@ -54,17 +54,9 @@ module DatastaxRails
       # @param [Hash] attributes a hash containing the columns to set on the record
       # @param [Hash] options a hash containing various options
       # @option options [Symbol] :consistency the consistency to set for the Cassandra operation (e.g., ALL)
-      # @option options [String] :schema_version the version of the schema to set for this record
       def write(key, attributes, options = {})
         key.tap do |key|
-          binary_attributes = {}
-          attributes.each do |column_name, value|
-            if attribute_definitions[column_name.to_sym].coder.class.to_s == 'DatastaxRails::Types::BinaryType'
-              binary_attributes[column_name] = value
-              attributes.delete(column_name)
-            end
-          end
-          attributes = encode_attributes(attributes, options[:schema_version])
+          attributes = encode_attributes(attributes)
           ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => key, :attributes => attributes) do
             c = cql.update(key.to_s).columns(attributes)
             if(options[:consistency])
@@ -76,59 +68,10 @@ module DatastaxRails
               end
             end
             c.execute
-            binary_attributes.each do |column_name, value|
-              store_file(key, column_name, value, options)
-            end
           end
         end
       end
       
-      def store_file(key, column, file, options = {})
-        timestamp = Time.now.stamp
-        mutations = []
-        i = 0
-        io = StringIO.new(file)
-        while chunk = io.read(1.megabyte)
-          mutations << CassandraCQL::Thrift::Mutation.new(
-            :column_or_supercolumn => CassandraCQL::Thrift::ColumnOrSuperColumn.new(
-              :column => CassandraCQL::Thrift::Column.new(
-                :name      => column.to_s + "_chunk_#{'%05d' % i}",
-                :value     => Base64.encode64(chunk),
-                :timestamp => timestamp,
-                :ttl       => options[:ttl]
-              )
-            )
-          )
-          i += 1
-        end
-        
-        mutations << CassandraCQL::Thrift::Mutation.new(
-          :column_or_supercolumn => CassandraCQL::Thrift::ColumnOrSuperColumn.new(
-            :column => CassandraCQL::Thrift::Column.new(
-              :name      => column.to_s + "_chunk_count",
-              :value     => i.to_s,
-              :timestamp => timestamp,
-              :ttl       => options[:ttl]
-            )
-          )
-        )
-        
-        cql = self.cql.select("#{column.to_s}_chunk_count").conditions(:key => key)
-        count = CassandraCQL::Result.new(cql.execute).fetch.to_hash["#{column.to_s}_chunk_count"]
-        if count
-          column_names = []
-          i.upto(count.to_i) do |j|
-            column_names << "#{column.to_s}_chunk_#{'%05d' % j}"
-          end
-          deletion_hash = {:timestamp => timestamp}
-          deletion_hash[:predicate] = CassandraCQL::Thrift::SlicePredicate.new(:column_names => column_names)
-          mutations << CassandraCQL::Thrift::Mutation.new(:deletion => CassandraCQL::Thrift::Deletion.new(deletion_hash))
-        end
-        
-        self.connection.connection.batch_mutate({key.to_s => {column_family => mutations}}, 1)
-        key
-      end
-
       # Instantiates a new object without calling +initialize+.
       #
       # @param [String] key the primary key for the record
@@ -139,7 +82,6 @@ module DatastaxRails
       def instantiate(key, attributes, selected_attributes = [])
         allocate.tap do |object|
           object.instance_variable_set("@loaded_attributes", {}.with_indifferent_access)
-          object.instance_variable_set("@schema_version", attributes.delete('schema_version'))
           object.instance_variable_set("@key", parse_key(key)) if key
           object.instance_variable_set("@new_record", false)
           object.instance_variable_set("@destroyed", false)
@@ -151,23 +93,11 @@ module DatastaxRails
       # to do the heavy lifting.
       #
       # @param [Hash] attributes a hash containing the attributes to be encoded for storage
-      # @param [String] schema_version the schema version to set in Cassandra.  Not currently used.
       # @return [Hash] a new hash with attributes encoded for storage
-      def encode_attributes(attributes, schema_version)
-        encoded = {"schema_version" => schema_version.to_s}
+      def encode_attributes(attributes)
+        encoded = {}
         attributes.each do |column_name, value|
-          # if value.nil?
-            # encoded[column_name.to_s] = ""
-          # else
-            encoded_value = attribute_definitions[column_name.to_sym].coder.encode(value)
-            if(encoded_value.is_a?(Array))
-              encoded_value.each_with_index do |chunk,i|
-                encoded[column_name.to_s + "_chunk_#{'%05d' % i}"] = chunk
-              end
-            else
-              encoded[column_name.to_s] = encoded_value
-            end
-          # end
+            encoded[column_name.to_s] = attribute_definitions[column_name.to_sym].coder.encode(value)
         end
         encoded
       end
@@ -181,13 +111,7 @@ module DatastaxRails
         end
         
         attribute_definitions.each do |k,definition|
-          if(definition.coder.is_a?(DatastaxRails::Types::BinaryType))
-            # Need to handle possibly chunked data
-            chunks = attributes.select {|key,value| key.to_s =~ /#{k.to_s}_chunk_\d+/ }.sort {|a,b| a.first.to_s <=> b.first.to_s}.collect {|c| c.last}
-            casted[k.to_s] = definition.instantiate(object, chunks)
-          else
-            casted[k.to_s] = definition.instantiate(object, attributes[k])
-          end
+          casted[k.to_s] = definition.instantiate(object, attributes[k])
         end
         casted
       end
@@ -262,7 +186,8 @@ module DatastaxRails
       
       def write(options) #:nodoc:
         changed_attributes = changed.inject({}) { |h, n| h[n] = read_attribute(n); h }
-        self.class.write(key, changed_attributes, options.merge(:schema_version => schema_version))
+        return true if changed_attributes.empty?
+        self.class.write(key, changed_attributes, options)
       end
   end
 end

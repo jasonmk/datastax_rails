@@ -18,6 +18,7 @@ module DatastaxRails
   autoload :GroupedCollection
   autoload :Identity
   autoload :Migrations
+  autoload :PayloadModel
   autoload :Persistence
   autoload :Reflection
   autoload :Relation
@@ -77,7 +78,12 @@ require "thrift"
 module Thrift
   class BinaryProtocol
     def write_string(str)
-      write_i32(str.bytesize)
+      if(str.respond_to?(:bytesize))
+        size = str.bytesize
+      else
+        size = str.size
+      end
+      write_i32(size)
       trans.write(str)
     end
   end

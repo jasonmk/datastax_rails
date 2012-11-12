@@ -8,6 +8,7 @@ module DatastaxRails
       end
     end
     
+    autoload :AlterColumnFamily
     autoload :Base
     autoload :ColumnFamily
     autoload :Consistency

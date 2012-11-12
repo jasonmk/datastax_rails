@@ -4,8 +4,9 @@ module DatastaxRails#:nodoc:
       def initialize(cf_name)
         @cf_name = cf_name
         @columns = {}
-        @storage_parameters = {}
+        @storage_parameters = []
         @key_type = 'uuid'
+        @key_columns = @key_name = "KEY"
       end
       
       def key_type(key_type)
@@ -13,8 +14,18 @@ module DatastaxRails#:nodoc:
         self
       end
       
+      def key_name(key_name)
+        @key_name = key_name
+        self
+      end
+      
+      def key_columns(key_columns)
+        @key_columns = key_columns
+        self
+      end
+      
       def with(with)
-        @storage_parameters.merge!(with)
+        @storage_parameters << with
         self
       end
       
@@ -36,24 +47,15 @@ module DatastaxRails#:nodoc:
         with("default_validation" => val)
       end
       
-      def column_type=(type)
-        # TODO: Ignored till CQL supports super-columns
-      end
-      
       def to_cql
-        stmt = "CREATE COLUMNFAMILY #{@cf_name} (key #{@key_type} PRIMARY KEY"
+        stmt = "CREATE COLUMNFAMILY #{@cf_name} (\"#{@key_name}\" #{@key_type}, "
         @columns.each do |name,type|
-          stmt << ", #{name} #{type}"
+          stmt << "#{name} #{type}, "
         end
-        stmt << ")"
+        stmt << "PRIMARY KEY (\"#{@key_columns}\"))"
         unless @storage_parameters.empty?
           stmt << " WITH "
-          first_parm = @storage_parameter.shift
-          stmt << "#{first_parm.first.to_s} = '#{first_parm.last.to_s}'"
-          
-          @storage_parameters.each do |key, value|
-            stmt << " AND #{key.to_s} = '#{value.to_s}'"
-          end
+          stmt << @storage_parameters.join(" AND ")
         end
         
         stmt

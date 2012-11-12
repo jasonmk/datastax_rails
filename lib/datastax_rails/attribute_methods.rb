@@ -53,7 +53,11 @@ module DatastaxRails
     
     # Casts the attribute and stores it in the attribute hash.
     def write_attribute(name, value)
-      @attributes[name.to_s] = self.class.typecast_attribute(self, name, value)
+      if(attribute_definitions[name.to_sym].coder.is_a?(DatastaxRails::Types::BinaryType))
+        @attributes[name.to_s] = value
+      else
+        @attributes[name.to_s] = self.class.typecast_attribute(self, name, value)
+      end
     end
 
     # Returns the attribute out of the attribute hash.  If the attribute is lazy loaded and hasn't

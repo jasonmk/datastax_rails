@@ -14,8 +14,6 @@ describe DatastaxRails::Base do
   end
   
   it "should raise RecordNotFound when finding a bogus ID" do
-    pending "Datastax Enterprise 2.2.1 should fix this" do
-      lambda { Person.find("xyzzy") }.should raise_exception(DatastaxRails::RecordNotFound)
-    end
+    lambda { Person.find("xyzzy") }.should raise_exception(DatastaxRails::RecordNotFound)
   end
 end

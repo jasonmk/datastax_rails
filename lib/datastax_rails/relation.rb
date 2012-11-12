@@ -371,6 +371,8 @@ module DatastaxRails
     # @return [DatastaxRails::Collection] the resulting collection
     def parse_docs(response, select_columns)
       results = DatastaxRails::Collection.new
+      results.per_page = @per_page_value
+      results.current_page = @page_value || 1
       results.total_entries = response['numFound'].to_i
       response['docs'].each do |doc|
         id = doc['id']

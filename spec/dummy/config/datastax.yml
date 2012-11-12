@@ -6,12 +6,8 @@ development:
   connection_options:
     timeout: 10
   solr:
-    port: 8984
+    port: 8983
     path: /solr
-    ssl:
-      use_ssl: true
-      cert: config/datastax_rails.crt
-      key: config/datastax_rails.key
     
 test:
   servers: ["127.0.0.1:9160"]
@@ -19,11 +15,7 @@ test:
   strategy_class: "org.apache.cassandra.locator.SimpleStrategy"
   strategy_options: {"replication_factor": "1"}
   connection_options:
-    timeout: 10
+    timeout: 30
   solr:
-    port: 8984
+    port: 8983
     path: /solr
-    ssl:
-      use_ssl: true
-      cert: config/datastax_rails.crt
-      key: config/datastax_rails.key

@@ -28,19 +28,23 @@ describe "DatastaxRails::Base" do
     describe "#store_file" do
       it "should store a file" do
         file = "abcd"*1.megabyte
-        Car.create(:name => 'limo', :picture => file)
-        Car.commit_solr
-        Car.find_by_name('limo').picture.should == file
+        CarPayload.create(:digest => 'limo', :payload => file)
+        CarPayload.find('limo').payload.should == file
+      end
+      
+      it "should store really large files" do
+        file = IO.read("/dev/urandom", 25.megabyte)
+        CarPayload.create(:digest => 'limo', :payload => file)
+        CarPayload.find('limo').payload.should == file
       end
       
       it "should successfully overwrite a larger file with a smaller one" do
         file = "abcd"*1.megabyte
-        car = Car.create(:name => 'limo', :picture => file)
-        Car.commit_solr
+        car = CarPayload.create(:digest => 'limo', :payload => file)
         smallfile = "e"*1.kilobyte
-        car.picture = smallfile
+        car.payload = smallfile
         car.save
-        Car.find_by_name('limo').picture.should == smallfile
+        CarPayload.find('limo').payload.should == smallfile
       end
     end
   end

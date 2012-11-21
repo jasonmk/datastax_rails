@@ -431,7 +431,15 @@ module DatastaxRails
     
     protected
       def find_by_attributes(match, attributes, *args) #:nodoc:
-        conditions = Hash[attributes.map {|a| [a, args[attributes.index(a)]]}]
+        conditions = {}
+        Hash[attributes.map {|a| [a, args[attributes.index(a)]]}].each do |k,v|
+          if(v.is_a?(String))
+            conditions[k] = v.gsub(/(\W)/, '\\\\\1')
+          else
+            conditions[k] = v
+          end
+        end
+        
         result = where(conditions).send(match.finder)
         
         if match.blank? && result.blank?

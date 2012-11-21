@@ -113,7 +113,7 @@ module DatastaxRails
       # @return [DatastaxRails::RSolrClientWrapper] a wrapped RSolr connection      
       def solr_connection(reconnect = false)
         if(!@rsolr || reconnect)
-          @rsolr = DatastaxRails::RSolrClientWrapper.new(establish_solr_connection)
+          @rsolr = DatastaxRails::RSolrClientWrapper.new(establish_solr_connection, self)
         end
         @rsolr
       end

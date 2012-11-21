@@ -3,14 +3,15 @@ module DatastaxRails
   # a new server tried (if one is available)
   class RSolrClientWrapper < BlankSlate
     # @param [RSolr::Client] rsolr the initial RSolr client object to wrap
-    def initialize(rsolr)
+    def initialize(rsolr,model)
       @rsolr = rsolr
+      @model = model
     end
     
     def method_missing(sym, *args, &block)
       if @rsolr.uri.host != DatastaxRails::Base.current_server
         @rsolr.uri.host = DatastaxRails::Base.current_server
-        @rsolr = DatastaxRails::Base.establish_solr_connection
+        @rsolr = @model.establish_solr_connection
       end
       @rsolr.__send__(sym, *args, &block)
     rescue Errno::ECONNREFUSED

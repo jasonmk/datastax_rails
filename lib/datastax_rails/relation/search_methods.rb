@@ -440,7 +440,9 @@ module DatastaxRails
           end
         end
         
-        result = where(conditions).send(match.finder)
+        self.where_values << conditions
+        result = self.send(match.finder)
+        #result = where(conditions).send(match.finder)
         
         if match.blank? && result.blank?
           raise RecordNotFound, "Couldn't find #{klass.name} with #{conditions.to_a.collect {|p| p.join('=')}.join(', ')}"

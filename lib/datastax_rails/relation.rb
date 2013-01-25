@@ -237,15 +237,7 @@ module DatastaxRails
     # For ad-hoc queries, you will have to use Solr.
     def query_via_cql
       select_columns = select_values.empty? ? (@klass.attribute_definitions.keys - @klass.lazy_attributes) : select_values.flatten
-      select = []
-      select_columns.each do |col|
-        if @klass.attribute_definitions[col.to_sym] && @klass.attribute_definitions[col.to_sym].coder.is_a?(DatastaxRails::Types::BinaryType)
-          select << "'#{col}_chunk_00000' .. '#{col}_chunk_99999'"
-        else
-          select << col
-        end
-      end
-      cql = @cql.select(select)
+      cql = @cql.select(select_columns)
       cql.using(@consistency_value) if @consistency_value
       @where_values.each do |wv|
         cql.conditions(wv)
@@ -275,6 +267,10 @@ module DatastaxRails
       end
     end
     
+    def full_solr_range(attr)
+      self.klass.attribute_definitions[attr].coder.full_solr_range
+    end
+    
     # Constructs a solr query to run against SOLR. At this point, only where, where_not, 
     # fulltext, order and pagination are supported.  More will be added.
     #
@@ -287,14 +283,14 @@ module DatastaxRails
       @where_values.each do |wv|
         wv.each do |k,v|
           # If v is blank, check that there is no value for the field in the document
-          filter_queries << (v.blank? ? "-#{k}:[\"\" TO *]" : "#{k}:(#{v})")
+          filter_queries << (v.blank? ? "-#{k}:#{full_solr_range(k)}" : "#{k}:(#{v})")
         end
       end
       
       @where_not_values.each do |wnv|
         wnv.each do |k,v|
           # If v is blank, check for any value for the field in document
-          filter_queries << (v.blank? ? "#{k}:[* TO *]" : "-#{k}:(#{v})")
+          filter_queries << (v.blank? ? "#{k}:#{full_solr_range(k)}" : "-#{k}:(#{v})")
         end
       end
       
@@ -344,6 +340,7 @@ module DatastaxRails
       if(@group_value)
         results = DatastaxRails::GroupedCollection.new
         params[:group] = 'true'
+        params[:rows] = 10000
         params['group.field'] = @group_value
         params['group.limit'] = @per_page_value
         params['group.offset'] = (@page_value - 1) * @per_page_value

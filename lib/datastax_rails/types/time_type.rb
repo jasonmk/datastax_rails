@@ -14,6 +14,10 @@ module DatastaxRails
         return str if str.kind_of?(Time)
         Time.parse(str) rescue nil
       end
+      
+      def full_solr_range
+        '[* TO *]'
+      end
     end
   end
 end

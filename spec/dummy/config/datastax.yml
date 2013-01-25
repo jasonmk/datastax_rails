@@ -1,3 +1,15 @@
+productiont:
+  servers: ["sade-rs-ds1.opensource.gov:9160", "sade-rs-ds2.opensource.gov:9160", "sade-rs-ds3.opensource.gov:9160"]
+  keyspace: "datastax_rails_development"
+  strategy_options: {"RS": "3"}
+  connection_options:
+    timeout: 20
+    retries: 3
+    server_max_requests: 1000
+  solr:
+    port: 8983
+    path: /solr
+
 development:
   servers: ["127.0.0.1:9160"]
   keyspace: "datastax_rails_development"

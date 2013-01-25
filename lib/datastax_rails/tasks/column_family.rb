@@ -115,6 +115,7 @@ module DatastaxRails
               cql = DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).key_type(:text).columns(:updated_at => :text, :created_at => :text).to_cql
               puts cql
               connection.execute_cql_query(cql)
+              sleep(5) if Rails.env.production?
             end
             schema = generate_solr_schema(model)
             schema_digest = Digest::SHA1.hexdigest(schema)

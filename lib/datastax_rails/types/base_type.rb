@@ -13,7 +13,9 @@ module DatastaxRails
       end
 
       def default
-        options[:default].dup if options[:default]
+        if options.has_key?(:default)
+          options[:default].duplicable? ? options[:default].dup : options[:default]
+        end
       end
 
       def encode(value)
@@ -30,6 +32,10 @@ module DatastaxRails
       
       def type
         self.class.name.sub(/^DatastaxRails::Types::/,'').sub(/Type$/,'').underscore.to_sym
+      end
+      
+      def full_solr_range
+        '[\"\" TO *]'
       end
     end
   end

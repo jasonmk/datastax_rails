@@ -346,6 +346,8 @@ module DatastaxRails #:nodoc:
       @changed_attributes = {}
       @schema_version = self.class.current_schema_version
       
+      set_defaults
+      
       populate_with_current_scope_attributes
       
       sanitize_for_mass_assignment(attributes).each do |k,v|
@@ -358,6 +360,15 @@ module DatastaxRails #:nodoc:
       
       yield self if block_given?
       run_callbacks :initialize
+    end
+    
+    # Set any default attributes specified by the schema
+    def set_defaults
+      self.class.attribute_definitions.each do |a,d|
+        unless(d.coder.default.nil?)
+          self.attributes[a]=d.coder.default
+        end
+      end
     end
     
     # Freeze the attributes hash such that associations are still accessible, even on destroyed records.

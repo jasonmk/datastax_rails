@@ -19,7 +19,7 @@ module DatastaxRails
       tries -= 1
       if tries > 0
         # Force cassandra connection to roll
-        DatastaxRails::Cql::Select.new(SchemaMigration, ['id']).limit(1).execute
+        DatastaxRails::Cql::Select.new(SchemaMigration, ['digest']).limit(1).execute
         retry
       else
         raise

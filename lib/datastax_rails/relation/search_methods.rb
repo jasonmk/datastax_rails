@@ -424,6 +424,8 @@ module DatastaxRails
           "[#{solr_format(value.first)} TO #{solr_format(value.last)}]"
         when value.is_a?(String)
           solr_escape(downcase_query(value.gsub(/ /,"\\ ")))
+        when value.is_a?(FalseClass), value.is_a?(TrueClass)
+          value.to_s
         else
           value
       end

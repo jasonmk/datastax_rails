@@ -346,7 +346,7 @@ module DatastaxRails #:nodoc:
       @changed_attributes = {}
       @schema_version = self.class.current_schema_version
       
-      set_defaults
+      __set_defaults
       
       populate_with_current_scope_attributes
       
@@ -363,10 +363,11 @@ module DatastaxRails #:nodoc:
     end
     
     # Set any default attributes specified by the schema
-    def set_defaults
+    def __set_defaults
       self.class.attribute_definitions.each do |a,d|
         unless(d.coder.default.nil?)
           self.attributes[a]=d.coder.default
+          self.send(a.to_s+"_will_change!")
         end
       end
     end
@@ -561,7 +562,7 @@ module DatastaxRails #:nodoc:
       private
       
         def construct_finder_relation(options = {}, scope = nil)
-          relation = options.is_a(Hash) ? unscoped.apply_finder_options(options) : options
+          relation = options.is_a?(Hash) ? unscoped.apply_finder_options(options) : options
           relation = scope.merge(relation) if scope
           relation
         end

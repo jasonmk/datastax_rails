@@ -268,7 +268,11 @@ module DatastaxRails
     end
     
     def full_solr_range(attr)
-      self.klass.attribute_definitions[attr].coder.full_solr_range
+      if(self.klass.attribute_definitions[attr])
+        self.klass.attribute_definitions[attr].coder.full_solr_range
+      else
+        '[\"\" TO *]'
+      end
     end
     
     # Constructs a solr query to run against SOLR. At this point, only where, where_not, 

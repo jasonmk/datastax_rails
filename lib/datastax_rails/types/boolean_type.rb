@@ -3,7 +3,7 @@ module DatastaxRails
     class BooleanType < BaseType
       DEFAULTS = {:solr_type => 'boolean', :indexed => true, :stored => true, :multi_valued => false, :sortable => true, :tokenized => false, :fulltext => false}
       TRUE_VALS = [true, 'true', '1', 'Y']
-      FALSE_VALS = [false, 'false', '0', '', 'N', nil]
+      FALSE_VALS = [false, 'false', '0', '', 'N', nil, 'null']
       VALID_VALS = TRUE_VALS + FALSE_VALS
       
       def encode(bool)

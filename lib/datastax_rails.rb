@@ -28,6 +28,7 @@ module DatastaxRails
     autoload :ModificationMethods
     autoload :SearchMethods
     autoload :SpawnMethods
+    autoload :StatsMethods
   end
   
   autoload :RSolrClientWrapper, 'datastax_rails/rsolr_client_wrapper'

@@ -243,6 +243,30 @@ module DatastaxRails
       end
     end
     
+    # Have SOLR compute stats for a given numeric field.  Status computed include:
+    #  * min
+    #  * max
+    #  * sum
+    #  * sum of squares
+    #  * mean
+    #  * standard deviation
+    #
+    #   Model.compute_stats(:price)
+    #   Model.compute_stats(:price, :quantity)
+    #
+    # NOTE: This is only compatible with solr queries.  It will be ignored when
+    # a CQL query is made.
+    #
+    # @param fields [Symbol] the field to compute stats on
+    # @return [DatastaxRails::Relation] a new Relation object
+    def compute_stats(*fields)
+      return self if fields.empty?
+      
+      clone.tap do |r|
+        r.stats_values += Array.wrap(fields)
+      end
+    end
+    
     # By default, DatastaxRails will try to pick the right method of performing
     # a search.  You can use this method to force it to make the query via SOLR.
     #

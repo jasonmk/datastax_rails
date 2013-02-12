@@ -472,7 +472,8 @@ module DatastaxRails #:nodoc:
       delegate :destroy, :destroy_all, :delete, :update, :update_all, :to => :scoped
       delegate :order, :limit, :where, :where_not, :page, :paginate, :select, :to => :scoped
       delegate :per_page, :each, :group, :total_pages, :search, :fulltext, :to => :scoped
-      delegate :count, :first, :first!, :last, :last!, :to => :scoped
+      delegate :count, :first, :first!, :last, :last!, :compute_stats, :to => :scoped
+      delegate :sum, :average, :minimum, :maximum, :stddev, :to => :scoped
       delegate :cql, :with_cassandra, :with_solr, :commit_solr, :to => :scoped
 
       # Sets the column family name

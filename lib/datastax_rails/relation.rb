@@ -2,7 +2,7 @@ require 'rsolr'
 
 module DatastaxRails
   class Relation
-    MULTI_VALUE_METHODS = [:order, :where, :where_not, :fulltext, :greater_than, :less_than, :select]
+    MULTI_VALUE_METHODS = [:order, :where, :where_not, :fulltext, :greater_than, :less_than, :select, :stats]
     SINGLE_VALUE_METHODS = [:page, :per_page, :reverse_order, :query_parser, :consistency, :ttl, :use_solr, :escape, :group]
     
     SOLR_CHAR_RX = /([\+\!\(\)\[\]\^\"\~\:\'\=]+)/
@@ -19,6 +19,7 @@ module DatastaxRails
     include ModificationMethods
     include FinderMethods
     include SpawnMethods
+    include StatsMethods
     
     attr_reader :klass, :column_family, :loaded, :cql
     alias :loaded? :loaded
@@ -45,6 +46,7 @@ module DatastaxRails
       @extensions = []
       @create_with_value = {}
       @escape_value = true
+      @stats = {}
       apply_default_scope
     end
     
@@ -89,6 +91,13 @@ module DatastaxRails
     # Otherwise you get everything that has ever been in the CF.
     def count
       @count ||= self.use_solr_value ? count_via_solr : count_via_cql
+    end
+    
+    def stats
+      unless(loaded?)
+        to_a
+      end
+      @stats
     end
     
     # Returns the current page for will_paginate compatibility
@@ -149,6 +158,7 @@ module DatastaxRails
     # will re-run the query.
     def reset
       @loaded = @first = @last = @scope_for_create = @count = nil
+      @stats = {}
       @results = []
     end
     
@@ -341,6 +351,16 @@ module DatastaxRails
       
       select_columns = select_values.empty? ? (@klass.attribute_definitions.keys - @klass.lazy_attributes) : select_values.flatten
       
+      unless(@stats_values.empty?)
+        params[:stats] = 'true'
+        @stats_values.flatten.each do |sv|
+          params['stats.field'] = sv
+        end
+        if(@group_value)
+          params['stats.facet'] = @group_value
+        end
+      end
+      solr_response = nil
       if(@group_value)
         results = DatastaxRails::GroupedCollection.new
         params[:group] = 'true'
@@ -349,7 +369,8 @@ module DatastaxRails
         params['group.limit'] = @per_page_value
         params['group.offset'] = (@page_value - 1) * @per_page_value
         params['group.ngroups'] = 'true'
-        response = rsolr.post('select', :data => params)["grouped"][@group_value.to_s]
+        solr_response = rsolr.post('select', :data => params)
+        response = solr_response["grouped"][@group_value.to_s]
         results.total_groups = response['ngroups'].to_i
         results.total_for_all = response['matches'].to_i
         results.total_entries = 0
@@ -358,8 +379,12 @@ module DatastaxRails
           results.total_entries = results[group['groupValue']].total_entries if results[group['groupValue']].total_entries > results.total_entries
         end
       else
-        response = rsolr.paginate(@page_value, @per_page_value, 'select', :data => params, :method => :post)["response"]
+        solr_response = rsolr.paginate(@page_value, @per_page_value, 'select', :data => params, :method => :post)
+        response = solr_response["response"]
         results = parse_docs(response, select_columns)
+      end
+      if solr_response["stats"]
+        @stats = solr_response["stats"]["stats_fields"].with_indifferent_access
       end
       results
     end

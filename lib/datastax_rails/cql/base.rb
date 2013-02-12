@@ -16,7 +16,7 @@ module DatastaxRails
       # already been set up (Rails does this for you).
       def execute
         cql = self.to_cql
-        # puts cql
+        puts cql if ENV['DEBUG_CQL'] == 'true'
         DatastaxRails::Base.connection.execute_cql_query(cql)
       end
     end

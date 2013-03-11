@@ -1,6 +1,47 @@
 module DatastaxRails
   module StatsMethods
     STATS_FIELDS={'sum' => 'sum', 'maximum' => 'max', 'minimum' => 'min', 'average' => 'mean', 'stddev' => 'stddev'}
+    
+    # @!method sum(field)
+    #   Calculates the sum of the field listed. Field must be indexed as a number.
+    #   @param [Symbol] field the field to calculate
+    #   @return [Fixnum,Float] the sum of the column value rows that match the query
+    # @!method grouped_sum(field)
+    #   Calculates the sum of the field listed for a grouped query.
+    #   @param [Symbol] field the field to calculate
+    #   @return [Hash] the sum of the columns that match the query by group. Group name is the key.
+    # @!method maximum(field)
+    #   Calculates the maximum value of the field listed. Field must be indexed as a number.
+    #   @param [Symbol] field the field to calculate
+    #   @return [Fixnum,Float] the maximum value of the rows that match the query
+    # @!method grouped_maximum(field)
+    #   Calculates the sum of the field listed for a grouped query.
+    #   @param [Symbol] field the field to calculate
+    #   @return [Hash] the sum of the columns that match the query by group. Group name is the key.
+    # @!method sum(field)
+    #   Calculates the sum of the field listed. Field must be indexed as a number.
+    #   @param [Symbol] field the field to calculate
+    #   @return [Fixnum,Float] the sum of the columns that match the query
+    # @!method grouped_sum(field)
+    #   Calculates the sum of the field listed for a grouped query.
+    #   @param [Symbol] field the field to calculate
+    #   @return [Hash] the sum of the columns that match the query by group. Group name is the key.
+    # @!method sum(field)
+    #   Calculates the sum of the field listed. Field must be indexed as a number.
+    #   @param [Symbol] field the field to calculate
+    #   @return [Fixnum,Float] the sum of the columns that match the query
+    # @!method grouped_sum(field)
+    #   Calculates the sum of the field listed for a grouped query.
+    #   @param [Symbol] field the field to calculate
+    #   @return [Hash] the sum of the columns that match the query by group. Group name is the key.
+    # @!method sum(field)
+    #   Calculates the sum of the field listed. Field must be indexed as a number.
+    #   @param [Symbol] field the field to calculate
+    #   @return [Fixnum,Float] the sum of the columns that match the query
+    # @!method grouped_sum(field)
+    #   Calculates the sum of the field listed for a grouped query.
+    #   @param [Symbol] field the field to calculate
+    #   @return [Hash] the sum of the columns that match the query by group. Group name is the key.
     %w[sum maximum minimum average stddev].each do |op|
       define_method(op) do |field|
         calculate_stats(field)
@@ -17,31 +58,6 @@ module DatastaxRails
         values
       end
     end
-    
-    # def sum(field)
-      # calculate_stats(field)
-      # @stats[field]["sum"]
-    # end
-#     
-    # def maximum(field)
-      # calculate_stats(field)
-      # @stats[field]["max"]
-    # end
-#     
-    # def minimum(field)
-      # calculate_stats(field)
-      # @stats[field]["min"]
-    # end
-#     
-    # def average(field)
-      # calculate_stats(field)
-      # @stats[field]["mean"]
-    # end
-#     
-    # def stddev(field)
-      # calculate_stats(field)
-      # @stats[field]["stddev"]
-    # end
     
     private
     def calculate_stats(field)

@@ -42,12 +42,24 @@ namespace :ds do
     end
   end
   
-  desc 'Upload SOLR schemas -- pass in CF name to force an upload (all uploads everything).'
+  desc 'Upload SOLR schemas -- pass in model name to force an upload (:all uploads everything).'
   task :schema, [:force_cf] => :configure do |t, args|
     cf = DatastaxRails::Tasks::ColumnFamily.new(@config['keyspace'])
     cf.upload_solr_schemas(args[:force_cf])
   end
-
+  
+  desc 'Rebuild SOLR Index -- pass in a model name (:all rebuilds everything)'
+  task :reindex, [:model] => :configure do |t, args|
+    if args[:model].blank?
+      puts "\nUSAGE: rake ds:reindex[Model]"
+    else
+      cf = DatastaxRails::Tasks::ColumnFamily.new(@config['keyspace'])
+      puts "Reindexing #{args[:model]}"
+      cf.reindex_solr(args[:model])
+      puts "Reindexing will run in the background"
+    end
+  end
+  
   desc 'Load the seed data from ds/seeds.rb'
   task :seed => :environment do
     seed_file = Rails.root.join("ks","seeds.rb")

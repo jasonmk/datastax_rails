@@ -55,21 +55,14 @@ module DatastaxRails
       # @param [Hash] options a hash containing various options
       # @option options [Symbol] :consistency the consistency to set for the Cassandra operation (e.g., ALL)
       def write(key, attributes, options = {})
-        key.tap do |key|
-          attributes = encode_attributes(attributes)
-          ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => key, :attributes => attributes) do
-            c = cql.update(key.to_s).columns(attributes)
-            if(options[:consistency])
-              level = options[:consistency].to_s.upcase
-              if(valid_consistency?(level))
-                c.using(options[:consistency])
-              else
-                raise ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
-              end
-            end
-            c.execute
-          end
+        attributes = encode_attributes(attributes)
+        level = (options[:consistency] || self.default_consistency).to_s.upcase
+        if(valid_consistency?(level))
+          options[:consistency] = level
+        else
+          raise ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
         end
+        write_with_cql(key, attributes, options)
       end
       
       # Instantiates a new object without calling +initialize+.
@@ -115,6 +108,19 @@ module DatastaxRails
         end
         casted
       end
+      
+      private
+        def write_with_cql(key, attributes, options)
+          key.tap do |key|
+            ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => key, :attributes => attributes) do
+              cql.update(key.to_s).columns(attributes).using(options[:consistency]).execute
+            end
+          end
+        end
+        
+        def write_with_solr(key, attributes, options)
+          
+        end
     end
 
     def new_record?

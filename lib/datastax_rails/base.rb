@@ -311,6 +311,7 @@ module DatastaxRails #:nodoc:
     include Timestamps
     include Serialization
     include Migrations
+    include SolrRepair
     
     # Stores the default scope for the class
     class_attribute :default_scopes, :instance_writer => false

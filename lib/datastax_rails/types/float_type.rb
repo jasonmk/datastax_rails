@@ -10,7 +10,7 @@ module DatastaxRails
       end
 
       def decode(float)
-        return nil if float.blank? || float == -10191980.0
+        return nil if float.blank? || (float.to_f < -10191979.9 && float.to_f > -10191980.1)
         float.to_f
       end
     end

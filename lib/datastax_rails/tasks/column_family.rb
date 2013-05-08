@@ -71,6 +71,25 @@ module DatastaxRails
         return ERB.new(File.read(File.join(File.dirname(__FILE__),"..","..","..","config","schema.xml.erb"))).result(binding)
       end
       
+      def reindex_solr(model)
+        if model == ':all'
+          models_to_index = DatastaxRails::Base.models
+        else
+          models_to_index = [model.constantize]
+        end
+        
+        models_to_index.each do |m|
+          next if m.payload_model?
+          
+          url = "#{DatastaxRails::Base.solr_base_url}/admin/cores?action=RELOAD&name=#{DatastaxRails::Base.config[:keyspace]}.#{m.column_family}&reindex=true&deleteAll=false"
+          puts "Posting reindex command to '#{url}'"
+          `curl -s -X POST '#{url}'`
+          if Rails.env.production?
+            sleep(5)
+          end
+        end
+      end
+      
       def upload_solr_schemas(column_family)
         force = !column_family.nil?
         column_family ||= :all
@@ -110,7 +129,10 @@ module DatastaxRails
               connection.execute_cql_query(cql)
             end
           else
+            newcf = false
+            newschema = false
             unless connection.schema.column_families[model.column_family.to_s]
+              newcf = true
               puts "Creating normal model #{model.column_family}"
               cql = DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).key_type(:text).columns(:updated_at => :text, :created_at => :text).to_cql
               puts cql
@@ -172,6 +194,17 @@ module DatastaxRails
                 break
               end
               DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:digest => schema_digest).execute
+              newschema = true
+            end
+            
+            if newcf
+              # Create the SOLR Core
+              url = "#{DatastaxRails::Base.solr_base_url}/admin/cores?action=CREATE&name=#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}"
+              puts "Posting create command to '#{url}'"
+              `curl -s -X POST '#{url}'`
+              if Rails.env.production?
+                sleep(5)
+              end
             end
             
             # Check for unindexed columns

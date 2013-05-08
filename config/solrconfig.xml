@@ -110,101 +110,11 @@
        persistent, and doesn't work with replication.
     -->
   <directoryFactory name="DirectoryFactory" 
-                    class="${solr.directoryFactory:solr.StandardDirectoryFactory}"/>
-
-
-  <!-- Index Defaults
-
-       Values here affect all index writers and act as a default
-       unless overridden.
-
-       WARNING: See also the <mainIndex> section below for parameters
-       that overfor Solr's main Lucene index.
-    -->
-  <indexDefaults>
+                    class="com.datastax.bdp.cassandra.index.solr.DSENRTCachingDirectoryFactory"/>
+  <indexConfig>
 
     <useCompoundFile>false</useCompoundFile>
-
-    <mergeFactor>10</mergeFactor>
-    <!-- Sets the amount of RAM that may be used by Lucene indexing
-         for buffering added documents and deletions before they are
-         flushed to the Directory.  -->
-    <ramBufferSizeMB>32</ramBufferSizeMB>
-    <!-- If both ramBufferSizeMB and maxBufferedDocs is set, then
-         Lucene will flush based on whichever limit is hit first.  
-      -->
-    <!-- <maxBufferedDocs>1000</maxBufferedDocs> -->
-
-    <maxFieldLength>10000</maxFieldLength>
-    <writeLockTimeout>1000</writeLockTimeout>
-    <commitLockTimeout>10000</commitLockTimeout>
-
-    <!-- Expert: Merge Policy 
-
-         The Merge Policy in Lucene controls how merging is handled by
-         Lucene.  The default in Solr 3.3 is TieredMergePolicy.
-         
-         The default in 2.3 was the LogByteSizeMergePolicy,
-         previous versions used LogDocMergePolicy.
-         
-         LogByteSizeMergePolicy chooses segments to merge based on
-         their size.  The Lucene 2.2 default, LogDocMergePolicy chose
-         when to merge based on number of documents
-         
-         Other implementations of MergePolicy must have a no-argument
-         constructor
-      -->
-    <!--
-       <mergePolicy class="org.apache.lucene.index.TieredMergePolicy"/>
-       -->
-
-    <!-- Expert: Merge Scheduler
-
-         The Merge Scheduler in Lucene controls how merges are
-         performed.  The ConcurrentMergeScheduler (Lucene 2.3 default)
-         can perform merges in the background using separate threads.
-         The SerialMergeScheduler (Lucene 2.2 default) does not.
-     -->
-    <!-- 
-       <mergeScheduler class="org.apache.lucene.index.ConcurrentMergeScheduler"/>
-       -->
-	  
-    <!-- LockFactory 
-
-         This option specifies which Lucene LockFactory implementation
-         to use.
-      
-         single = SingleInstanceLockFactory - suggested for a
-                  read-only index or when there is no possibility of
-                  another process trying to modify the index.
-         native = NativeFSLockFactory - uses OS native file locking.
-                  Do not use when multiple solr webapps in the same
-                  JVM are attempting to share a single index.
-         simple = SimpleFSLockFactory  - uses a plain file for locking
-
-         (For backwards compatibility with Solr 1.2, 'simple' is the
-         default if not specified.)
-
-         More details on the nuances of each LockFactory...
-         http://wiki.apache.org/lucene-java/AvailableLockFactories
-    -->
-    <lockType>native</lockType>
-
-    <!-- Expert: Controls how often Lucene loads terms into memory
-         Default is 128 and is likely good for most everyone.
-      -->
-    <!-- <termIndexInterval>256</termIndexInterval> -->
-  </indexDefaults>
-
-  <!-- Main Index
-
-       Values here override the values in the <indexDefaults> section
-       for the main on disk index.
-    -->
-  <mainIndex>
-
-    <useCompoundFile>false</useCompoundFile>
-    <ramBufferSizeMB>32</ramBufferSizeMB>
+    <ramBufferSizeMB>100</ramBufferSizeMB>
     <mergeFactor>10</mergeFactor>
 
     <!-- Unlock On Startup
@@ -216,8 +126,12 @@
 
          This is not needed if lock type is 'none' or 'single'
      -->
-    <unlockOnStartup>false</unlockOnStartup>
+    <unlockOnStartup>true</unlockOnStartup>
     
+    <maxFieldLength>10000</maxFieldLength>
+    <writeLockTimeout>1000</writeLockTimeout>
+    <commitLockTimeout>10000</commitLockTimeout>
+
     <!-- If true, IndexReaders will be reopened (often more efficient)
          instead of closed and then opened.
       -->
@@ -262,7 +176,7 @@
       -->
      <infoStream file="INFOSTREAM.txt">false</infoStream> 
 
-  </mainIndex>
+  </indexConfig>
 
   <!-- JMX
        
@@ -283,6 +197,7 @@
     -->
 
   <!-- The default high-performance update handler -->
+  <!-- IN DSE THIS CANNOT BE CHANGED -->
   <updateHandler class="solr.DirectUpdateHandler2">
 
     <!-- AutoCommit
@@ -300,9 +215,9 @@
                    since a document was added before automaticly
                    triggering a new commit. 
       -->
-       <autoSoftCommit>
-       	 <maxDocs>1</maxDocs>
+       <autoSoftCommit> 
          <maxTime>1000</maxTime> 
+         <maxDocs>1</maxDocs>
        </autoSoftCommit>
 
     <!-- Update Related Event Listeners
@@ -579,7 +494,7 @@
          Recommend values of 1-2 for read-only slaves, higher for
          masters w/o cache warming.
       -->
-    <maxWarmingSearchers>2</maxWarmingSearchers>
+    <maxWarmingSearchers>16</maxWarmingSearchers>
 
   </query>
 
@@ -1014,31 +929,6 @@
      <str name="echoHandler">true</str>
     </lst>
   </requestHandler>
-  
-  <!-- Solr Replication
-
-       The SolrReplicationHandler supports replicating indexes from a
-       "master" used for indexing and "salves" used for queries.
-
-       http://wiki.apache.org/solr/SolrReplication 
-
-       In the example below, remove the <lst name="master"> section if
-       this is just a slave and remove  the <lst name="slave"> section
-       if this is just a master.
-    -->
-  <!--
-     <requestHandler name="/replication" class="solr.ReplicationHandler" >
-       <lst name="master">
-         <str name="replicateAfter">commit</str>
-         <str name="replicateAfter">startup</str>
-         <str name="confFiles">schema.xml,stopwords.txt</str>
-       </lst>
-       <lst name="slave">
-         <str name="masterUrl">http://localhost:8983/solr/replication</str>
-         <str name="pollInterval">00:00:60</str>
-       </lst>
-     </requestHandler>
-    -->
 
   <!-- Search Components
 
@@ -1449,38 +1339,6 @@
       </boundaryScanner>
     </highlighting>
   </searchComponent>
-
-  <!-- Update Processors
-
-       Chains of Update Processor Factories for dealing with Update
-       Requests can be declared, and then used by name in Update
-       Request Processors
-
-       http://wiki.apache.org/solr/UpdateRequestProcessor
-
-    --> 
-  <!-- Deduplication
-
-       An example dedup update processor that creates the "id" field
-       on the fly based on the hash code of some other fields.  This
-       example has overwriteDupes set to false since we are using the
-       id field as the signatureField and Solr will maintain
-       uniqueness based on that anyway.  
-       
-    -->
-  <!--
-     <updateRequestProcessorChain name="dedupe">
-       <processor class="solr.processor.SignatureUpdateProcessorFactory">
-         <bool name="enabled">true</bool>
-         <str name="signatureField">id</str>
-         <bool name="overwriteDupes">false</bool>
-         <str name="fields">name,features,cat</str>
-         <str name="signatureClass">solr.processor.Lookup3Signature</str>
-       </processor>
-       <processor class="solr.LogUpdateProcessorFactory" />
-       <processor class="solr.RunUpdateProcessorFactory" />
-     </updateRequestProcessorChain>
-    -->
 
   <!-- Response Writers
 

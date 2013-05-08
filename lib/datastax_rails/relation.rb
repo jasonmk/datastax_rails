@@ -5,7 +5,7 @@ module DatastaxRails
     MULTI_VALUE_METHODS = [:order, :where, :where_not, :fulltext, :greater_than, :less_than, :select, :stats]
     SINGLE_VALUE_METHODS = [:page, :per_page, :reverse_order, :query_parser, :consistency, :ttl, :use_solr, :escape, :group]
     
-    SOLR_CHAR_RX = /([\+\!\(\)\[\]\^\"\~\:\'\=]+)/
+    SOLR_CHAR_RX = /([\+\!\(\)\[\]\^\"\~\:\'\=\/]+)/
     
     Relation::MULTI_VALUE_METHODS.each do |m|
       attr_accessor :"#{m}_values"

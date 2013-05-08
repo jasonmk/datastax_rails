@@ -37,6 +37,9 @@ module DatastaxRails
   autoload :Serialization
   autoload :Timestamps
   autoload :Type
+  autoload_under 'util' do
+    autoload :SolrRepair
+  end
   autoload :Validations
   
   module AttributeMethods

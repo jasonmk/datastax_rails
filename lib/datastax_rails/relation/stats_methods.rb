@@ -18,34 +18,34 @@ module DatastaxRails
     #   Calculates the sum of the field listed for a grouped query.
     #   @param [Symbol] field the field to calculate
     #   @return [Hash] the sum of the columns that match the query by group. Group name is the key.
-    # @!method sum(field)
-    #   Calculates the sum of the field listed. Field must be indexed as a number.
+    # @!method minimum(field)
+    #   Calculates the minimum of the field listed. Field must be indexed as a number.
     #   @param [Symbol] field the field to calculate
-    #   @return [Fixnum,Float] the sum of the columns that match the query
-    # @!method grouped_sum(field)
-    #   Calculates the sum of the field listed for a grouped query.
+    #   @return [Fixnum,Float] the minimum of the columns that match the query
+    # @!method grouped_minimum(field)
+    #   Calculates the minimum of the field listed for a grouped query.
     #   @param [Symbol] field the field to calculate
-    #   @return [Hash] the sum of the columns that match the query by group. Group name is the key.
-    # @!method sum(field)
-    #   Calculates the sum of the field listed. Field must be indexed as a number.
+    #   @return [Hash] the minimum of the columns that match the query by group. Group name is the key.
+    # @!method average(field)
+    #   Calculates the average of the field listed. Field must be indexed as a number.
     #   @param [Symbol] field the field to calculate
-    #   @return [Fixnum,Float] the sum of the columns that match the query
-    # @!method grouped_sum(field)
-    #   Calculates the sum of the field listed for a grouped query.
+    #   @return [Fixnum,Float] the average of the columns that match the query
+    # @!method grouped_average(field)
+    #   Calculates the average of the field listed for a grouped query.
     #   @param [Symbol] field the field to calculate
-    #   @return [Hash] the sum of the columns that match the query by group. Group name is the key.
-    # @!method sum(field)
-    #   Calculates the sum of the field listed. Field must be indexed as a number.
+    #   @return [Hash] the average of the columns that match the query by group. Group name is the key.
+    # @!method stddev(field)
+    #   Calculates the standard deviation of the field listed. Field must be indexed as a number.
     #   @param [Symbol] field the field to calculate
-    #   @return [Fixnum,Float] the sum of the columns that match the query
-    # @!method grouped_sum(field)
-    #   Calculates the sum of the field listed for a grouped query.
+    #   @return [Fixnum,Float] the standard deviation of the columns that match the query
+    # @!method grouped_stddev(field)
+    #   Calculates the standard deviation of the field listed for a grouped query.
     #   @param [Symbol] field the field to calculate
-    #   @return [Hash] the sum of the columns that match the query by group. Group name is the key.
+    #   @return [Hash] the standard deviation of the columns that match the query by group. Group name is the key.
     %w[sum maximum minimum average stddev].each do |op|
       define_method(op) do |field|
         calculate_stats(field)
-        @stats[field][STATS_FIELDS[op]]
+        @stats[field] ? @stats[field][STATS_FIELDS[op]] : 0
       end
       
       define_method("grouped_#{op}") do |field|

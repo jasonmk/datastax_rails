@@ -7,11 +7,17 @@ module DatastaxRails#:nodoc:
         @limit = nil
         @conditions = {}
         @order = nil
+        @paginate = nil
         super
       end
       
       def using(consistency)
         @consistency = consistency
+        self
+      end
+      
+      def paginate(start)
+        @paginate = start
         self
       end
       
@@ -34,6 +40,11 @@ module DatastaxRails#:nodoc:
         conditions = []
         values = []
         stmt = "SELECT #{@select} FROM #{@klass.column_family} USING CONSISTENCY #{@consistency} "
+        
+        if @paginate
+          conditions << "token(\"KEY\") > token('#{@paginate}')"
+        end
+        
         @conditions.each do |k,v|
           values << v
           if v.kind_of?(Array)

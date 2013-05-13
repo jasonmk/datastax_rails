@@ -20,6 +20,7 @@ module DatastaxRails
     include FinderMethods
     include SpawnMethods
     include StatsMethods
+    include Batches
     
     attr_reader :klass, :column_family, :loaded, :cql
     alias :loaded? :loaded
@@ -251,6 +252,17 @@ module DatastaxRails
       cql.using(@consistency_value) if @consistency_value
       @where_values.each do |wv|
         cql.conditions(wv)
+      end
+      @greater_than_values.each do |gtv|
+        gtv.each do |k,v|
+          # Special case if inequality is equal to the primary key (we're paginating)
+          if(k == :KEY)
+            cql.paginate(v)
+          end
+        end
+      end
+      if(@per_page_value)
+        cql.limit(@per_page_value)
       end
       results = []
       CassandraCQL::Result.new(cql.execute).fetch do |row|

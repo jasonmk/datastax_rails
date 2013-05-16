@@ -476,6 +476,7 @@ module DatastaxRails #:nodoc:
       delegate :count, :first, :first!, :last, :last!, :compute_stats, :to => :scoped
       delegate :sum, :average, :minimum, :maximum, :stddev, :to => :scoped
       delegate :cql, :with_cassandra, :with_solr, :commit_solr, :to => :scoped
+      delegate :find_each, :find_in_batches, :to => :scoped
 
       # Sets the column family name
       #

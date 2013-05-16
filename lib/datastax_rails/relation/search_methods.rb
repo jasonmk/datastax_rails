@@ -33,7 +33,7 @@ module DatastaxRails
     # is submitted.  If you want to handle escaping yourself because you need to use
     # those special characters, then just include this in your chain.
     #
-    #   Model.dont_escape.where("(some stuff I don\'t want escaped)")
+    #   Model.dont_escape.where(:name => "(some stuff I don\'t want escaped)")
     #
     # Note that fulltext searches are NEVER escaped.  Use Relation.solr_escape if you
     # want that done.

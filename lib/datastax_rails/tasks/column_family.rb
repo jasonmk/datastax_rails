@@ -43,7 +43,7 @@ module DatastaxRails
         @fulltext_fields = []
         model.attribute_definitions.values.each do |attr|
           coder = attr.coder
-          if coder.options[:solr_type] && (coder.options[:indexed] || coder.options[:stored])
+          if coder.options[:solr_type]
             @fields.push({ :name => attr.name,
                            :type => coder.options[:solr_type].to_s,
                            :indexed => coder.options[:indexed].to_s,

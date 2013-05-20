@@ -123,8 +123,17 @@ module DatastaxRails
         end
         
         def write_with_solr(key, attributes, options)
+          # We need to collect removed fields since we can't currently delete the column via
+          # the solr interface
+          removed_fields = []
+          attributes.each do |k,v|
+            removed_fields << k.to_s if v.blank?
+          end
           xml_doc = RSolr::Xml::Generator.new.add(attributes.merge(:id => key))
           self.solr_connection.update(:data => xml_doc, :params => {:replacefields => false, :cl => options[:consistency]})
+          unless removed_fields.empty?
+            cql.delete(key.to_s).columns(removed_fields).using(options[:consistency]).execute
+          end
         end
     end
 

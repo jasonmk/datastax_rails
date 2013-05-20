@@ -37,6 +37,15 @@ describe "DatastaxRails::Base" do
           p=Person.new(:name => 'Steven')
           p.save(:consistency => 'LOCAL_QUORUM')
         end
+        
+        it "should successfully remove columns that are set to nil" do
+          Person.storage_method = :solr
+          p = Person.create(:name => 'Steven', :birthdate => Date.today)
+          Person.commit_solr
+          p.birthdate = nil
+          p.save
+          Person.find_by_name('Steven').birthdate.should be_nil
+        end
       end
     end
     

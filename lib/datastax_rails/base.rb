@@ -311,6 +311,7 @@ module DatastaxRails #:nodoc:
     include Timestamps
     include Serialization
     include Migrations
+    include SolrRepair
     
     # Stores the default scope for the class
     class_attribute :default_scopes, :instance_writer => false
@@ -321,6 +322,9 @@ module DatastaxRails #:nodoc:
     
     class_attribute :default_consistency
     self.default_consistency = :quorum
+
+    class_attribute :storage_method
+    self.storage_method = :solr
     
     class_attribute :models
     self.models = []

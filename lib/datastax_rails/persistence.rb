@@ -55,19 +55,20 @@ module DatastaxRails
       # @param [Hash] options a hash containing various options
       # @option options [Symbol] :consistency the consistency to set for the Cassandra operation (e.g., ALL)
       def write(key, attributes, options = {})
+        attributes = encode_attributes(attributes)
+        level = (options[:consistency] || self.default_consistency).to_s.upcase
+        if(valid_consistency?(level))
+          options[:consistency] = level
+        else
+          raise ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
+        end
         key.tap do |key|
-          attributes = encode_attributes(attributes)
           ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => key, :attributes => attributes) do
-            c = cql.update(key.to_s).columns(attributes)
-            if(options[:consistency])
-              level = options[:consistency].to_s.upcase
-              if(valid_consistency?(level))
-                c.using(options[:consistency])
-              else
-                raise ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
-              end
+            if(self.storage_method == :solr)
+              write_with_solr(key, attributes, options)
+            else
+              write_with_cql(key, attributes, options)
             end
-            c.execute
           end
         end
       end
@@ -115,6 +116,16 @@ module DatastaxRails
         end
         casted
       end
+      
+      private
+        def write_with_cql(key, attributes, options)
+          cql.update(key.to_s).columns(attributes).using(options[:consistency]).execute
+        end
+        
+        def write_with_solr(key, attributes, options)
+          xml_doc = RSolr::Xml::Generator.new.add(attributes.merge(:id => key))
+          self.solr_connection.update(:data => xml_doc, :params => {:replacefields => false, :cl => options[:consistency]})
+        end
     end
 
     def new_record?

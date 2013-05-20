@@ -119,24 +119,12 @@ module DatastaxRails
       
       private
         def write_with_cql(key, attributes, options)
-<<<<<<< HEAD
-          key.tap do |key|
-            ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => key, :attributes => attributes) do
-              cql.update(key.to_s).columns(attributes).using(options[:consistency]).execute
-            end
-          end
-        end
-        
-        def write_with_solr(key, attributes, options)
-          
-=======
           cql.update(key.to_s).columns(attributes).using(options[:consistency]).execute
         end
         
         def write_with_solr(key, attributes, options)
           xml_doc = RSolr::Xml::Generator.new.add(attributes.merge(:id => key))
           self.solr_connection.update(:data => xml_doc, :params => {:replacefields => false, :cl => options[:consistency]})
->>>>>>> 26dbdcf18ec7bf7084033bf799c4f508db17525a
         end
     end
 

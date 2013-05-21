@@ -123,7 +123,6 @@ module DatastaxRails
         end
         
         def write_with_solr(key, attributes, options)
-          debugger     
           replace_fields = false
           
           unless options[:new_record]

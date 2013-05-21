@@ -122,7 +122,8 @@ module DatastaxRails
           cql.update(key.to_s).columns(attributes).using(options[:consistency]).execute
         end
         
-        def write_with_solr(key, attributes, options)          
+        def write_with_solr(key, attributes, options)
+          debugger     
           replace_fields = false
           
           unless options[:new_record]
@@ -131,7 +132,8 @@ module DatastaxRails
                 # We are (potentially) removing a field
                 # TODO: This is a hack until Datastax fixes the error when you try to set a date field to nil
                 replace_fields = true
-                attributes.reverse_merge(self.find(key).attributes)
+                attributes.reverse_merge!(self.encode_attributes(self.find(key.to_s).attributes))
+                break
               end
             end
           end

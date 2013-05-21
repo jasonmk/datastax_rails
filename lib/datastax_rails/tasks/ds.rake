@@ -60,6 +60,17 @@ namespace :ds do
     end
   end
   
+  desc 'Create SOLR Core (Normally not needed) -- pass in a model name (:all creates everything)'
+  task :create_core, [:model] => :configure do |t, args|
+    if args[:model].blank?
+      puts "\nUSAGE: rake ds:create_core[Model]"
+    else
+      cf = DatastaxRails::Tasks::ColumnFamily.new(@config['keyspace'])
+      puts "Creating core #{args[:model]}"
+      cf.create_solr_core(args[:model])
+    end
+  end
+  
   desc 'Load the seed data from ds/seeds.rb'
   task :seed => :environment do
     seed_file = Rails.root.join("ks","seeds.rb")

@@ -122,18 +122,22 @@ module DatastaxRails
           cql.update(key.to_s).columns(attributes).using(options[:consistency]).execute
         end
         
-        def write_with_solr(key, attributes, options)
-          # We need to collect removed fields since we can't currently delete the column via
-          # the solr interface
-          removed_fields = []
-          attributes.each do |k,v|
-            removed_fields << k.to_s if v.blank?
+        def write_with_solr(key, attributes, options)          
+          replace_fields = false
+          
+          unless options[:new_record]
+            attributes.each do |k,v|
+              if v.blank?
+                # We are (potentially) removing a field
+                # TODO: This is a hack until Datastax fixes the error when you try to set a date field to nil
+                replace_fields = true
+                attributes.reverse_merge(self.find(key).attributes)
+              end
+            end
           end
+          
           xml_doc = RSolr::Xml::Generator.new.add(attributes.merge(:id => key))
-          self.solr_connection.update(:data => xml_doc, :params => {:replacefields => false, :cl => options[:consistency]})
-          unless removed_fields.empty?
-            cql.delete(key.to_s).columns(removed_fields).using(options[:consistency]).execute
-          end
+          self.solr_connection.update(:data => xml_doc, :params => {:replacefields => replace_fields, :cl => options[:consistency]})
         end
     end
 
@@ -205,6 +209,7 @@ module DatastaxRails
       end
       
       def write(options) #:nodoc:
+        options[:new_record] = new_record?
         changed_attributes = changed.inject({}) { |h, n| h[n] = read_attribute(n); h }
         return true if changed_attributes.empty?
         self.class.write(key, changed_attributes, options)

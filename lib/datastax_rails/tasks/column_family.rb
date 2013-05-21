@@ -90,6 +90,23 @@ module DatastaxRails
         end
       end
       
+      def create_solr_core(model)
+        if model == ':all'
+          cores_to_create = DatastaxRails::Base.models
+        else
+          cores_to_create = [model.constantize]
+        end
+        cores_to_create.each do |m|
+          # Create the SOLR Core
+          url = "#{DatastaxRails::Base.solr_base_url}/admin/cores?action=CREATE&name=#{DatastaxRails::Base.config[:keyspace]}.#{m.column_family}"
+          puts "Posting create command to '#{url}'"
+          `curl -s -X POST '#{url}'`
+          if Rails.env.production?
+            sleep(5)
+          end
+        end
+      end
+      
       def upload_solr_schemas(column_family)
         force = !column_family.nil?
         column_family ||= :all

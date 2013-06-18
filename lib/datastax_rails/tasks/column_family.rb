@@ -72,7 +72,7 @@ module DatastaxRails
       end
       
       def reindex_solr(model)
-        if model == ':all'
+        if model == 'all'
           models_to_index = DatastaxRails::Base.models
         else
           models_to_index = [model.constantize]
@@ -91,12 +91,13 @@ module DatastaxRails
       end
       
       def create_solr_core(model)
-        if model == ':all'
+        if model == 'all'
           cores_to_create = DatastaxRails::Base.models
         else
           cores_to_create = [model.constantize]
         end
         cores_to_create.each do |m|
+          next if m.payload_model?
           # Create the SOLR Core
           url = "#{DatastaxRails::Base.solr_base_url}/admin/cores?action=CREATE&name=#{DatastaxRails::Base.config[:keyspace]}.#{m.column_family}&recovery=true"
           puts "Posting create command to '#{url}'"

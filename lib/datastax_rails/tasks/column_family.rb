@@ -98,7 +98,7 @@ module DatastaxRails
         end
         cores_to_create.each do |m|
           # Create the SOLR Core
-          url = "#{DatastaxRails::Base.solr_base_url}/admin/cores?action=CREATE&name=#{DatastaxRails::Base.config[:keyspace]}.#{m.column_family}"
+          url = "#{DatastaxRails::Base.solr_base_url}/admin/cores?action=CREATE&name=#{DatastaxRails::Base.config[:keyspace]}.#{m.column_family}&recovery=true"
           puts "Posting create command to '#{url}'"
           `curl -s -X POST '#{url}'`
           if Rails.env.production?

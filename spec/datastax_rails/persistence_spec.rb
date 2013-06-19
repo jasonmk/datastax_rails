@@ -24,7 +24,7 @@ describe "DatastaxRails::Base" do
     describe "with solr" do
       describe "#create" do
         it "should persist at the given consistency level" do
-          Person.solr_connection.should_receive(:update).with(hash_including(:params => {:replacefields => false, :cl => 'LOCAL_QUORUM'})).and_return(true)
+          Person.solr_connection.should_receive(:update).with(hash_including(:params => {:cl => 'LOCAL_QUORUM'})).and_return(true)
           Person.storage_method = :solr
           Person.create({:name => 'Steven'},{:consistency => 'LOCAL_QUORUM'})
         end
@@ -32,7 +32,7 @@ describe "DatastaxRails::Base" do
     
       describe "#save" do
         it "should persist at the given consistency level" do
-          Person.solr_connection.should_receive(:update).with(hash_including(:params => {:replacefields => false, :cl => 'LOCAL_QUORUM'})).and_return(true)
+          Person.solr_connection.should_receive(:update).with(hash_including(:params => {:cl => 'LOCAL_QUORUM'})).and_return(true)
           Person.storage_method = :solr
           p=Person.new(:name => 'Steven')
           p.save(:consistency => 'LOCAL_QUORUM')
@@ -44,6 +44,7 @@ describe "DatastaxRails::Base" do
           Person.commit_solr
           p.birthdate = nil
           p.save
+          Person.commit_solr
           Person.find_by_name('Steven').birthdate.should be_nil
         end
       end

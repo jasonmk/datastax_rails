@@ -123,22 +123,8 @@ module DatastaxRails
         end
         
         def write_with_solr(key, attributes, options)
-          replace_fields = false
-          
-          unless options[:new_record]
-            attributes.each do |k,v|
-              if v.blank?
-                # We are (potentially) removing a field
-                # TODO: This is a hack until Datastax fixes the error when you try to set a date field to nil
-                replace_fields = true
-                attributes.reverse_merge!(self.encode_attributes(self.find(key.to_s).attributes))
-                break
-              end
-            end
-          end
-          
           xml_doc = RSolr::Xml::Generator.new.add(attributes.merge(:id => key))
-          self.solr_connection.update(:data => xml_doc, :params => {:replacefields => replace_fields, :cl => options[:consistency]})
+          self.solr_connection.update(:data => xml_doc, :params => {:cl => options[:consistency]})
         end
     end
 

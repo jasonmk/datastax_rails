@@ -362,7 +362,8 @@ module DatastaxRails
       end
       
       select_columns = select_values.empty? ? (@klass.attribute_definitions.keys - @klass.lazy_attributes) : select_values.flatten
-      
+      select_columns << "id"
+      params[:fl] = select_columns.collect(&:to_s).join(",")
       unless(@stats_values.empty?)
         params[:stats] = 'true'
         @stats_values.flatten.each do |sv|

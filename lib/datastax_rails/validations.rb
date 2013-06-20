@@ -46,3 +46,4 @@ module DatastaxRails
 end
 
 require 'datastax_rails/validations/uniqueness'
+require 'datastax_rails/validations/associated'

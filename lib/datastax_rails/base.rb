@@ -481,13 +481,6 @@ module DatastaxRails #:nodoc:
       delegate :cql, :with_cassandra, :with_solr, :commit_solr, :to => :scoped
       delegate :find_each, :find_in_batches, :to => :scoped
 
-      # Sets a column that we can use to tell if a record is real or bogus.  This is here
-      # to deal with a peculiarity in how Cassandra deals with columns that have been deleted.
-      def inherited(child)
-        super
-        child.boolean :dsr, :default => true
-      end
-      
       # Sets the column family name
       #
       # @param [String] column_family the name of the column family in cassandra
@@ -514,10 +507,6 @@ module DatastaxRails #:nodoc:
         end
         klass
       end
-      
-      # def find(*keys)
-        # scoped.with_cassandra.find(keys)
-      # end
       
       def find_by_id(id)
         scoped.with_cassandra.find(id)

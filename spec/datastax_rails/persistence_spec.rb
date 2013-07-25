@@ -66,7 +66,7 @@ describe "DatastaxRails::Base" do
       end
       
       it "should store really large files" do
-        file = IO.read("/dev/urandom", 25.megabyte)
+        file = IO.read("/dev/zero", 25.megabyte)
         CarPayload.create(:digest => 'limo', :payload => file)
         CarPayload.find('limo').payload.should == file
       end

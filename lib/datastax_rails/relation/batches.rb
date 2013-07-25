@@ -22,6 +22,16 @@ module DatastaxRails
         records.each { |record| yield record }
       end
     end
+    
+    def find_each_with_index(options = {})
+      idx = 0
+      find_in_batches(options) do |records|
+        records.each do |record| 
+          yield record, idx
+          idx += 1
+        end
+      end
+    end
 
     # Yields each batch of records that was found by the find +options+ as
     # an array. The size of each batch is set by the <tt>:batch_size</tt>
@@ -50,14 +60,14 @@ module DatastaxRails
     # @param options [Hash] finder options
     # @yeild [records] a batch of DatastaxRails records
     def find_in_batches(options = {})
-      relation = self.with_cassandra
+      relation = self
 
-      unless @order_values.empty? && @per_page_value.blank?
+      unless (@order_values.empty? || @order_values == [{:created_at => :asc}]) && @per_page_value.blank?
         DatastaxRails::Base.logger.warn("Scoped order and limit are ignored, it's forced to be batch order and batch size")
       end
 
       if (finder_options = options.except(:start, :batch_size)).present?
-        raise "You can't specify an order, it's forced to be #{batch_order}" if options[:order].present?
+        raise "You can't specify an order, it's forced to be #{relation.use_solr_value ? "created_at" : "KEY"}" if options[:order].present?
         raise "You can't specify a limit, it's forced to be the batch_size" if options[:limit].present?
 
         relation = apply_finder_options(finder_options)
@@ -66,20 +76,23 @@ module DatastaxRails
       start = options.delete(:start)
       batch_size = options.delete(:batch_size) || 1000
 
+      batch_order = relation.use_solr_value ? :created_at : :KEY
       relation = relation.limit(batch_size)
-      records = start ? relation.where(:KEY).greater_than(start).to_a : relation.to_a
-
+      relation = relation.order(batch_order) if relation.use_solr_value
+      records = start ? relation.where(batch_order).greater_than(start).to_a : relation.to_a
       while records.size > 0
         records_size = records.size
-        primary_key_offset = records.last.id
+        offset = relation.use_solr_value ? records.last.created_at : records.last.id
         yield records
 
         break if records_size < batch_size
-
-        if primary_key_offset
-          records = relation.where(:KEY).greater_than(primary_key_offset).to_a
+        if offset
+          if relation.use_solr_value
+            offset += 1
+          end
+          records = relation.where(batch_order).greater_than(offset).to_a
         else
-          raise "Primary key not included in the custom select clause"
+          raise "Batch order not included in the custom select clause"
         end
       end
     end

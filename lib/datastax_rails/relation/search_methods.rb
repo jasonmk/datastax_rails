@@ -163,7 +163,7 @@ module DatastaxRails
       return self if attribute.blank?
 
       clone.tap do |r|
-        order_by = attribute.is_a?(Hash) ? attribute.dup : {attribute => :asc}
+        order_by = attribute.is_a?(Hash) ? attribute.dup : {attribute.to_sym => :asc}
         
         r.order_values << order_by 
       end

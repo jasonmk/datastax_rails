@@ -399,6 +399,7 @@ module DatastaxRails
       if solr_response["stats"]
         @stats = solr_response["stats"]["stats_fields"].with_indifferent_access
       end
+      pp params if ENV['DEBUG_SOLR'] == 'true'
       results
     end
     
@@ -488,7 +489,7 @@ module DatastaxRails
       def method_missing(method, *args, &block) #:nodoc:
         if Array.method_defined?(method)
           to_a.send(method, *args, &block)
-        elsif @klass.respond_to?(method)
+        elsif @klass.respond_to?(method, true)
           scoping { @klass.send(method, *args, &block) }
         else
           super

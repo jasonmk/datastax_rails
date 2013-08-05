@@ -148,7 +148,6 @@ module DatastaxRails
             end
           else
             newcf = false
-            newschema = false
             unless connection.schema.column_families[model.column_family.to_s]
               newcf = true
               puts "Creating normal model #{model.column_family}"
@@ -212,7 +211,7 @@ module DatastaxRails
                 break
               end
               DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:digest => schema_digest).execute
-              newschema = true
+              reindex_solr(model) unless newcf
             end
             
             if newcf

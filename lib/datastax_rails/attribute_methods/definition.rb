@@ -9,8 +9,8 @@ module DatastaxRails
       end
 
       def instantiate(record, value)
-        value ||= coder.default
-        return unless value
+        value = coder.default if value.nil?
+        return if value.nil?
       
         value = coder.decode(value)
         coder.wrap(record, name, value)

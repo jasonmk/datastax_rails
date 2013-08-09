@@ -124,7 +124,7 @@ module DatastaxRails
         
         def write_with_solr(key, attributes, options)
           xml_doc = RSolr::Xml::Generator.new.add(attributes.merge(:id => key))
-          self.solr_connection.update(:data => xml_doc, :params => {:cl => options[:consistency]})
+          self.solr_connection.update(:data => xml_doc, :params => {:replacefields => false, :cl => options[:consistency]})
         end
     end
 

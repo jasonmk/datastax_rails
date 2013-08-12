@@ -70,6 +70,18 @@ Once you've created some models, the following will upload the solr schemas and 
 It is safe to run ds:schema over and over.  In fact, it is necessary to re-run it any time you change the
 attributes on any model.  DSR will only upload schema files if they have changed.
 
+Create a sample Model.  See Base documentation for more details:
+
+class Person < DatastaxRails::Base
+  key     :uuid
+  string  :first_name
+  string  :user_name
+  text    :bio
+  date    :birthdate
+  boolean :active
+  timestamps
+end
+
 === Known issues
 
 Setting an integer field to something other than an integer results in nothing being set and no validation error

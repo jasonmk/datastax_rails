@@ -211,7 +211,7 @@ module DatastaxRails
                 break
               end
               DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:digest => schema_digest).execute
-              reindex_solr(model) unless newcf
+              reindex_solr(model.to_s) unless newcf
             end
             
             if newcf

@@ -2,6 +2,8 @@ source "http://rubygems.org/"
 # Declare your gem's dependencies in datastax_rails.gemspec.
 # Bundler will treat runtime dependencies like base dependencies, and
 # development dependencies will be added by default to the :development group.
+gem 'cassandra-cql', :path => '../cassandra-cql'
+gem 'thin'
 gemspec
 
 # jquery-rails is used by the dummy application
@@ -14,6 +16,6 @@ gem "jquery-rails"
 
 # To use debugger
 #gem 'pry'
-#gem 'debugger', :platforms => :ruby_19
-#gem 'ruby-debug-base19', :platforms => :ruby_19
-gem 'ruby-debug'
+#gem 'debugger', :platforms => :ruby_20
+#gem 'ruby-debug-base19', :platforms => :ruby_20
+#gem 'ruby-debug'

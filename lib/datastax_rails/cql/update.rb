@@ -37,29 +37,29 @@ module DatastaxRails
         column_names = @columns.keys
         
         
-          stmt = "update #{@klass.column_family} using consistency #{@consistency} "
+        stmt = "update #{@klass.column_family} "
+        
+        if(@ttl)
+          stmt << "AND TTL #{@ttl} "
+        end
+        
+        if(@timestamp)
+          stmt << "AND TIMESTAMP #{@timestamp}"
+        end
+        
+        unless @columns.empty?
+          stmt << "SET "
           
-          if(@ttl)
-            stmt << "AND TTL #{@ttl} "
+          first_entry = column_names.first
+          
+          stmt << CassandraCQL::Statement.sanitize("\"#{first_entry.to_s}\" = ?", [@columns[first_entry].to_s])
+          column_names[1..-1].each do |col|
+            stmt << CassandraCQL::Statement.sanitize(", \"#{col.to_s}\" = ?", [@columns[col].to_s])
           end
-          
-          if(@timestamp)
-            stmt << "AND TIMESTAMP #{@timestamp}"
-          end
-          
-          unless @columns.empty?
-            stmt << "SET "
-            
-            first_entry = column_names.first
-            
-            stmt << CassandraCQL::Statement.sanitize("\"#{first_entry.to_s}\" = ?", [@columns[first_entry]])
-            column_names[1..-1].each do |col|
-              stmt << CassandraCQL::Statement.sanitize(", \"#{col.to_s}\" = ?", [@columns[col]])
-            end
-          end
-          
-          stmt << CassandraCQL::Statement.sanitize(" WHERE \"KEY\" IN (?)", [@key])
-        stmt
+        end
+        
+        stmt << CassandraCQL::Statement.sanitize(" WHERE key IN (?)", [@key])
+        stmt.force_encoding('UTF-8')
       end
       
       # def execute

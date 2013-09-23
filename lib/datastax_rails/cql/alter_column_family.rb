@@ -4,6 +4,7 @@ module DatastaxRails#:nodoc:
       def initialize(cf_name)
         @cf_name = cf_name
         @action = nil
+        @consistency = 'QUORUM'
       end
       
       def add(column)

@@ -7,7 +7,7 @@ module DatastaxRails
         @timestamp = nil
         @columns = []
         @conditions = {}
-        @key_name = "KEY"
+        @key_name = "key"
         super
       end
       
@@ -37,8 +37,8 @@ module DatastaxRails
       end
       
       def to_cql
-        values = [@keys]
-        stmt = "DELETE #{@columns.join(',')} FROM #{@klass.column_family} USING CONSISTENCY #{@consistency} "
+        values = [@keys.collect{|k|k.to_s}]
+        stmt = "DELETE #{@columns.join(',')} FROM #{@klass.column_family} "
         
         if(@timestamp)
           stmt << "AND TIMESTAMP #{@timestamp} "
@@ -48,7 +48,7 @@ module DatastaxRails
         
         @conditions.each do |col,val|
           stmt << " AND #{col} = ?"
-          values << val
+          values << val.to_s
         end
         
         CassandraCQL::Statement.sanitize(stmt, values)

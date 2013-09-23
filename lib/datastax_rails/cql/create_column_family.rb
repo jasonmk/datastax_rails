@@ -6,7 +6,7 @@ module DatastaxRails#:nodoc:
         @columns = {}
         @storage_parameters = []
         @key_type = 'uuid'
-        @key_columns = @key_name = "KEY"
+        @key_columns = @key_name = "key"
       end
       
       def key_type(key_type)
@@ -48,11 +48,11 @@ module DatastaxRails#:nodoc:
       end
       
       def to_cql
-        stmt = "CREATE COLUMNFAMILY #{@cf_name} (\"#{@key_name}\" #{@key_type}, "
+        stmt = "CREATE COLUMNFAMILY #{@cf_name} (#{@key_name} #{@key_type}, "
         @columns.each do |name,type|
           stmt << "#{name} #{type}, "
         end
-        stmt << "PRIMARY KEY (\"#{@key_columns}\"))"
+        stmt << "PRIMARY KEY (#{@key_columns}))"
         unless @storage_parameters.empty?
           stmt << " WITH "
           stmt << @storage_parameters.join(" AND ")

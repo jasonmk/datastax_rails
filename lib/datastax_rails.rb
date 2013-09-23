@@ -1,5 +1,5 @@
 require 'active_support/all'
-require 'cassandra-cql/1.1'
+require 'cassandra-cql/1.2'
 require 'blankslate'
 require 'schema_migration'
 
@@ -80,19 +80,19 @@ end
 require "thrift"
 # Thrift is how we communicate with Cassandra.  We need to do a little fixup
 # work to handle UTF-8 properly in Ruby 1.8.6.
-module Thrift
-  class BinaryProtocol
-    def write_string(str)
-      if(str.respond_to?(:bytesize))
-        size = str.bytesize
-      else
-        size = str.size
-      end
-      write_i32(size)
-      trans.write(str)
-    end
-  end
-end
+# module Thrift
+  # class BinaryProtocol
+    # def write_string(str)
+      # if(str.respond_to?(:bytesize))
+        # size = str.bytesize
+      # else
+        # size = str.size
+      # end
+      # write_i32(size)
+      # trans.write(str)
+    # end
+  # end
+# end
 
 require 'datastax_rails/railtie' if defined?(Rails)
 require 'datastax_rails/errors'

@@ -137,11 +137,11 @@ module DatastaxRails
       end
       
       def find_one(id)
-        with_cassandra.where(:KEY => id).first || raise(RecordNotFound, "Couldn't find #{@klass.name} with ID=#{id}")
+        with_cassandra.where(:key => id).first || raise(RecordNotFound, "Couldn't find #{@klass.name} with ID=#{id}")
       end
   
       def find_some(ids)
-        result = with_cassandra.where(:KEY => ids).all
+        result = with_cassandra.where(:key => ids).all
   
         expected_size =
           if @limit_value && ids.size > @limit_value

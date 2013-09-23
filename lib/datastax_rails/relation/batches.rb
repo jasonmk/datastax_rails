@@ -67,7 +67,7 @@ module DatastaxRails
       end
 
       if (finder_options = options.except(:start, :batch_size)).present?
-        raise "You can't specify an order, it's forced to be #{relation.use_solr_value ? "created_at" : "KEY"}" if options[:order].present?
+        raise "You can't specify an order, it's forced to be #{relation.use_solr_value ? "created_at" : "key"}" if options[:order].present?
         raise "You can't specify a limit, it's forced to be the batch_size" if options[:limit].present?
 
         relation = apply_finder_options(finder_options)

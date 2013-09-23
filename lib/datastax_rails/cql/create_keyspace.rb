@@ -17,12 +17,12 @@ module DatastaxRails#:nodoc:
       end
       
       def to_cql
-        stmt = "CREATE KEYSPACE #{@ks_name} WITH strategy_class = '#{@strategy_class}'"
+        stmt = "CREATE KEYSPACE #{@ks_name} WITH REPLICATION = {'class' : '#{@strategy_class}'"
         
         @strategy_options.each do |key, value|
-          stmt << " AND strategy_options:#{key.to_s} = '#{value.to_s}'"
+          stmt << ", '#{key.to_s}' : '#{value.to_s}'"
         end
-        
+        stmt << '}'
         stmt
       end
     end

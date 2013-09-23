@@ -248,7 +248,7 @@ module DatastaxRails
     # For ad-hoc queries, you will have to use Solr.
     def query_via_cql
       select_columns = select_values.empty? ? (@klass.attribute_definitions.keys - @klass.lazy_attributes) : select_values.flatten
-      cql = @cql.select(select_columns)
+      cql = @cql.select(select_columns + ['key'])
       cql.using(@consistency_value) if @consistency_value
       @where_values.each do |wv|
         cql.conditions(wv)
@@ -256,7 +256,7 @@ module DatastaxRails
       @greater_than_values.each do |gtv|
         gtv.each do |k,v|
           # Special case if inequality is equal to the primary key (we're paginating)
-          if(k == :KEY)
+          if(k == :key)
             cql.paginate(v)
           end
         end
@@ -266,7 +266,7 @@ module DatastaxRails
       end
       results = []
       CassandraCQL::Result.new(cql.execute).fetch do |row|
-        results << @klass.instantiate(row.row.key, row.to_hash, select_columns)
+        results << @klass.instantiate(row['key'], row.to_hash, select_columns)
       end
       results
     end

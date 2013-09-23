@@ -154,6 +154,37 @@ module DatastaxRails
         record
       end
       
+      # Replace this collection with +other_array+
+      # This will perform a diff and delete/add only records that have changed.
+      def replace(other_array)
+        other_array.each { |val| raise_on_type_mismatch(val) }
+        original_target = load_target.dup
+
+        delete(target - other_array)
+
+        unless concat(other_array - target)
+          @target = original_target
+          raise RecordNotSaved, "Failed to replace #{reflection.name} because one or more of the " \
+                                "new records could not be saved."
+        end
+      end
+      
+      # Add +records+ to this association. Returns +self+ so method calls may be chained.
+      # Since << flattens its argument list and inserts each record, +push+ and +concat+ behave identically.
+      def concat(*records)
+        result = true
+        load_target if owner.new_record?
+
+        records.flatten.each do |record|
+          raise_on_type_mismatch(record)
+          add_to_target(record) do |r|
+            result &&= insert_record(record) unless owner.new_record?
+          end
+        end
+
+        result && records
+      end
+      
       private
       
         # We have some records loaded from the database (persisted) and some that are

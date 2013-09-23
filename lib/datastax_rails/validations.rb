@@ -24,9 +24,20 @@ module DatastaxRails
       end
     end
 
-    def valid?
+
+    # Runs all the validations within the specified context. Returns true if no errors are found,
+    # false otherwise.
+    #
+    # If the argument is false (default is +nil+), the context is set to <tt>:create</tt> if
+    # <tt>new_record?</tt> is true, and to <tt>:update</tt> if it is not.
+    #
+    # Validations with no <tt>:on</tt> option will run no matter the context. Validations with
+    # some <tt>:on</tt> option will only run in the specified context.
+    def valid?(context = nil)
       run_callbacks :validation do
-        super
+        context ||= (new_record? ? :create : :update)
+        output = super(context)
+        errors.empty? && output
       end
     end
 

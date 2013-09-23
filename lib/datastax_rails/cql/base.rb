@@ -17,7 +17,7 @@ module DatastaxRails
       def execute
         cql = self.to_cql
         puts cql if ENV['DEBUG_CQL'] == 'true'
-        DatastaxRails::Base.connection.execute_cql_query(cql)
+        DatastaxRails::Base.connection.execute_cql_query(cql, :consistency => CassandraCQL::Thrift::ConsistencyLevel.const_get(@consistency))
       end
     end
   end

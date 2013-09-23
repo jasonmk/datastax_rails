@@ -479,7 +479,7 @@ module DatastaxRails #:nodoc:
       delegate :count, :first, :first!, :last, :last!, :compute_stats, :to => :scoped
       delegate :sum, :average, :minimum, :maximum, :stddev, :to => :scoped
       delegate :cql, :with_cassandra, :with_solr, :commit_solr, :to => :scoped
-      delegate :find_each, :find_in_batches, :to => :scoped
+      delegate :find_each, :find_in_batches, :consistency, :to => :scoped
 
       # Sets the column family name
       #
@@ -493,7 +493,7 @@ module DatastaxRails #:nodoc:
       #
       # Returns [String] the name of the column family
       def column_family
-        @column_family || name.pluralize
+        @column_family || name.underscore.pluralize
       end
       
       def payload_model?

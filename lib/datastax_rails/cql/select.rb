@@ -39,10 +39,10 @@ module DatastaxRails#:nodoc:
       def to_cql
         conditions = []
         values = []
-        stmt = "SELECT #{@select} FROM #{@klass.column_family} USING CONSISTENCY #{@consistency} "
+        stmt = "SELECT #{@select} FROM #{@klass.column_family} "
         
         if @paginate
-          conditions << "token(\"KEY\") > token('#{@paginate}')"
+          conditions << "token(key) > token('#{@paginate}')"
         end
         
         @conditions.each do |k,v|

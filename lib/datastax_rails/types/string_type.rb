@@ -8,7 +8,7 @@ module DatastaxRails
       end
 
       def wrap(record, name, value)
-        txt = (value.frozen? ? value.dup : value)
+        txt = (value.frozen? ? value.to_s.dup : value)
         txt.respond_to?(:force_encoding) ? txt.force_encoding('UTF-8') : txt
       end
     end

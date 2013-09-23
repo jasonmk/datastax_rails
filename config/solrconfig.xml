@@ -48,6 +48,9 @@
        affect both how text is indexed and queried.
     -->
   <luceneMatchVersion>LUCENE_40</luceneMatchVersion>
+  
+  <!-- Enable DSE Search new type mappings -->
+  <dseTypeMappingVersion>0</dseTypeMappingVersion>
 
   <!-- lib directives can be used to instruct Solr to load an Jars
        identified and use them to resolve any "plugins" specified in

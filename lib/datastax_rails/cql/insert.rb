@@ -36,7 +36,7 @@ module DatastaxRails
           keys << k.to_s
           values << v
         end
-        stmt = "INSERT INTO #{@klass.column_family} (#{keys.join(',')}) VALUES (#{('?'*keys.size).split(//).join(',')}) USING CONSISTENCY #{@consistency} "
+        stmt = "INSERT INTO #{@klass.column_family} (#{keys.join(',')}) VALUES (#{('?'*keys.size).split(//).join(',')}) "
         
         if(@ttl)
           stmt << "AND TTL #{@ttl} "
@@ -46,7 +46,7 @@ module DatastaxRails
           stmt << "AND TIMESTAMP #{@timestamp}"
         end
         
-        CassandraCQL::Statement.sanitize(stmt, values)
+        CassandraCQL::Statement.sanitize(stmt, values).force_encoding('UTF-8')
       end
     end
   end

@@ -1,6 +1,7 @@
 # require 'datastax_rails/rsolr_client_wrapper'
 require 'rsolr/client_cert'
 require 'rest_client'
+require "cassandra-cql/1.2"
 module DatastaxRails
   # The connection module holds all the code for establishing and maintaining a connection to
   # Datastax Exterprise.  This includes both the Cassandra and Solr connections.

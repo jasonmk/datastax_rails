@@ -84,8 +84,7 @@ end
 
 === Known issues
 
-Setting an integer field to something other than an integer results in nothing being set and no validation error
-(if you were using one).
+Trying to set a value to nil via the solr API results in the field value not changing at all.  Updating it via CQL doesn't have this issue.
 
 === More information
 

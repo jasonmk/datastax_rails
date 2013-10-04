@@ -1,7 +1,7 @@
 module DatastaxRails
   module Types
     class IntegerType < BaseType
-      DEFAULTS = {:solr_type => 'int', :indexed => true, :stored => true, :multi_valued => false, :sortable => true, :tokenized => false, :fulltext => false}
+      DEFAULTS = {:solr_type => 'int', :indexed => :solr, :stored => true, :multi_valued => false, :sortable => true, :tokenized => false, :fulltext => false}
       REGEX = /\A[-+]?\d+\Z/
       def encode(int)
         return -10191980 if int.blank?

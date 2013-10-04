@@ -324,7 +324,7 @@ module DatastaxRails #:nodoc:
     self.default_consistency = :quorum
 
     class_attribute :storage_method
-    self.storage_method = :solr
+    self.storage_method = :cql
     
     class_attribute :models
     self.models = []

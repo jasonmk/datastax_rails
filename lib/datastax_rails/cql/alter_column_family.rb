@@ -24,6 +24,12 @@ module DatastaxRails#:nodoc:
         @action = 'ALTER'
         self 
       end
+      
+      def rename(col1,col2)
+        set_column([col1,col2])
+        @action = 'RENAME'
+        self
+      end
 
       def set_column(column)  
         if(@action)
@@ -40,6 +46,8 @@ module DatastaxRails#:nodoc:
           stmt << "ADD #{@column.keys.first} #{@column.values.first}"
         elsif(@action == 'DROP')
           stmt << "DROP #{@column}"
+        elsif(@action == 'RENAME')
+          stmt << "RENAME \"#{@column[0]}\" TO \"#{@column[1]}\""
         end
         
         stmt

@@ -240,7 +240,13 @@ module DatastaxRails
     # works if you run against a secondary index. So this currently just
     # delegates to the count_via_solr method.
     def count_via_cql
-      with_solr.count_via_solr
+      select_columns = ['count(*)']
+      cql = @cql.select(select_columns)
+      cql.using(@consistency_value) if @consistency_value
+      @where_values.each do |wv|
+        cql.conditions(wv)
+      end
+      CassandraCQL::Result.new(cql.execute).fetch['count']
     end
     
     # Constructs a CQL query and runs it against Cassandra directly.  For this to

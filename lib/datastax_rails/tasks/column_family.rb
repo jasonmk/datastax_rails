@@ -46,7 +46,7 @@ module DatastaxRails
           if coder.options[:solr_type]
             @fields.push({ :name => attr.name,
                            :type => coder.options[:solr_type].to_s,
-                           :indexed => coder.options[:indexed].to_s,
+                           :indexed => (coder.options[:indexed] == :solr).to_s,
                            :stored => coder.options[:stored].to_s,
                            :multi_valued => coder.options[:multi_valued].to_s })
           end
@@ -123,6 +123,8 @@ module DatastaxRails
           connection.execute_cql_query(DatastaxRails::Cql::CreateColumnFamily.new('schema_migrations').key_type(:text).columns(:digest => :text, :solrconfig => :text, :stopwords => :text).to_cql)
         end
         
+        check_key_name('schema_migrations')
+        
         solrconfig = File.read(File.join(File.dirname(__FILE__),"..","..","..","config","solrconfig.xml"))
         stopwords = File.read(File.join(File.dirname(__FILE__),"..","..","..","config","stopwords.txt"))
         solrconfig_digest = Digest::SHA1.hexdigest(solrconfig)
@@ -149,7 +151,7 @@ module DatastaxRails
             unless column_family_exists?(model.column_family.to_s)
               puts "Creating payload model #{model.column_family}"
               columns = {:chunk => :int, :payload => :text}
-              cql = DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).key_name(:digest).key_columns("digest\", \"chunk").key_type(:text).columns(columns).with("COMPACT STORAGE").to_cql
+              cql = DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).key_name(:digest).key_columns("digest, chunk").key_type(:text).columns(columns).with("COMPACT STORAGE").to_cql
               puts cql
               connection.execute_cql_query(cql)
             end
@@ -227,11 +229,23 @@ module DatastaxRails
               end
             end
             
-            # Check for unindexed columns
+            check_key_name(model.column_family)
+            
+            # Check for missing columns or columns needing cassandra indexes
             model.attribute_definitions.each do |attribute, definition|
               unless column_exists?(model.column_family.to_s, attribute.to_s)
                 puts "Adding column '#{attribute}' to '#{model.column_family}'"
                 DatastaxRails::Cql::AlterColumnFamily.new(model.column_family).add(attribute => :text).execute
+              end
+              if(definition.coder.options[:indexed] == :cassandra)
+                unless index_exists?(cassandra_index_system_name(model.column_family.to_s, attribute.to_s))
+                  if index_exists?(solr_index_system_name(model.column_family.to_s, attribute.to_s))
+                    puts "Dropping solr index on #{model.column_family.to_s}.#{attribute.to_s}"
+                    DatastaxRails::Cql::DropIndex.new(solr_index_cql_name(model.column_family.to_s, attribute.to_s)).execute
+                  end
+                  puts "Creating cassandra index on #{model.column_family.to_s}.#{attribute.to_s}"
+                  DatastaxRails::Cql::CreateIndex.new(cassandra_index_cql_name(model.column_family.to_s, attribute.to_s)).on(model.column_family.to_s).column(attribute.to_s).execute
+                end
               end
             end
           end
@@ -239,6 +253,17 @@ module DatastaxRails
       end
 
       private
+      
+      def check_key_name(cf)
+        klass = OpenStruct.new(:column_family => 'system.schema_columnfamilies', :default_consistency => 'QUORUM')
+        cql = DatastaxRails::Cql::ColumnFamily.new(klass)
+        results = CassandraCQL::Result.new(cql.select("key_alias, key_aliases").conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf).execute)
+        result = results.fetch
+        if(result['key_alias'] == 'KEY' && (result['key_aliases'].blank? || !result['key_aliases'].include?('key')))
+          puts "Renaming KEY column for #{cf}"
+          DatastaxRails::Cql::AlterColumnFamily.new(cf).rename("KEY",'key').execute
+        end
+      end
 
       def connection
         DatastaxRails::Base.connection
@@ -263,6 +288,22 @@ module DatastaxRails
         cf
       end
       
+      def solr_index_system_name(cf, column)
+        "#{@keyspace}.#{cf.to_s}#{column.to_s}"
+      end
+      
+      def solr_index_cql_name(cf, column)
+        "#{@keyspace}_#{cf.to_s}_#{column.to_s}_index"
+      end
+      
+      def cassandra_index_cql_name(cf, column)
+        "#{cf.to_s}_#{column.to_s}_idx"
+      end
+      
+      def cassandra_index_system_name(cf, column)
+        "#{cf.to_s}.#{cf.to_s}_#{column.to_s}_idx"
+      end
+      
       def column_family_exists?(cf)
         klass = OpenStruct.new(:column_family => 'system.schema_columnfamilies', :default_consistency => 'QUORUM')
         cql = DatastaxRails::Cql::ColumnFamily.new(klass)
@@ -274,6 +315,13 @@ module DatastaxRails
         klass = OpenStruct.new(:column_family => 'system.schema_columns', :default_consistency => 'QUORUM')
         cql = DatastaxRails::Cql::ColumnFamily.new(klass)
         results = CassandraCQL::Result.new(cql.select("count(*)").conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf, 'column_name' => col).execute)
+        results.fetch['count'] > 0
+      end
+      
+      def index_exists?(idx)
+        klass = OpenStruct.new(:column_family => 'system."IndexInfo"', :default_consistency => 'QUORUM')
+        cql = DatastaxRails::Cql::ColumnFamily.new(klass)
+        results = CassandraCQL::Result.new(cql.select("count(*)").conditions('table_name' => @keyspace, 'index_name' => idx).execute)
         results.fetch['count'] > 0
       end
     end

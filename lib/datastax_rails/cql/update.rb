@@ -52,9 +52,9 @@ module DatastaxRails
           
           first_entry = column_names.first
           
-          stmt << CassandraCQL::Statement.sanitize("\"#{first_entry.to_s}\" = ?", [@columns[first_entry].to_s])
+          stmt << CassandraCQL::Statement.sanitize("\"#{first_entry.to_s}\" = ?", [@columns[first_entry]])
           column_names[1..-1].each do |col|
-            stmt << CassandraCQL::Statement.sanitize(", \"#{col.to_s}\" = ?", [@columns[col].to_s])
+            stmt << CassandraCQL::Statement.sanitize(", \"#{col.to_s}\" = ?", [@columns[col]])
           end
         end
         

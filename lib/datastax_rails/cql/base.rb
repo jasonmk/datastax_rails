@@ -4,6 +4,7 @@ module DatastaxRails
       # Base initialize that sets the default consistency.
       def initialize(klass, *args)
         @consistency = klass.default_consistency.to_s.upcase
+        @keyspace = DatastaxRails::Base.config[:keyspace]
       end
 
       # Abstract.  Should be overridden by subclasses
@@ -17,7 +18,7 @@ module DatastaxRails
       def execute
         cql = self.to_cql
         puts cql if ENV['DEBUG_CQL'] == 'true'
-        DatastaxRails::Base.connection.execute_cql_query(cql, :consistency => CassandraCQL::Thrift::ConsistencyLevel.const_get(@consistency))
+        DatastaxRails::Base.connection.execute_cql_query(cql, :consistency => CassandraCQL::Thrift::ConsistencyLevel.const_get(@consistency || 'QUORUM'))
       end
     end
   end

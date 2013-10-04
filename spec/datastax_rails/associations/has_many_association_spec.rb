@@ -27,6 +27,7 @@ describe DatastaxRails::Base do
     end
     
     it "should create records with the proper foreign key" do
+      Person.commit_solr
       p = Person.create(:name => 'jason')
       p.cars.create(:name => 'Jeep')
       Car.commit_solr

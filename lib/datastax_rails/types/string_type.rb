@@ -1,7 +1,7 @@
 module DatastaxRails
   module Types
     class StringType < BaseType
-      DEFAULTS = {:solr_type => 'string', :indexed => true, :stored => true, :multi_valued => false, :sortable => true, :tokenized => false, :fulltext => true}
+      DEFAULTS = {:solr_type => 'string', :indexed => :solr, :stored => true, :multi_valued => false, :sortable => true, :tokenized => false, :fulltext => true}
       def encode(str)
         str = "" unless str
         str.to_s

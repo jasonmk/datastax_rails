@@ -48,7 +48,7 @@ module DatastaxRails
         
         @conditions.each do |col,val|
           stmt << " AND #{col} = ?"
-          values << val.to_s
+          values << val
         end
         
         CassandraCQL::Statement.sanitize(stmt, values)

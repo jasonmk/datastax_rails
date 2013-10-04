@@ -1,7 +1,7 @@
 module DatastaxRails
   module Types
     class FloatType < BaseType
-      DEFAULTS = {:solr_type => 'float', :indexed => true, :stored => true, :multi_valued => false, :sortable => true, :tokenized => false, :fulltext => false}
+      DEFAULTS = {:solr_type => 'float', :indexed => :solr, :stored => true, :multi_valued => false, :sortable => true, :tokenized => false, :fulltext => false}
       REGEX = /\A[-+]?(\d+(\.\d+)?|\.\d+)\Z/
       def encode(float)
         return -10191980.0 if float.blank?

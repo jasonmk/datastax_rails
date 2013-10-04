@@ -1,7 +1,7 @@
 module DatastaxRails
   module Types
     class TextType < BaseType
-      DEFAULTS = {:solr_type => 'text', :indexed => true, :stored => true, :multi_valued => false, :sortable => false, :tokenized => true, :fulltext => true}
+      DEFAULTS = {:solr_type => 'text', :indexed => :solr, :stored => true, :multi_valued => false, :sortable => false, :tokenized => true, :fulltext => true}
       def encode(str)
         str.to_s.dup
       end

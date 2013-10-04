@@ -7,7 +7,7 @@ module DatastaxRails
     #
     # That would give you all the posts that have Technology somewhere in the tags array. 
     class ArrayType < BaseType
-      DEFAULTS = {:solr_type => 'array', :indexed => true, :stored => true, :multi_valued => false, :sortable => false, :tokenized => true, :fulltext => true}
+      DEFAULTS = {:solr_type => 'array', :indexed => :solr, :stored => true, :multi_valued => false, :sortable => false, :tokenized => true, :fulltext => true}
       
       # An extension to normal arrays that allow for tracking of dirty values.  This is
       # used by ActiveModel's change tracking framework.

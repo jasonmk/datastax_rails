@@ -13,9 +13,11 @@ module DatastaxRails
     autoload :ColumnFamily
     autoload :Consistency
     autoload :CreateColumnFamily
+    autoload :CreateIndex
     autoload :CreateKeyspace
     autoload :Delete
     autoload :DropColumnFamily
+    autoload :DropIndex
     autoload :DropKeyspace
     autoload :Insert
     autoload :Select

@@ -1,8 +1,15 @@
 require 'rubygems'
 require 'datastax_rails'
 require 'rails'
+require 'action_controller/railtie'
+
 module DatastaxRails
   class Railtie < Rails::Railtie
+    config.action_dispatch.rescue_responses.merge!(
+      'DatastaxRails::RecordNotFound' => :not_found,
+      'DatastaxRails::RecordInvalid'  => :unprocessable_entity,
+      'DatastaxRails::RecordNotSaved' => :unprocessable_entity)
+    
     initializer 'datastax_rails.init' do
       ActiveSupport.on_load(:datastax_rails) do
       end

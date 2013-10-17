@@ -238,8 +238,8 @@ module DatastaxRails
                 DatastaxRails::Cql::AlterColumnFamily.new(model.column_family).add(attribute => :text).execute
               end
               if(definition.coder.options[:indexed] == :cassandra)
-                unless index_exists?(cassandra_index_system_name(model.column_family.to_s, attribute.to_s))
-                  if index_exists?(solr_index_system_name(model.column_family.to_s, attribute.to_s))
+                unless index_exists?(model.column_family.to_s, attribute.to_s)
+                  if index_exists?(model.column_family.to_s, attribute.to_s)
                     puts "Dropping solr index on #{model.column_family.to_s}.#{attribute.to_s}"
                     DatastaxRails::Cql::DropIndex.new(solr_index_cql_name(model.column_family.to_s, attribute.to_s)).execute
                   end
@@ -288,9 +288,9 @@ module DatastaxRails
         cf
       end
       
-      def solr_index_system_name(cf, column)
-        "#{@keyspace}.#{cf.to_s}#{column.to_s}"
-      end
+      # def solr_index_system_name(cf, column)
+        # "#{@keyspace}.#{cf.to_s}#{column.to_s}"
+      # end
       
       def solr_index_cql_name(cf, column)
         "#{@keyspace}_#{cf.to_s}_#{column.to_s}_index"
@@ -300,9 +300,9 @@ module DatastaxRails
         "#{cf.to_s}_#{column.to_s}_idx"
       end
       
-      def cassandra_index_system_name(cf, column)
-        "#{cf.to_s}.#{cf.to_s}_#{column.to_s}_idx"
-      end
+      # def cassandra_index_system_name(cf, column)
+        # "#{cf.to_s}.#{cf.to_s}_#{column.to_s}_idx"
+      # end
       
       def column_family_exists?(cf)
         klass = OpenStruct.new(:column_family => 'system.schema_columnfamilies', :default_consistency => 'QUORUM')
@@ -318,11 +318,11 @@ module DatastaxRails
         results.fetch['count'] > 0
       end
       
-      def index_exists?(idx)
-        klass = OpenStruct.new(:column_family => 'system."IndexInfo"', :default_consistency => 'QUORUM')
+      def index_exists?(cf, col)
+        klass = OpenStruct.new(:column_family => 'system.schema_columns', :default_consistency => 'QUORUM')
         cql = DatastaxRails::Cql::ColumnFamily.new(klass)
-        results = CassandraCQL::Result.new(cql.select("count(*)").conditions('table_name' => @keyspace, 'index_name' => idx).execute)
-        results.fetch['count'] > 0
+        results = CassandraCQL::Result.new(cql.select("index_name").conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf, 'column_name' => col).execute)
+        results.fetch['index_name'] != nil
       end
     end
   end

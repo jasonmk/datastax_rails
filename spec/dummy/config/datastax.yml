@@ -1,5 +1,5 @@
 productiont:
-  servers: ["sade-rs-ds1.opensource.gov:9160", "sade-rs-ds2.opensource.gov:9160", "sade-rs-ds3.opensource.gov:9160"]
+  servers: ["127.0.0.1:9160"]
   keyspace: "datastax_rails_development"
   strategy_options: {"RS": "3"}
   connection_options:

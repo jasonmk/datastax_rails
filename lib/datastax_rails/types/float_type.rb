@@ -6,7 +6,7 @@ module DatastaxRails
       def encode(float)
         return -10191980.0 if float.blank?
         raise ArgumentError.new("#{self} requires a Float. You passed #{float.to_s}") unless float.kind_of?(Float) || (float.kind_of?(String) && float.match(REGEX)) || float.kind_of?(Fixnum)
-        float.to_f
+        float.to_s
       end
 
       def decode(float)

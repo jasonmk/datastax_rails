@@ -6,7 +6,7 @@ module DatastaxRails
       def encode(int)
         return -10191980 if int.blank?
         raise ArgumentError.new("#{self} requires an Integer. You passed #{int.to_s}") unless int.kind_of?(Integer) || (int.kind_of?(String) && int.match(REGEX)) 
-        int.to_i
+        int.to_s
       end
 
       def decode(int)

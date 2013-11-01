@@ -387,10 +387,10 @@ module DatastaxRails
         params['group.field'] = @group_value
         params['group.limit'] = @per_page_value
         params['group.offset'] = (@page_value - 1) * @per_page_value
-        params['group.ngroups'] = 'true'
+        params['group.ngroups'] = 'false' # must be false due to issues with solr sharding
         solr_response = rsolr.post('select', :data => params)
         response = solr_response["grouped"][@group_value.to_s]
-        results.total_groups = response['ngroups'].to_i
+        results.total_groups = response['groups'].size
         results.total_for_all = response['matches'].to_i
         results.total_entries = 0
         response['groups'].each do |group|

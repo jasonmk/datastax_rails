@@ -84,7 +84,7 @@ end
 
 === Known issues
 
-Trying to set a value to nil via the solr API results in the field value not changing at all.  Updating it via CQL doesn't have this issue.
+When doing a grouped query, the total groups reported is only the total groups included in your query, not the total matching groups (if you're paginating).  This is due to the way solr sharding works with grouped queries.
 
 === More information
 

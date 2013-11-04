@@ -41,6 +41,7 @@ module DatastaxRails
         @fields = []
         @copy_fields = []
         @fulltext_fields = []
+        @custom_fields = ""
         model.attribute_definitions.values.each do |attr|
           coder = attr.coder
           if coder.options[:solr_type]
@@ -68,6 +69,9 @@ module DatastaxRails
         @copy_fields.sort! {|a,b| a[:source] <=> b[:source]}
         @fulltext_fields.sort!
         
+        user_schema = File.join(Rails.root, "config", "solr", "schema.xml")
+        @custom_fields = File.read(user_schema) if File.exists?(user_schema)
+          
         return ERB.new(File.read(File.join(File.dirname(__FILE__),"..","..","..","config","schema.xml.erb"))).result(binding)
       end
       

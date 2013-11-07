@@ -62,7 +62,7 @@ module DatastaxRails
     private
     def calculate_stats(field)
       unless @stats[field]
-        @stats[field] = limit(0).compute_stats(field).stats[field]
+        @stats[field] = limit(1).compute_stats(field).stats[field]
       end
     end
   end 

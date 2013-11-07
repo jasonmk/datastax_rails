@@ -493,7 +493,7 @@ module DatastaxRails
     protected
       
       def method_missing(method, *args, &block) #:nodoc:
-        if Array.method_defined?(method)
+        if DatastaxRails::Collection.method_defined?(method)
           to_a.send(method, *args, &block)
         elsif @klass.respond_to?(method, true)
           scoping { @klass.send(method, *args, &block) }

@@ -30,6 +30,7 @@ module DatastaxRails
     autoload :SpawnMethods
     autoload :StatsMethods
     autoload :Batches
+    autoload :FacetMethods
   end
   
   autoload :RSolrClientWrapper, 'datastax_rails/rsolr_client_wrapper'

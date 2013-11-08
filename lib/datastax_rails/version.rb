@@ -1,4 +1,4 @@
 module DatastaxRails
   # The current version of the gem
-  VERSION = "1.1.1-alpha"
+  VERSION = "1.1.1.1"
 end

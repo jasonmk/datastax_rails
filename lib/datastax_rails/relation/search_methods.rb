@@ -404,15 +404,12 @@ module DatastaxRails
     # You can also pass in an options hash with the following options:
     #
     #  * :fields => list of fields to search instead of the default of all fields
-    #  * :highlight => List of fields to retrieve highlights for.  Note that highlighted fields *must* be +:stored+
     #
     #   Model.fulltext("john smith", :fields => [:title])
-    #   Model.fulltext("john smith", :hightlight => [:body])
     #
     # @param query [String] a fulltext query to pass to solr
     # @param opts [Hash] an optional options hash to modify the fulltext query
     # @option opts [Array] :fields list of fields to search instead of the default of all text fields (not-implemented)
-    # @option opts [Array] :highlight list of fields to retrieve highlights for (not-implemented)
     # @return [DatastaxRails::Relation] a new Relation object
     def fulltext(query, opts = {})
       return self if query.blank?
@@ -421,6 +418,56 @@ module DatastaxRails
       
       clone.tap do |r|
         r.fulltext_values << opts
+      end
+    end
+    
+    # Enables highlighting on specific fields when used with full 
+    # text searching. In order for highlighting to work, the highlighted 
+    # field(s) *must* be +:stored+
+    # 
+    #   Model.fulltext("ruby on rails").highlight(:tags, :body)
+    #   Model.fulltext("pizza").highlight(:description, snippets: 3, fragsize: 150)
+    # 
+    # In addition to the array of field names to highlight, you can pass in an
+    # options hash with the following options:
+    #
+    #  * :snippets => number of highlight snippets to return
+    #  * :fragsize => number of characters for each snippet length
+    #  * :pre_tag => text which appears before a highlighted term
+    #  * :post_tag => text which appears after a highlighted term
+    #  * :merge_contiguous => collapse contiguous fragments into a single fragment
+    #  * :use_fast_vector => enables the Solr FastVectorHighlighter
+    # 
+    # Note: When enabling +:use_fast_vector+, the highlighted fields must be also have
+    # +:term_vectors+, +:term_positions+, and +:term_offsets+ enabled. 
+    # For more information about these options, refer to Solr's wiki 
+    # on HighlightingParameters[http://http://wiki.apache.org/solr/HighlightingParameters].
+    #
+    # @overload highlight(*args, opts)
+    #   Highlights the full text search terms for the specified fields with the
+    #   given options
+    #   @param [Array] args list of field names to be highlighted
+    #   @param [Hash] opts an options hash to configure the Solr highlighter
+    #   @option opts [Integer] :snippets number of highlighted snippets to return
+    #   @option opts [Integer] :fragsize number of characters for each snippet length
+    #   @option opts [String] :pre_tag text which appears before a highlighted term
+    #   @option opts [String] :post_tag text which appears after a highlighted term
+    #   @option opts [true, false] :merge_contiguous collapse contiguous fragments into a single fragment
+    #   @option opts [true, false] :use_fast_vector enables the Solr FastVectorHighlighter
+    #   @return [DatastaxRails::Relation] a new Relation object
+    # @overload highlight(*args)
+    #   Highlights the full text search terms for the specified fields
+    #   @param [Array] args list of field names to be highlighted
+    #   @return [DatastaxRails::Relation] a new Relation object
+    def highlight(*args)
+      return self if args.blank?
+      
+      opts = args.last.is_a?(Hash) ? args.pop : {}
+      
+      clone.tap do |r|
+        opts[:fields] = r.highlight_options[:fields] || []
+        opts[:fields] |= args # Union unique field names
+        r.highlight_options.merge! opts
       end
     end
     

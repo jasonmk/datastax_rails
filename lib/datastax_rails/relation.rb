@@ -1,4 +1,5 @@
 require 'rsolr'
+require 'pp' if ENV['DEBUG_SOLR'] == 'true'
 
 module DatastaxRails
   class Relation
@@ -354,9 +355,11 @@ module DatastaxRails
         q = "*:*"
       else
         q = @fulltext_values.collect {|ftv| "(" + ftv[:query] + ")"}.join(' AND ')
+        hl_fields = @fulltext_values.collect { |ftv| ftv[:highlight].join(",") if ftv[:highlight].present? }.join(",")
       end
       
       #TODO highlighting and fielded queries of fulltext
+      
       
       params = {:q => q}
       unless sort.empty?
@@ -365,6 +368,13 @@ module DatastaxRails
       
       unless filter_queries.empty?
         params[:fq] = filter_queries
+      end
+      
+      unless hl_fields.blank?
+        params[:hl] = true
+        params["hl.fl"] = hl_fields
+        params["hl.simple.pre"] = "<em>"
+        params["hl.simple.post"] = "</em>"
       end
       
       select_columns = select_values.empty? ? (@klass.attribute_definitions.keys - @klass.lazy_attributes) : select_values.flatten
@@ -400,7 +410,9 @@ module DatastaxRails
       else
         solr_response = rsolr.paginate(@page_value, @per_page_value, 'select', :data => params, :method => :post)
         response = solr_response["response"]
+        pp solr_response if ENV['DEBUG_SOLR'] == 'true'
         results = parse_docs(response, select_columns)
+        results.highlights = solr_response['highlighting']
       end
       if solr_response["stats"]
         @stats = solr_response["stats"]["stats_fields"].with_indifferent_access

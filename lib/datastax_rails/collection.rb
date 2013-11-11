@@ -8,10 +8,10 @@ module DatastaxRails
     #   @return [Fixnum] the per page value of the search that produced these results (used by will_paginate)
     # @!attribute [r] current_page
     #   @return [Fixnum] the current page of the search that produced these results (used by will_paginate)
-    attr_accessor :last_column_name, :total_entries, :per_page, :current_page
+    attr_accessor :last_column_name, :total_entries, :per_page, :current_page, :highlights
     
     def inspect
-      "<DatastaxRails::Collection##{object_id} contents: #{super} last_column_name: #{last_column_name.inspect}>"
+      "<DatastaxRails::Collection##{object_id} contents: #{super} last_column_name: #{last_column_name.inspect} highlights: #{highlights.inspect}>"
     end
     
     def total_pages

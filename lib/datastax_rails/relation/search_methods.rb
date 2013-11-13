@@ -425,7 +425,8 @@ module DatastaxRails
     # text searching. In order for highlighting to work, the highlighted 
     # field(s) *must* be +:stored+
     # 
-    #   Model.fulltext("john smith").highlight(:name)
+    #   Model.fulltext("ruby on rails").highlight(:tags, :body)
+    #   Model.fulltext("pizza").highlight(:description, snippets: 3, fragsize: 150)
     # 
     # In addition to the array of field names to highlight, you can pass in an
     # options hash with the following options:
@@ -437,22 +438,27 @@ module DatastaxRails
     #  * :merge_contiguous => collapse contiguous fragments into a single fragment
     #  * :use_fast_vector => enables the Solr FastVectorHighlighter
     # 
-    #   Model.fulltext("pizza").highlight(:description, snippets: 3, fragsize: 150)
-    #
     # Note: When enabling +:use_fast_vector+, the highlighted fields must be also have
     # +:term_vectors+, +:term_positions+, and +:term_offsets+ enabled. 
     # For more information about these options, refer to Solr's wiki 
     # on HighlightingParameters[http://http://wiki.apache.org/solr/HighlightingParameters].
     #
-    # @param args [Array] list of field names to be highlighted
-    # @param opts [Hash] an optional options hash to configure the Solr highlighter
-    # @option opts [Integer] :snippets number of highlighted snippets to return
-    # @option opts [Integer] :fragsize number of characters for each snippet length
-    # @option opts [String] :pre_tag text which appears before a highlighted term
-    # @option opts [String] :post_tag text which appears after a highlighted term
-    # @option opts [true, false] :merge_contiguous collapse contiguous fragments into a single fragment
-    # @option opts [true, false] :use_fast_vector enables the Solr FastVectorHighlighter
-    # @return [DatastaxRails::Relation] a new Relation object
+    # @overload highlight(*args, opts)
+    #   Highlights the full text search terms for the specified fields with the
+    #   given options
+    #   @param [Array] args list of field names to be highlighted
+    #   @param [Hash] opts an options hash to configure the Solr highlighter
+    #   @option opts [Integer] :snippets number of highlighted snippets to return
+    #   @option opts [Integer] :fragsize number of characters for each snippet length
+    #   @option opts [String] :pre_tag text which appears before a highlighted term
+    #   @option opts [String] :post_tag text which appears after a highlighted term
+    #   @option opts [true, false] :merge_contiguous collapse contiguous fragments into a single fragment
+    #   @option opts [true, false] :use_fast_vector enables the Solr FastVectorHighlighter
+    #   @return [DatastaxRails::Relation] a new Relation object
+    # @overload highlight(*args)
+    #   Highlights the full text search terms for the specified fields
+    #   @param [Array] args list of field names to be highlighted
+    #   @return [DatastaxRails::Relation] a new Relation object
     def highlight(*args)
       return self if args.blank?
       

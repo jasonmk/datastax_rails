@@ -12,6 +12,17 @@ Dir[File.expand_path(File.join(ENGINE_RAILS_ROOT, "spec/support/**/*.rb"))].each
 
 RSpec.configure do |config|
   config.alias_it_should_behave_like_to :it_has_behavior, 'has behavior:'
+  
+  # Use a focus tag to filter specific specs. This helps if you need to
+  # focus on one spec instead of the whole suite.
+  config.filter_run focus: true
+  config.run_all_when_everything_filtered = true
+  
+  # Filter slow specs. Add a :slow tag to the spec to keep it from
+  # running unless the SLOW_SPECS environment variable is set.
+  config.treat_symbols_as_metadata_keys_with_true_values = true
+  config.filter_run_excluding :slow unless ENV['SLOW_SPECS']
+  
   config.before(:each) do
     DatastaxRails::Base.recorded_classes = {}
   end

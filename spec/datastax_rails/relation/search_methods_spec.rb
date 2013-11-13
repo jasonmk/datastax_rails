@@ -186,4 +186,18 @@ describe DatastaxRails::Relation do
       @relation.fulltext("swimming").should_not be_empty
     end
   end
+  
+  describe '#highlight' do
+    let(:hl) { @relation.highlight(:name, :description, :snippet => 3, :fragsize => 200) }
+    
+    it { expect(hl.highlight_options[:fields]).to eq [:name, :description] }
+    it { expect(hl.highlight_options[:snippet]).to eq 3 }
+    it { expect(hl.highlight_options[:fragsize]).to eq 200 }
+    
+    context 'with duplicate fields' do
+      let(:hl) { @relation.highlight(:name, :description, :name) }
+      
+      it { expect(hl.highlight_options[:fields]).to eq [:name, :description] }
+    end
+  end
 end

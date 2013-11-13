@@ -11,7 +11,7 @@ module DatastaxRails
     attr_accessor :last_column_name, :total_entries, :per_page, :current_page, :highlights
     
     def inspect
-      "<DatastaxRails::Collection##{object_id} contents: #{super} last_column_name: #{last_column_name.inspect} highlights: #{highlights.inspect}>"
+      "<DatastaxRails::Collection##{object_id} contents: #{super} last_column_name: #{last_column_name.inspect}>"
     end
     
     def total_pages

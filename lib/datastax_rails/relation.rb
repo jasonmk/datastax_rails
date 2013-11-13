@@ -15,6 +15,7 @@ module DatastaxRails
       attr_accessor :"#{m}_value"
     end
     attr_accessor :create_with_value, :default_scoped
+    attr_accessor :highlight_options
     
     include SearchMethods
     include ModificationMethods
@@ -42,6 +43,7 @@ module DatastaxRails
       
       SINGLE_VALUE_METHODS.each {|v| instance_variable_set(:"@#{v}_value", nil)}
       MULTI_VALUE_METHODS.each {|v| instance_variable_set(:"@#{v}_values", [])}
+      @highlight_options = {}
       @per_page_value = @klass.default_page_size
       @page_value = 1
       @use_solr_value = true
@@ -370,11 +372,20 @@ module DatastaxRails
         params[:fq] = filter_queries
       end
       
-      unless hl_fields.blank?
+      if @highlight_options[:fields].present?
         params[:hl] = true
-        params["hl.fl"] = hl_fields
-        params["hl.simple.pre"] = "<em>"
-        params["hl.simple.post"] = "</em>"
+        params['hl.fl'] = @highlight_options[:fields]
+        params['hl.snippets'] = @highlight_options[:snippets] if @highlight_options[:snippets]
+        params['hl.fragsize'] = @highlight_options[:fragsize] if @highlight_options[:fragsize]
+        if @highlight_options[:use_fast_vector]
+          params['hl.useFastVectorHighlighter'] = true
+          params['hl.tag.pre'] = @highlight_options[:pre_tag] if @highlight_options[:pre_tag].present?
+          params['hl.tag.post'] = @highlight_options[:post_tag] if @highlight_options[:post_tag].present?
+        else
+          params['hl.mergeContiguous'] = !!@highlight_options[:merge_contiguous]
+          params['hl.simple.pre'] = @highlight_options[:pre_tag] if @highlight_options[:pre_tag].present?
+          params['hl.simple.post'] = @highlight_options[:post_tag] if @highlight_options[:post_tag].present?
+        end
       end
       
       select_columns = select_values.empty? ? (@klass.attribute_definitions.keys - @klass.lazy_attributes) : select_values.flatten

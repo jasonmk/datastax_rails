@@ -296,6 +296,7 @@ module DatastaxRails #:nodoc:
     include ActiveModel::MassAssignmentSecurity
     
     include Connection
+    include Inheritance
     include Identity
     include FinderMethods
     include Batches
@@ -310,7 +311,6 @@ module DatastaxRails #:nodoc:
     include Scoping
     include Timestamps
     include Serialization
-    include Migrations
     include SolrRepair
     
     # Stores the default scope for the class
@@ -348,7 +348,6 @@ module DatastaxRails #:nodoc:
       @destroyed = false
       @previously_changed = {}
       @changed_attributes = {}
-      @schema_version = self.class.current_schema_version
       
       __set_defaults
       
@@ -498,6 +497,10 @@ module DatastaxRails #:nodoc:
       
       def payload_model?
         self.ancestors.include?(DatastaxRails::PayloadModel)
+      end
+      
+      def wide_storage_model?
+        self.ancestors.include?(DatastaxRails::WideStorageModel)
       end
       
       def base_class

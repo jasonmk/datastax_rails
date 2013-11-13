@@ -47,6 +47,17 @@ class CarPayload < DatastaxRails::PayloadModel
   self.column_family = "car_payloads"
 end
 
+class AuditLog < DatastaxRails::WideStorageModel
+  self.column_family = "audit_logs"
+  
+  key :natural, :attributes => [:uuid]
+  cluster_by :created_at
+  
+  string     :uuid
+  string     :message
+  timestamps
+end
+
 class Job < DatastaxRails::Base
   self.column_family = "jobs"
   

@@ -17,7 +17,7 @@ module DatastaxRails
   autoload :Cql
   autoload :GroupedCollection
   autoload :Identity
-  autoload :Migrations
+  autoload :Inheritance
   autoload :PayloadModel
   autoload :Persistence
   autoload :Reflection
@@ -42,6 +42,8 @@ module DatastaxRails
     autoload :SolrRepair
   end
   autoload :Validations
+  autoload :Version
+  autoload :WideStorageModel
   
   module AttributeMethods
     extend ActiveSupport::Autoload

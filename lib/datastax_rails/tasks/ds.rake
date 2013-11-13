@@ -2,76 +2,53 @@ namespace :ds do
   task :configure => :environment do
     @configs = YAML.load_file(Rails.root.join("config", "datastax.yml"))
     @config = @configs[Rails.env || 'development']
+    @migrator = DatastaxRails::Schema::Migrator.new(@config['keyspace'])
   end
 
   desc 'Create the keyspace in config/datastax.yml for the current environment'
   task :create do
     @configs = YAML.load_file(Rails.root.join("config", "datastax.yml"))
     @config = @configs[Rails.env || 'development']
-    ret = DatastaxRails::Tasks::Keyspace.create @config['keyspace'], @config
-    puts "Created keyspace: #{@config['keyspace']}" if ret
-  end
-
-  namespace :create do
-    desc 'Create keyspaces in config/datastax.yml for all environments'
-    task :all => :configure do
-      created = []
-      @configs.values.each do |config|
-        DatastaxRails::Tasks::Keyspace.create config['keyspace'], config
-        created << config['keyspace']
-      end
-      puts "Created keyspaces: #{created.join(', ')}"
-    end
+    DatastaxRails::Base.establish_connection(@config.with_indifferent_access.merge(:keyspace => 'system'))
+    DatastaxRails::Schema::Migrator.new('system').create_keyspace(@config['keyspace'], @config)
   end
 
   desc 'Drop keyspace in config/datastax.yml for the current environment'
   task :drop => :configure do
-    DatastaxRails::Tasks::Keyspace.drop @config['keyspace']
-    puts "Dropped keyspace: #{@config['keyspace']}"
+    @migrator.drop_keyspace
   end
 
-  namespace :drop do
-    desc 'Drop keyspaces in config/datastax.yml for all environments'
-    task :all => :configure do
-      dropped = []
-      @configs.values.each do |config|
-        DatastaxRails::Tasks::Keyspace.drop config['keyspace']
-        dropped << config['keyspace']
-      end
-      puts "Dropped keyspaces: #{dropped.join(', ')}"
+  desc 'Migrate keyspace to latest version -- pass in model name to force an upload of just that one (all force-uploads everything).'
+  task :migrate, [:force_cf] => :configure do |t, args|
+    if args[:force_cf].blank?
+      @migrator.migrate_all
+    else
+      args[:force_cf] == 'all' ? @migrator.migrate_all(true) : @migrator.migrate_one(args[:force_cf].constantize, true)
     end
   end
   
-  desc 'Upload SOLR schemas -- pass in model name to force an upload (:all uploads everything).'
-  task :schema, [:force_cf] => :configure do |t, args|
-    cf = DatastaxRails::Tasks::ColumnFamily.new(@config['keyspace'])
-    cf.upload_solr_schemas(args[:force_cf])
-  end
+  desc 'Alias for ds:migrate to maintain backwards-compatibility'
+  task :schema, [:force_cf] => :migrate
   
-  desc 'Rebuild SOLR Index -- pass in a model name (:all rebuilds everything)'
+  desc 'Rebuild SOLR Index -- pass in a model name (all rebuilds everything)'
   task :reindex, [:model] => :configure do |t, args|
     if args[:model].blank?
       puts "\nUSAGE: rake ds:reindex[Model]"
     else
-      cf = DatastaxRails::Tasks::ColumnFamily.new(@config['keyspace'])
-      puts "Reindexing #{args[:model]}"
-      cf.reindex_solr(args[:model])
-      puts "Reindexing will run in the background"
+      @migrator.reindex_solr(args[:model].constantize)
     end
   end
   
-  desc 'Create SOLR Core (Normally not needed) -- pass in a model name (:all creates everything)'
+  desc 'Create SOLR Core (Normally not needed) -- pass in a model name (all creates everything)'
   task :create_core, [:model] => :configure do |t, args|
     if args[:model].blank?
       puts "\nUSAGE: rake ds:create_core[Model]"
     else
-      cf = DatastaxRails::Tasks::ColumnFamily.new(@config['keyspace'])
-      puts "Creating core #{args[:model]}"
-      cf.create_solr_core(args[:model])
+      @migrator.create_solr_core(args[:model].constantize)
     end
   end
   
-  desc 'Load the seed data from ds/seeds.rb'
+  desc 'Load the seed data from ks/seeds.rb'
   task :seed => :environment do
     seed_file = Rails.root.join("ks","seeds.rb")
     load(seed_file) if seed_file.exist?

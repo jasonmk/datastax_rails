@@ -3,7 +3,7 @@ require 'pp' if ENV['DEBUG_SOLR'] == 'true'
 
 module DatastaxRails
   class Relation
-    MULTI_VALUE_METHODS = [:order, :where, :where_not, :fulltext, :greater_than, :less_than, :select, :stats]
+    MULTI_VALUE_METHODS = [:order, :where, :where_not, :fulltext, :greater_than, :less_than, :select, :stats, :field_facet, :range_facet]
     SINGLE_VALUE_METHODS = [:page, :per_page, :reverse_order, :query_parser, :consistency, :ttl, :use_solr, :escape, :group]
     
     SOLR_CHAR_RX = /([\+\!\(\)\[\]\^\"\~\:\'\=\/]+)/
@@ -23,6 +23,7 @@ module DatastaxRails
     include SpawnMethods
     include StatsMethods
     include Batches
+    include FacetMethods
     
     attr_reader :klass, :column_family, :loaded, :cql
     alias :loaded? :loaded
@@ -371,6 +372,38 @@ module DatastaxRails
       unless filter_queries.empty?
         params[:fq] = filter_queries
       end
+
+      # Facets
+      # facet=true to enable faceting,  facet.field=<field_name> (can appear more than once for multiple fields)
+      # Additional options: f.<field_name>.facet.<option> [e.g. f.author.facet.sort=index]
+      
+      # Facet Fields
+      unless field_facet_values.empty?
+        params['facet'] = 'true'
+        facet_fields = []
+        field_facet_values.each do |facet|
+          facet_field = facet[:field]
+          facet_fields << facet_field
+          facet[:options].each do |key,value|
+            params["f.#{facet_field}.facet.#{key}"] = value.to_s
+          end
+        end
+        params['facet.field'] = facet_fields
+      end
+
+      # Facet Ranges
+      unless range_facet_values.empty?
+        params['facet'] = 'true'
+        facet_fields = []
+        range_facet_values.each do |facet|
+          facet_field = facet[:field]
+          facet_fields << facet_field
+          facet[:options].each do |key,value|
+            params["f.#{facet_field}.facet.range.#{key}"] = value.to_s
+          end
+        end
+        params['facet.range'] = facet_fields
+      end
       
       if @highlight_options[:fields].present?
         params[:hl] = true
@@ -427,6 +460,12 @@ module DatastaxRails
       end
       if solr_response["stats"]
         @stats = solr_response["stats"]["stats_fields"].with_indifferent_access
+      end
+      # Apply Facets if they exist
+      if solr_response['facet_counts']
+        results.facets = {}
+        results.facets = results.facets.merge(solr_response['facet_counts']['facet_fields'].to_h)
+        results.facets = results.facets.merge(solr_response['facet_counts']['facet_ranges'].to_h)
       end
       pp params if ENV['DEBUG_SOLR'] == 'true'
       results

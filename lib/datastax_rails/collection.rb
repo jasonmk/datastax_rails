@@ -8,7 +8,9 @@ module DatastaxRails
     #   @return [Fixnum] the per page value of the search that produced these results (used by will_paginate)
     # @!attribute [r] current_page
     #   @return [Fixnum] the current page of the search that produced these results (used by will_paginate)
-    attr_accessor :last_column_name, :total_entries, :per_page, :current_page, :highlights
+    # @!attribute [r] facets
+    #   @return [Hash] the facet(s) result (field and/or range) e.g. results.facets => {"author"=>["vonnegut", 2, "asimov", 4]} 
+    attr_accessor :last_column_name, :total_entries, :per_page, :current_page, :facets, :highlights
     
     def inspect
       "<DatastaxRails::Collection##{object_id} contents: #{super} last_column_name: #{last_column_name.inspect}>"

@@ -8,12 +8,12 @@ describe DatastaxRails::Relation do
       sleep(1) if idx % 5 == 4 # Performance hack
     end
     Hobby.commit_solr
-    Hobby.commit_solr
   end
   
   ['cassandra', 'solr'].each do |method|
     describe "#find_each" do
       it "returns each record one at a time with #{method}" do
+        sleep(1)
         missed_hobbies = ('a'..'l').to_a
         @relation.send('with_'+method).find_each(:batch_size => 5) do |hobby|
           missed_hobbies.delete_if {|h| h == hobby.name}

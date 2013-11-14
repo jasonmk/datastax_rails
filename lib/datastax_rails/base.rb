@@ -1,6 +1,5 @@
 require 'active_record/dynamic_finder_match'
 require 'active_record/dynamic_scope_match'
-require 'datastax_rails/log_subscriber'
 require 'datastax_rails/types'
 require 'datastax_rails/errors'
 module DatastaxRails #:nodoc:

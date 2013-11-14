@@ -30,13 +30,13 @@ describe DatastaxRails::Relation do
     end
     
     it "should cache the total count on any solr query" do
-      @relation.should_receive(:query_via_solr).and_return(mock("ResultSet", :total_entries => 42))
+      @relation.should_receive(:query_via_solr).and_return(double("ResultSet", :total_entries => 42))
       @relation.all
       @relation.count.should == 42
     end
     
     it "should execute a fast search to determine the count" do
-      mock_relation = mock(DatastaxRails::Relation)
+      mock_relation = double(DatastaxRails::Relation)
       mock_relation.stub_chain(:select, :to_a, :total_entries).and_return(37)
       @relation.should_receive(:limit).with(1).and_return(mock_relation)
       @relation.count.should == 37

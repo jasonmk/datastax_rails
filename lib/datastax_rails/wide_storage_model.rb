@@ -7,7 +7,7 @@ module DatastaxRails
   #
   # CAVEATS: 
   # * Wide Storage Models cannot be indexed into Solr.
-  # * Once the order is set, it cannot be changed as it becomes the column header in Cassandra
+  # * Once the cluster is set, it cannot be changed as it becomes the column header in Cassandra
   #
   #   class AuditLog < DatastaxRails::WideStorageModel
   #     self.column_family = 'audit_logs'

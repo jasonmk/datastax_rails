@@ -3,6 +3,7 @@ require 'spec_helper'
 describe DatastaxRails::Base do
   describe "uniqueness validation" do
     it "should validate uniqueness" do
+      Person.commit_solr
       Person.create!(:name => "Jason")
       Person.commit_solr
       Person.commit_solr
@@ -13,6 +14,7 @@ describe DatastaxRails::Base do
     end
     
     it "should allow an update to a model without triggering a uniqueness error" do
+      Person.commit_solr
       p=Person.create!(:name => "Jason", :birthdate => Date.strptime("10/19/1985", '%m/%d/%Y'))
       Person.commit_solr
       p.birthdate = Date.strptime("10/19/1980", '%m/%d/%Y')
@@ -31,7 +33,7 @@ describe DatastaxRails::Base do
       j.should be_valid
     end
     
-    it "should enfore uniqueness of blanks if not instructed otherwise" do
+    it "should enforce uniqueness of blanks if not instructed otherwise" do
       Boat.create!(:name => nil)
       Boat.commit_solr
       b=Boat.new

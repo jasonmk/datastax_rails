@@ -62,19 +62,19 @@ describe "DatastaxRails::Base" do
     end
     
     describe "#store_file" do
-      it "should store a file" do
+      it "should store a file", :slow => true do
         file = "abcd"*1.megabyte
         CarPayload.create(:digest => 'limo', :payload => file)
         CarPayload.find('limo').payload.should == file
       end
       
-      it "should store really large files" do
+      it "should store really large files", :slow => true do
         file = IO.read("/dev/zero", 25.megabyte)
         CarPayload.create(:digest => 'limo', :payload => file)
         CarPayload.find('limo').payload.should == file
       end
       
-      it "should successfully overwrite a larger file with a smaller one" do
+      it "should successfully overwrite a larger file with a smaller one", :slow => true do
         file = "abcd"*1.megabyte
         car = CarPayload.create(:digest => 'limo', :payload => file)
         smallfile = "e"*1.kilobyte

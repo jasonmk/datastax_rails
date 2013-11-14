@@ -3,6 +3,7 @@ require 'spec_helper'
 describe DatastaxRails::Relation do
   before(:each) do
     @relation = DatastaxRails::Relation.new(Hobby, "hobbies")
+    Hobby.commit_solr
   end
   
   describe "#first" do

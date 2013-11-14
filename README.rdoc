@@ -72,15 +72,15 @@ attributes on any model.  DSR will only upload schema files if they have changed
 
 Create a sample Model.  See Base documentation for more details:
 
-class Person < DatastaxRails::Base
-  key     :uuid
-  string  :first_name
-  string  :user_name
-  text    :bio
-  date    :birthdate
-  boolean :active
-  timestamps
-end
+  class Person < DatastaxRails::Base
+    key     :uuid
+    string  :first_name
+    string  :user_name
+    text    :bio
+    date    :birthdate
+    boolean :active
+    timestamps
+  end
 
 === Known issues
 

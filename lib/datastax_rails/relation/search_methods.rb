@@ -485,8 +485,12 @@ module DatastaxRails
     def solr_format(value)
       return value unless use_solr_value
       case
-        when value.is_a?(Date), value.is_a?(Time)
-          value.strftime('%Y-%m-%dT%H:%M:%SZ')
+        when value.is_a?(Time)
+          value.utc.strftime(DatastaxRails::Types::TimeType::FORMAT)
+        when value.is_a?(DateTime)
+          value.to_time.utc.strftime(DatastaxRails::Types::TimeType::FORMAT)
+        when value.is_a?(Date)
+          value.strftime(DatastaxRails::Types::TimeType::FORMAT)
         when value.is_a?(Array)
           value.collect {|v| v.gsub(/ /,"\\ ") }.join(" OR ")
         when value.is_a?(Fixnum)

@@ -3,6 +3,7 @@ require 'spec_helper'
 describe DatastaxRails::Relation do
   before(:each) do
     @relation = DatastaxRails::Relation.new(Hobby, "hobbies")
+    @relation.commit_solr
   end
   
   describe "#==" do
@@ -130,6 +131,7 @@ describe DatastaxRails::Relation do
   
   describe "grouped queries" do
     before(:each) do
+      Person.commit_solr
       Person.create(:name => 'John', :nickname => 'J')
       Person.create(:name => 'Jason', :nickname => 'J')
       Person.create(:name => 'James', :nickname => 'J')
@@ -146,7 +148,7 @@ describe DatastaxRails::Relation do
       results['steve'].should have(1).item
     end
     
-    it "should return total_entires as the highest value of any group" do
+    it "should return total_entries as the highest value of any group" do
       results = Person.group(:nickname).all
       results.total_entries.should eq(3)
     end

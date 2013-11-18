@@ -30,5 +30,30 @@ module DatastaxRails
       super.with_cassandra
     end
     
+    def self.encode_attributes(attributes)
+      encoded = {}
+      attributes.each do |column_name, value|
+        encoded[column_name.to_s] = attribute_definitions[column_name.to_sym].coder.encode(value)
+        if attribute_definitions[column_name.to_sym].coder.options[:cassandra_type] == 'timestamp'
+          encoded[column_name.to_s] = encoded[column_name.to_s][0..-2]
+        end
+      end
+      encoded
+    end
+    
+    def self.write(key, attributes, options = {})
+      attributes = encode_attributes(attributes)
+      level = (options[:consistency] || self.default_consistency).to_s.upcase
+      if(valid_consistency?(level))
+        options[:consistency] = level
+      else
+        raise ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
+      end
+      key.tap do |key|
+        ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => key, :attributes => attributes) do
+            cql.insert.using(level).columns(attributes).execute
+        end
+      end
+    end
   end
 end

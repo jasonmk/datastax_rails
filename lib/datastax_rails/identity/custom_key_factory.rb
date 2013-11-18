@@ -21,6 +21,7 @@ module DatastaxRails
 
       def initialize(options)
         @method = options[:method]
+        @key_columns = Array.wrap(options[:column])
       end
 
       def next_key(object)

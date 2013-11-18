@@ -7,6 +7,10 @@ module DatastaxRails
           to_guid
         end
       end
+      
+      def initialize(options = {})
+        @key_columns = options[:column].blank? ? ['key'] : Array.wrap(options[:column])
+      end
     
       def next_key(object)
         UUID.new

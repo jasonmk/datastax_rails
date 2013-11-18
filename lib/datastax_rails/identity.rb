@@ -20,7 +20,7 @@ module DatastaxRails #:nodoc:
       def key(name_or_factory = :uuid, *options)
         @key_factory = case name_or_factory
         when :uuid
-          UUIDKeyFactory.new
+          UUIDKeyFactory.new(*options)
         when :natural
           NaturalKeyFactory.new(*options)
         when :custom

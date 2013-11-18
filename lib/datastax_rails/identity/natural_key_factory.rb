@@ -23,6 +23,7 @@ module DatastaxRails
       def initialize(options)
         @attributes = [*options[:attributes]]
         @separator  = options[:separator] || "-"
+        @key_columns = options[:column].blank? ? @attributes.dup : Array.wrap(options[:column])
       end
 
       def next_key(object)

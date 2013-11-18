@@ -319,6 +319,7 @@ module DatastaxRails #:nodoc:
     include ActiveModel::Conversion
     extend ActiveSupport::DescendantsTracker
     include ActiveModel::MassAssignmentSecurity
+    include ActiveModel::Observing
     
     include Connection
     include Inheritance

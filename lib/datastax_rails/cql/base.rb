@@ -6,6 +6,10 @@ module DatastaxRails
         @consistency = klass.default_consistency.to_s.upcase
         @keyspace = DatastaxRails::Base.config[:keyspace]
       end
+      
+      def key_name
+        @klass.key_factory.key_columns
+      end
 
       # Abstract.  Should be overridden by subclasses
       def to_cql

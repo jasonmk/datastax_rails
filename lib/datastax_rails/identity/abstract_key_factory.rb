@@ -2,6 +2,7 @@ module DatastaxRails
   module Identity
     # Key factories need to support 3 operations
     class AbstractKeyFactory
+      attr_accessor :key_columns
       # Next key takes an object and returns the key object it should use.
       # object will be ignored with synthetic keys but could be useful with natural ones
       #

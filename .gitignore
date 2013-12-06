@@ -1,4 +1,5 @@
 Gemfile.lock
+gemfiles/*.lock
 *.rbc
 *.sassc
 .sass-cache
@@ -11,6 +12,7 @@ capybara-*.html
 /doc/
 /db/*.sqlite3
 /spec/dummy/log/*
+/spec/dummy/db
 /public/system/*
 /coverage/
 /spec/tmp/*

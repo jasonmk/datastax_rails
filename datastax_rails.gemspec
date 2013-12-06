@@ -23,4 +23,6 @@ Gem::Specification.new do |s|
   s.add_dependency "rsolr-client-cert"
   
   s.add_development_dependency "rspec-rails"
+  s.add_development_dependency "appraisal", "1.0.0.beta2"
+  s.add_development_dependency "sqlite3"
 end

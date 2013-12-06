@@ -1,5 +1,10 @@
-require 'active_record/dynamic_finder_match'
-require 'active_record/dynamic_scope_match'
+if Rails.version =~ /^3.*/
+  # Dynamic finders are only supported in Rails 3.x applications (depricated in 4.x)
+  require 'active_record/dynamic_finder_match'
+  require 'active_record/dynamic_scope_match'
+elsif Rails.version =~ /^4.*./
+  require 'active_record/deprecated_finders/dynamic_matchers'
+end
 require 'datastax_rails/types'
 require 'datastax_rails/errors'
 module DatastaxRails #:nodoc:
@@ -221,6 +226,8 @@ module DatastaxRails #:nodoc:
   #
   # == Dynamic attribute-based finders
   #
+  # Note: These are only available in Rails 3.x applications, and are not supported in Rails 4.x
+  #
   # Dynamic attribute-based finders are a cleaner way of getting (and/or creating) objects
   # by simple queries without using where chains. They work by appending the name of an attribute
   # to <tt>find_by_</tt> or <tt>find_all_by_</tt> and thus produces finders
@@ -318,8 +325,7 @@ module DatastaxRails #:nodoc:
     extend ActiveModel::Naming
     include ActiveModel::Conversion
     extend ActiveSupport::DescendantsTracker
-    include ActiveModel::MassAssignmentSecurity
-    include ActiveModel::Observing
+    include ActiveModel::MassAssignmentSecurity if Rails.version =~ /^3.*/
     
     include Connection
     include Inheritance
@@ -379,11 +385,17 @@ module DatastaxRails #:nodoc:
       
       populate_with_current_scope_attributes
       
-      sanitize_for_mass_assignment(attributes).each do |k,v|
-        if respond_to?("#{k.to_s.downcase}=")
-          send("#{k.to_s.downcase}=",v)
-        else
-          raise(DatastaxRails::UnknownAttributeError, "unknown attribute: #{k}")
+      if Rails.version =~ /^3.*/
+        sanitize_for_mass_assignment(attributes).each do |k,v|
+          if respond_to?("#{k.to_s.downcase}=")
+            send("#{k.to_s.downcase}=",v)
+          else
+            raise(DatastaxRails::UnknownAttributeError, "unknown attribute: #{k}")
+          end
+        end
+      else
+        attributes.each do |k,v|
+          send("#{k.to_s.downcase}=",v) if respond_to?("#{k.to_s.downcase}=")
         end
       end
       
@@ -464,7 +476,7 @@ module DatastaxRails #:nodoc:
       multi_parameter_attributes = []
       @mass_assignment_options = options
 
-      unless options[:without_protection]
+      if Rails.version =~ /^3.*/ && !options[:without_protection]  
         attributes = sanitize_for_mass_assignment(attributes, mass_assignment_role)
       end
 
@@ -497,7 +509,7 @@ module DatastaxRails #:nodoc:
       end
       
     class << self
-      delegate :find, :first, :all, :exists?, :any?, :many?, :to => :scoped
+      delegate :find, :find_by, :find_by!, :first, :all, :exists?, :any?, :many?, :to => :scoped
       delegate :destroy, :destroy_all, :delete, :update, :update_all, :to => :scoped
       delegate :order, :limit, :where, :where_not, :page, :paginate, :select, :to => :scoped
       delegate :per_page, :each, :group, :total_pages, :search, :fulltext, :to => :scoped
@@ -549,12 +561,19 @@ module DatastaxRails #:nodoc:
       end
       
       def respond_to?(method_id, include_private = false)
-        if match = ActiveRecord::DynamicFinderMatch.match(method_id)
-          return true if all_attributes_exists?(match.attribute_names)
-        elsif match = ActiveRecord::DynamicScopeMatch.match(method_id)
-          return true if all_attributes_exists?(match.attribute_names)
+       
+        if Rails.version =~ /^3.*/
+          if match = ActiveRecord::DynamicFinderMatch.match(method_id)
+            return true if all_attributes_exists?(match.attribute_names)
+          elsif match = ActiveRecord::DynamicScopeMatch.match(method_id)
+            return true if all_attributes_exists?(match.attribute_names)
+          end
+        elsif Rails.version =~ /^4.*/
+          if match = ActiveRecord::DynamicMatchers::Method.match(self, method_id)
+            return true if all_attributes_exists?(match.attribute_names)
+          end
         end
-
+        
         super
       end
       
@@ -608,41 +627,64 @@ module DatastaxRails #:nodoc:
         # Each dynamic finder using <tt>scoped_by_*</tt> is also defined in the class after it
         # is first invoked, so that future attempts to use it do not run through method_missing.
         def method_missing(method_id, *arguments, &block)
-          if match = ActiveRecord::DynamicFinderMatch.match(method_id)
-            attribute_names = match.attribute_names
-            super unless all_attributes_exists?(attribute_names)
-            if !arguments.first.is_a?(Hash) && arguments.size < attribute_names.size
-              ActiveSupport::Deprecation.warn(
-                "Calling dynamic finder with less number of arguments than the number of attributes in " \
-                "method name is deprecated and will raise an ArguementError in the next version of Rails. " \
-                "Please passing `nil' to the argument you want it to be nil."
-              )
+          if Rails.version =~ /^3.*/
+            if match = ActiveRecord::DynamicFinderMatch.match(method_id)
+              attribute_names = match.attribute_names
+              super unless all_attributes_exists?(attribute_names)
+              if !arguments.first.is_a?(Hash) && arguments.size < attribute_names.size
+                ActiveSupport::Deprecation.warn(
+                  "Calling dynamic finder with less number of arguments than the number of attributes in " \
+                  "method name is deprecated and will raise an ArguementError in the next version of Rails. " \
+                  "Please passing `nil' to the argument you want it to be nil."
+                )
+              end
+              if match.finder?
+                options = arguments.extract_options!
+                relation = options.any? ? scoped(options) : scoped
+                relation.send :find_by_attributes, match, attribute_names, *arguments
+              elsif match.instantiator?
+                scoped.send :find_or_instantiator_by_attributes, match, attribute_names, *arguments, &block
+              end
+            elsif match = ActiveRecord::DynamicScopeMatch.match(method_id)
+              attribute_names = match.attribute_names
+              super unless all_attributes_exists?(attribute_names)
+              if arguments.size < attribute_names.size
+                ActiveSupport::Deprecation.warn(
+                  "Calling dynamic scope with less number of arguments than the number of attributes in " \
+                  "method name is deprecated and will raise an ArguementError in the next version of Rails. " \
+                  "Please passing `nil' to the argument you want it to be nil."
+                )
+              end
+              if match.scope?
+                self.class_eval <<-METHOD, __FILE__, __LINE__ + 1
+                  def self.#{method_id}(*args)                                    # def self.scoped_by_user_name_and_password(*args)
+                    attributes = Hash[[:#{attribute_names.join(',:')}].zip(args)] #   attributes = Hash[[:user_name, :password].zip(args)]
+                    scoped(:conditions => attributes)                             #   scoped(:conditions => attributes)
+                  end                                                             # end
+                  METHOD
+                send(method_id, *arguments)
+              end
+            else
+              super
             end
-            if match.finder?
-              options = arguments.extract_options!
-              relation = options.any? ? scoped(options) : scoped
-              relation.send :find_by_attributes, match, attribute_names, *arguments
-            elsif match.instantiator?
-              scoped.send :find_or_instantiator_by_attributes, match, attribute_names, *arguments, &block
-            end
-          elsif match = ActiveRecord::DynamicScopeMatch.match(method_id)
-            attribute_names = match.attribute_names
-            super unless all_attributes_exists?(attribute_names)
-            if arguments.size < attribute_names.size
-              ActiveSupport::Deprecation.warn(
-                "Calling dynamic scope with less number of arguments than the number of attributes in " \
-                "method name is deprecated and will raise an ArguementError in the next version of Rails. " \
-                "Please passing `nil' to the argument you want it to be nil."
-              )
-            end
-            if match.scope?
-              self.class_eval <<-METHOD, __FILE__, __LINE__ + 1
-                def self.#{method_id}(*args)                                    # def self.scoped_by_user_name_and_password(*args)
-                  attributes = Hash[[:#{attribute_names.join(',:')}].zip(args)] #   attributes = Hash[[:user_name, :password].zip(args)]
-                  scoped(:conditions => attributes)                             #   scoped(:conditions => attributes)
-                end                                                             # end
-                METHOD
-              send(method_id, *arguments)
+          elsif Rails.version =~ /^4.*/
+            if match = ActiveRecord::DynamicMatchers::Method.match(self, method_id)
+              attribute_names = match.attribute_names
+              super unless all_attributes_exists?(attribute_names)
+              if !arguments.first.is_a?(Hash) && arguments.size < attribute_names.size
+                ActiveSupport::Deprecation.warn(
+                  "Calling dynamic scope with less number of arguments than the number of attributes in " \
+                  "method name is deprecated and will raise an ArguementError in the next version of Rails. " \
+                  "Please passing `nil' to the argument you want it to be nil."
+                )
+              end
+              if match.finder.present?
+                options = arguments.extract_options!
+                relation = options.any? ? scoped(options) : scoped
+                relation.send :find_by_attributes, match, attribute_names, *arguments
+              elsif match.instantiator?
+                scoped.send :find_or_instantiator_by_attributes, match, attribute_names, *arguments, &block
+              end
             end
           else
             super

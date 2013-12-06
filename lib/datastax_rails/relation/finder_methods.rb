@@ -72,6 +72,26 @@ module DatastaxRails
       end
     end
     
+    # Finds the first record matching the specified conditions. There
+    # is no implied ordering so if order matters, you should specify it
+    # yourself.
+    #
+    # If no record is found, returns <tt>nil</tt>.
+    #
+    # Post.find_by name: 'Spartacus', rating: 4
+    # Post.find_by "published_at < ?", 2.weeks.ago
+    def find_by(*args)
+      where_values << escape_attributes(args.first)
+      first
+    end
+
+    # Like <tt>find_by</tt>, except that if no record is found, raises
+    # an <tt>DatastaxRails::RecordNotFound</tt> error.
+    def find_by!(*args)
+      where_values << escape_attributes(args.first)
+      first!
+    end
+
     # A convenience wrapper for <tt>find(:first, *args)</tt>. You can pass in all the
     # same arguments to this method as you can to <tt>find(:first)</tt>.
     def first(*args)
@@ -117,6 +137,19 @@ module DatastaxRails
     end
     
     private
+
+      def escape_attributes(conditions)
+        escaped = {}
+        conditions.each do |k,v|
+          if(v.is_a?(String))
+            escaped[k] = v.gsub(/(\W)/, '\\\\\1')
+          else
+            escaped[k] = v
+          end
+        end
+        escaped
+      end
+       
       def find_with_ids(*ids)
         return to_a.find { |*block_args| yield(*block_args) } if block_given?
   

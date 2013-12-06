@@ -57,7 +57,7 @@ describe DatastaxRails::Relation do
     it "finds a record by an attribute" do
       Boat.create(:name => 'Spooner')
       Boat.commit_solr
-      Boat.find_by_name('Spooner').should_not be_nil
+      Boat.find_all_by_name('Spooner').should_not be_nil
     end
 
     it "finds a record by an attribute with a space in it" do
@@ -70,6 +70,26 @@ describe DatastaxRails::Relation do
       Boat.create(:name => 'Dumb: Name')
       Boat.commit_solr
       Boat.find_by_name('Dumb: Name').should_not be_nil
+    end
+  end
+  
+  describe "#find_by" do
+    it "finds a record by an attribute" do
+      Boat.create(:name => 'Spooner')
+      Boat.commit_solr
+      Boat.find_by(name: 'Spooner').should_not be_nil
+    end
+
+    it "finds a record by an attribute with a space in it" do
+      Boat.create(:name => 'Water Lily')
+      Boat.commit_solr
+      Boat.find_by(name: 'Water Lily').should_not be_nil
+    end
+
+    it "finds a record by an attribute with a colon in it" do
+      Boat.create(:name => 'Dumb: Name')
+      Boat.commit_solr
+      Boat.find_by(name: 'Dumb: Name').should_not be_nil
     end
   end
 end

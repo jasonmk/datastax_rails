@@ -142,14 +142,14 @@ module DatastaxRails
 
     def save(options = {})
       begin
-        create_or_update(options)
+        _create_or_update(options)
       rescue DatastaxRails::RecordInvalid
         false
       end
     end
 
     def save!(options = {})
-      create_or_update(options) || raise(RecordNotSaved)
+      _create_or_update(options) || raise(RecordNotSaved)
     end
 
     def destroy(options = {})
@@ -164,38 +164,43 @@ module DatastaxRails
       save(options.merge(:validate => false))
     end
 
-    def update_attributes(attributes, options = {})
+    def update(attributes, options = {})
+      puts "DEBUG: #{attributes}"
       self.attributes = attributes
       save(options)
     end
 
-    def update_attributes!(attributes, options = {})
+    alias update_attributes update
+ 
+    def update!(attributes, options = {})
       self.attributes = attributes
       save!(options)
     end
+
+    alias update_attributes! update!
 
     def reload
       @attributes.update(self.class.find(self.id).instance_variable_get('@attributes'))
     end
 
     private
-      def create_or_update(options)
-        result = new_record? ? create(options) : update(options)
+      def _create_or_update(options)
+        result = new_record? ? _create(options) : _update(options)
         result != false
       end
 
-      def create(options)
+      def _create(options)
         @key ||= self.class.next_key(self)
-        write(options)
+        _write(options)
         @new_record = false
         @key
       end
     
-      def update(options)
-        write(options)
+      def _update(options)
+        _write(options)
       end
       
-      def write(options) #:nodoc:
+      def _write(options) #:nodoc:
         options[:new_record] = new_record?
         changed_attributes = changed.inject({}) { |h, n| h[n] = read_attribute(n); h }
         return true if changed_attributes.empty?

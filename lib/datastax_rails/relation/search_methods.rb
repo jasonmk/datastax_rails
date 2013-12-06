@@ -508,17 +508,15 @@ module DatastaxRails
     
     protected
       def find_by_attributes(match, attributes, *args) #:nodoc:
-        conditions = {}
-        Hash[attributes.map {|a| [a, args[attributes.index(a)]]}].each do |k,v|
-          if(v.is_a?(String))
-            conditions[k] = v.gsub(/(\W)/, '\\\\\1')
-          else
-            conditions[k] = v
-          end
+       
+        conditions =  Hash[attributes.map {|a| [a, args[attributes.index(a)]]}]
+        if Rails.version =~ /^3.*/
+          self.where_values << escape_attributes(conditions)
+          result = self.send(match.finder)
+        elsif Rails.version =~ /^4.*/
+          result = self.send(match.finder, conditions)
         end
-        
-        self.where_values << conditions
-        result = self.send(match.finder)
+
         #result = where(conditions).send(match.finder)
         
         if match.blank? && result.blank?

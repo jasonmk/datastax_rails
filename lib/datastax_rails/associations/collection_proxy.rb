@@ -61,7 +61,11 @@ module DatastaxRails
       end
       
       def method_missing(method, *args, &block)
-        match = ActiveRecord::DynamicFinderMatch.match(method)
+        if Rails.version =~ /^3.*/
+          match = ActiveRecord::DynamicFinderMatch.match(method)
+        elsif Rails.version =~ /^4.*/
+          match = ActiveRecord::DynamicMatchers::Method.match(self, method)
+        end
         if match && match.instantiator?
           send(:find_or_instantiator_by_attributes, match, match.attribute_names, *args) do |r|
             proxy_association.send :set_owner_attributes, r

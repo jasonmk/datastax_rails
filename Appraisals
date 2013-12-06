@@ -4,5 +4,6 @@ end
 
 appraise 'rails40' do
   gem 'rails', '~> 4.0.0'
+  gem 'activerecord-deprecated_finders'
 end
 

@@ -2,6 +2,8 @@ if Rails.version =~ /^3.*/
   # Dynamic finders are only supported in Rails 3.x applications (depricated in 4.x)
   require 'active_record/dynamic_finder_match'
   require 'active_record/dynamic_scope_match'
+elsif Rails.version =~ /^4.*./
+  require 'active_record/deprecated_finders/dynamic_matchers'
 end
 require 'datastax_rails/types'
 require 'datastax_rails/errors'
@@ -507,7 +509,7 @@ module DatastaxRails #:nodoc:
       end
       
     class << self
-      delegate :find, :first, :all, :exists?, :any?, :many?, :to => :scoped
+      delegate :find, :find_by, :find_by!, :first, :all, :exists?, :any?, :many?, :to => :scoped
       delegate :destroy, :destroy_all, :delete, :update, :update_all, :to => :scoped
       delegate :order, :limit, :where, :where_not, :page, :paginate, :select, :to => :scoped
       delegate :per_page, :each, :group, :total_pages, :search, :fulltext, :to => :scoped
@@ -559,11 +561,15 @@ module DatastaxRails #:nodoc:
       end
       
       def respond_to?(method_id, include_private = false)
-        
+       
         if Rails.version =~ /^3.*/
           if match = ActiveRecord::DynamicFinderMatch.match(method_id)
             return true if all_attributes_exists?(match.attribute_names)
           elsif match = ActiveRecord::DynamicScopeMatch.match(method_id)
+            return true if all_attributes_exists?(match.attribute_names)
+          end
+        elsif Rails.version =~ /^4.*/
+          if match = ActiveRecord::DynamicMatchers::Method.match(self, method_id)
             return true if all_attributes_exists?(match.attribute_names)
           end
         end
@@ -660,6 +666,25 @@ module DatastaxRails #:nodoc:
               end
             else
               super
+            end
+          elsif Rails.version =~ /^4.*/
+            if match = ActiveRecord::DynamicMatchers::Method.match(self, method_id)
+              attribute_names = match.attribute_names
+              super unless all_attributes_exists?(attribute_names)
+              if !arguments.first.is_a?(Hash) && arguments.size < attribute_names.size
+                ActiveSupport::Deprecation.warn(
+                  "Calling dynamic scope with less number of arguments than the number of attributes in " \
+                  "method name is deprecated and will raise an ArguementError in the next version of Rails. " \
+                  "Please passing `nil' to the argument you want it to be nil."
+                )
+              end
+              if match.finder.present?
+                options = arguments.extract_options!
+                relation = options.any? ? scoped(options) : scoped
+                relation.send :find_by_attributes, match, attribute_names, *arguments
+              elsif match.instantiator?
+                scoped.send :find_or_instantiator_by_attributes, match, attribute_names, *arguments, &block
+              end
             end
           else
             super

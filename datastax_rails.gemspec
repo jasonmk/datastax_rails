@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.test_files = Dir["spec/**/*"]
 
   s.add_dependency "rails", ">= 3.2.0"
-  s.add_dependency "cassandra-cql", "~> 1.2.1"
+  s.add_dependency "cql-rb"
   s.add_dependency "rsolr", "~> 1.0.9"
   s.add_dependency "rsolr-client-cert"
   

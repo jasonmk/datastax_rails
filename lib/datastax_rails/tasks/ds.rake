@@ -1,13 +1,15 @@
 namespace :ds do
   task :configure => :environment do
-    @configs = YAML.load_file(Rails.root.join("config", "datastax.yml"))
+    datastax_config = ERB.new(Rails.root.join('config',"datastax.yml").read).result(binding)
+    @configs = YAML.load(datastax_config)
     @config = @configs[Rails.env || 'development']
     @migrator = DatastaxRails::Schema::Migrator.new(@config['keyspace'])
   end
 
   desc 'Create the keyspace in config/datastax.yml for the current environment'
   task :create do
-    @configs = YAML.load_file(Rails.root.join("config", "datastax.yml"))
+    datastax_config = ERB.new(Rails.root.join('config',"datastax.yml").read).result(binding)
+    @configs = YAML.load(datastax_config)
     @config = @configs[Rails.env || 'development']
     DatastaxRails::Base.establish_connection(@config.with_indifferent_access.merge(:keyspace => 'system'))
     DatastaxRails::Schema::Migrator.new('system').create_keyspace(@config['keyspace'], @config)
@@ -52,6 +54,26 @@ namespace :ds do
   task :seed => :environment do
     seed_file = Rails.root.join("ks","seeds.rb")
     load(seed_file) if seed_file.exist?
+  end
+  
+  if(defined?(ParallelTests))
+    namespace :parallel do
+      desc "create test keyspaces via ds:create --> ds:parallel:create[num_cpus]"
+      task :create, :count do |t,args|
+        ParallelTests::Tasks.run_in_parallel("rake ds:create RAILS_ENV=#{ParallelTests::Tasks.rails_env}", args)
+      end
+      
+      desc "drop test keyspaces via ds:drop --> ds:parallel:drop[num_cpus]"
+      task :drop, :count do |t,args|
+        ParallelTests::Tasks.run_in_parallel("rake ds:drop RAILS_ENV=#{ParallelTests::Tasks.rails_env}", args)
+      end
+      
+      desc "update test keyspaces via ds:migrate --> ds:parallel:migrate[num_cpus]"
+      task :migrate, :count do |t,args|
+        args = args.to_hash.merge(:non_parallel => true)
+        ParallelTests::Tasks.run_in_parallel("rake ds:migrate RAILS_ENV=#{ParallelTests::Tasks.rails_env}", args)
+      end
+    end
   end
 end
 

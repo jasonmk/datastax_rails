@@ -13,7 +13,8 @@ module DatastaxRails
     initializer 'datastax_rails.init' do
       ActiveSupport.on_load(:datastax_rails) do
       end
-      config = YAML.load_file(Rails.root.join("config", "datastax.yml"))
+      datastax_config = ERB.new(Rails.root.join('config',"datastax.yml").read).result(binding)
+      config = YAML.load(datastax_config)
       DatastaxRails::Base.establish_connection(config[Rails.env].with_indifferent_access)
     end
     

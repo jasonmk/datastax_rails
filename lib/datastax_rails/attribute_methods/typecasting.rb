@@ -7,7 +7,7 @@ module DatastaxRails
         class_attribute :attribute_definitions
         class_attribute :lazy_attributes
         class_attribute :readonly_attributes
-        self.attribute_definitions = {}
+        self.attribute_definitions = ActiveSupport::HashWithIndifferentAccess.new
         self.lazy_attributes = []
         self.readonly_attributes = []
 

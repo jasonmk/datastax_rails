@@ -112,7 +112,7 @@ module DatastaxRails
         end
         
         attribute_definitions.each do |k,definition|
-          casted[k.to_s] = definition.instantiate(object, attributes[k])#.to_s
+          casted[k.to_s] = definition.instantiate(object, attributes[k.to_sym])#.to_s
         end
         casted
       end

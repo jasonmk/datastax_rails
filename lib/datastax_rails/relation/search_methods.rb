@@ -492,7 +492,7 @@ module DatastaxRails
         when value.is_a?(Date)
           value.strftime(DatastaxRails::Types::TimeType::FORMAT)
         when value.is_a?(Array)
-          value.collect {|v| v.gsub(/ /,"\\ ") }.join(" OR ")
+          value.collect {|v| v.is_a?(String) ? v.gsub(/ /,"\\ ") : v }.join(" OR ")
         when value.is_a?(Fixnum)
           value < 0 ? "\\#{value}" : value
         when value.is_a?(Range)

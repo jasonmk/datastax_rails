@@ -77,6 +77,7 @@ class Boat < DatastaxRails::Base
   
   key :uuid
   string :name
+  integer :registration
   timestamps
   
   validates :name, :uniqueness => true

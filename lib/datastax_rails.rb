@@ -8,6 +8,7 @@ module DatastaxRails
   extend ActiveSupport::Autoload
   
   autoload :Associations
+  autoload :AttributeAssignment
   autoload :AttributeMethods
   autoload :Base
   autoload :Batches

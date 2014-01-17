@@ -332,6 +332,7 @@ module DatastaxRails #:nodoc:
     include Identity
     include FinderMethods
     include Batches
+    include AttributeAssignment
     include AttributeMethods
     include AttributeMethods::Dirty
     include AttributeMethods::Typecasting
@@ -440,55 +441,6 @@ module DatastaxRails #:nodoc:
 
     def eql?(comparison_object)
       self == (comparison_object)
-    end
-    
-    # Allows you to set all the attributes for a particular mass-assignment
-    # security role by passing in a hash of attributes with keys matching
-    # the attribute names (which again matches the column names) and the role
-    # name using the :as option.
-    #
-    # To bypass mass-assignment security you can use the :without_protection => true
-    # option.
-    #
-    #   class User < ActiveRecord::Base
-    #     attr_accessible :name
-    #     attr_accessible :name, :is_admin, :as => :admin
-    #   end
-    #
-    #   user = User.new
-    #   user.assign_attributes({ :name => 'Josh', :is_admin => true })
-    #   user.name # => "Josh"
-    #   user.is_admin? # => false
-    #
-    #   user = User.new
-    #   user.assign_attributes({ :name => 'Josh', :is_admin => true }, :as => :admin)
-    #   user.name # => "Josh"
-    #   user.is_admin? # => true
-    #
-    #   user = User.new
-    #   user.assign_attributes({ :name => 'Josh', :is_admin => true }, :without_protection => true)
-    #   user.name # => "Josh"
-    #   user.is_admin? # => true
-    def assign_attributes(new_attributes, options = {})
-      return unless new_attributes
-
-      attributes = new_attributes.stringify_keys
-      multi_parameter_attributes = []
-      @mass_assignment_options = options
-
-      if Rails.version =~ /^3.*/ && !options[:without_protection]  
-        attributes = sanitize_for_mass_assignment(attributes, mass_assignment_role)
-      end
-
-      attributes.each do |k, v|
-        if respond_to?("#{k.to_s.downcase}=")
-          send("#{k.to_s.downcase}=",v)
-        else
-          raise(UnknownAttributeError, "unknown attribute: #{k}")
-        end
-      end
-
-      @mass_assignment_options = nil
     end
     
     def attribute_names

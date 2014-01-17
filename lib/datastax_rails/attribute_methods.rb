@@ -75,12 +75,6 @@ module DatastaxRails
       @attributes.key?(name.to_s)
     end
 
-    def attributes=(attributes)
-      attributes.each do |(name, value)|
-        send("#{name}=", value)
-      end
-    end
-
     def method_missing(method_id, *args, &block)
       if !self.class.attribute_methods_generated?
         self.class.define_attribute_methods

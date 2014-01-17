@@ -15,6 +15,9 @@ module DatastaxRails
       end
       datastax_config = ERB.new(Rails.root.join('config',"datastax.yml").read).result(binding)
       config = YAML.load(datastax_config)
+      unless config[Rails.env]
+        raise "ERROR: datastax.yml does not define a configuration for #{Rails.env} environment"
+      end
       DatastaxRails::Base.establish_connection(config[Rails.env].with_indifferent_access)
     end
     

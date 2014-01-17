@@ -55,7 +55,10 @@ class AuditLog < DatastaxRails::WideStorageModel
   
   string     :uuid
   string     :message
+  string     :user, :indexed => :cassandra
   timestamps
+  
+  default_scope slow_order(:user)
 end
 
 class Job < DatastaxRails::Base
@@ -81,6 +84,7 @@ class Boat < DatastaxRails::Base
   timestamps
   
   validates :name, :uniqueness => true
+  default_scope order(:name)
 end
 
 class Hobby < DatastaxRails::Base

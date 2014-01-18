@@ -14,7 +14,7 @@ module DatastaxRails
   #       end
   #     end
   #   end
-  class PayloadModel < Base
+  class PayloadModel < CassandraOnlyModel
     self.abstract_class = true
     
     def self.inherited(child)
@@ -23,10 +23,6 @@ module DatastaxRails
       child.string :digest
       child.binary :payload
       child.validates :digest, :presence => true
-    end
-    
-    def self.scoped
-      super.with_cassandra
     end
     
     def self.find(digest, options = {})

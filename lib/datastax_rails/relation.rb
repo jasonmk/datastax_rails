@@ -3,8 +3,8 @@ require 'pp' if ENV['DEBUG_SOLR'] == 'true'
 
 module DatastaxRails
   class Relation
-    MULTI_VALUE_METHODS = [:order, :where, :where_not, :fulltext, :greater_than, :less_than, :select, :stats, :field_facet, :range_facet]
-    SINGLE_VALUE_METHODS = [:page, :per_page, :reverse_order, :query_parser, :consistency, :ttl, :use_solr, :escape, :group]
+    MULTI_VALUE_METHODS = [:order, :where, :where_not, :fulltext, :greater_than, :less_than, :select, :stats, :field_facet, :range_facet, :slow_order]
+    SINGLE_VALUE_METHODS = [:page, :per_page, :reverse_order, :query_parser, :consistency, :ttl, :use_solr, :escape, :group, :allow_filtering]
     
     SOLR_CHAR_RX = /([\+\!\(\)\[\]\^\"\~\:\'\=\/]+)/
     
@@ -47,12 +47,11 @@ module DatastaxRails
       @highlight_options = {}
       @per_page_value = @klass.default_page_size
       @page_value = 1
-      @use_solr_value = true
+      @use_solr_value = :default
       @extensions = []
       @create_with_value = {}
-      @escape_value = true
+      @escape_value = :default
       @stats = {}
-      apply_default_scope
     end
     
     # Returns true if the two relations have the same query parameters
@@ -91,11 +90,8 @@ module DatastaxRails
     # matching documents
     #
     # Compare with #size.
-    #
-    # XXX: Count via CQL is useless unless criteria has been applied.
-    # Otherwise you get everything that has ever been in the CF.
     def count
-      @count ||= self.use_solr_value ? count_via_solr : count_via_cql
+      @count ||= (with_default_scope.path_decision == :solr) ? with_default_scope.count_via_solr : with_default_scope.count_via_cql
     end
     
     def stats
@@ -122,10 +118,16 @@ module DatastaxRails
     
     # Gets a default scope with no conditions or search attributes set.
     def default_scope
-      clone.tap do |r|
-        SINGLE_VALUE_METHODS.each {|v| r.instance_variable_set(:"@#{v}_value", nil)}
-        MULTI_VALUE_METHODS.each {|v| r.instance_variable_set(:"@#{v}_values", [])}
-        apply_default_scope
+      klass.scoped.with_default_scope
+    end
+    
+    def with_default_scope #:nodoc:
+      if default_scoped? && default_scope = klass.send(:build_default_scope)
+        default_scope = default_scope.merge(self)
+        default_scope.default_scoped = false
+        default_scope
+      else
+        self
       end
     end
     
@@ -211,11 +213,11 @@ module DatastaxRails
     # Returns a standard array thus no more methods may be chained.
     def to_a
       return @results if loaded?
-      if use_solr_value
-        @results = query_via_solr
+      if with_default_scope.path_decision == :solr
+        @results = with_default_scope.query_via_solr
         @count = @group_value ? @results.total_for_all : @results.total_entries
       else
-        @results = query_via_cql
+        @results = with_default_scope.query_via_cql
       end
       @loaded = true
       @results
@@ -240,16 +242,56 @@ module DatastaxRails
       super
     end
     
-    # NOTE: This method does not actually run a count via CQL because it only
-    # works if you run against a secondary index. So this currently just
-    # delegates to the count_via_solr method.
+    def path_decision
+      return :cassandra if klass <= DatastaxRails::CassandraOnlyModel
+      case use_solr_value
+      when false
+        return :cassandra
+      when true
+        return :solr
+      else
+        # If we've already decided to use cassandra, just go with it.
+        return :cassandra unless use_solr_value
+        [order_values, where_not_values, fulltext_values, greater_than_values, less_than_values, field_facet_values,
+         range_facet_values, group_value].each do |solr_only_stuff|
+           return :solr unless solr_only_stuff.blank? 
+         end
+        return :solr unless group_value.blank?
+        return :solr unless page_value == 1
+        @where_values.each do |wv|
+          wv.each do |k,v|
+            next if k.to_sym == :id
+            if(klass.attribute_definitions[k].indexed == :solr || !klass.attribute_definitions[k].indexed)
+              return :solr
+            end
+          end
+        end
+        # If we get here, we can safely run this query via Cassandra
+        return :cassandra
+      end
+    end
+    
+    # If we index something into both cassandra and solr, we rename the cassandra
+    # column.  This method maps the column names as necessary
+    def map_cassandra_columns(conditions)
+      {}.tap do |mapped|
+        conditions.each do |k,v|
+          if(klass.attribute_definitions[k].indexed == :both)
+            mapped["__#{k}"] = v
+          else
+            mapped[k] = v
+          end
+        end
+      end
+    end
+    
     def count_via_cql
-      select_columns = ['count(*)']
-      cql = @cql.select(select_columns)
+      cql = @cql.select(['count(*)'])
       cql.using(@consistency_value) if @consistency_value
       @where_values.each do |wv|
         cql.conditions(wv)
       end
+      cql.allow_filtering if @allow_filtering_value
       CassandraCQL::Result.new(cql.execute).fetch['count']
     end
     
@@ -261,7 +303,7 @@ module DatastaxRails
       cql = @cql.select((select_columns + @klass.key_factory.key_columns).uniq)
       cql.using(@consistency_value) if @consistency_value
       @where_values.each do |wv|
-        cql.conditions(wv)
+        cql.conditions(Hash[wv.map {|k,v| [(k.to_sym == :id ? :key : k), v]}])
       end
       @greater_than_values.each do |gtv|
         gtv.each do |k,v|
@@ -274,11 +316,36 @@ module DatastaxRails
       if(@per_page_value)
         cql.limit(@per_page_value)
       end
+      cql.allow_filtering if @allow_filtering_value
       results = []
       CassandraCQL::Result.new(cql.execute).fetch do |row|
         results << @klass.instantiate(row['key'], row.to_hash, select_columns)
       end
+      if(@slow_order_values.any?)
+        results.sort! do |a,b| 
+          values = slow_ordering(a,b)
+          values[0] <=> values[1]
+        end
+      end
       results
+    end
+    
+    def slow_ordering(obj1, obj2)
+      [[],[]].tap do |values|
+        i=0
+        @slow_order_values.each do |ordering|
+          ordering.each do |k,v|
+            if v == :asc
+              values[0][i] = obj1.send(k)
+              values[1][i] = obj2.send(k)
+            else
+              values[1][i] = obj1.send(k)
+              values[0][i] = obj2.send(k)
+            end
+          end
+          i += 1
+        end
+      end
     end
     
     # Runs the query with a limit of 1 just to grab the total results attribute off
@@ -360,9 +427,6 @@ module DatastaxRails
         q = @fulltext_values.collect {|ftv| "(" + ftv[:query] + ")"}.join(' AND ')
         hl_fields = @fulltext_values.collect { |ftv| ftv[:highlight].join(",") if ftv[:highlight].present? }.join(",")
       end
-      
-      #TODO highlighting and fielded queries of fulltext
-      
       
       params = {:q => q}
       unless sort.empty?
@@ -488,6 +552,7 @@ module DatastaxRails
           obj = @klass.with_cassandra.consistency(@consistency_value).find_by_id(id)
           results << obj if obj
         else
+          #byebug
           results << @klass.instantiate(id, doc, select_columns)
         end
       end

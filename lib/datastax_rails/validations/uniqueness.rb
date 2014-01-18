@@ -17,7 +17,7 @@ module DatastaxRails
         #      are implemented in datastax_rails (such as STI)
         finder_class = record.class
         
-        scope = finder_class.unscoped.where(attribute => value)
+        scope = finder_class.where(attribute => value)
         scope = scope.where_not(:id => record.id) if record.persisted?
         
         Array.wrap(options[:scope]).each do |scope_item|

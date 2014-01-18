@@ -57,8 +57,6 @@ class AuditLog < DatastaxRails::WideStorageModel
   string     :message
   string     :user, :indexed => :cassandra
   timestamps
-  
-  default_scope slow_order(:user)
 end
 
 class Job < DatastaxRails::Base

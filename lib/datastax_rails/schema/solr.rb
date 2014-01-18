@@ -16,7 +16,7 @@ module DatastaxRails
           if coder.options[:solr_type]
             @fields.push({ :name => attr.name,
                            :type => coder.options[:solr_type].to_s,
-                           :indexed => (coder.options[:indexed] == :solr).to_s,
+                           :indexed => (coder.options[:indexed] == :solr || coder.options[:indexed] == :both).to_s,
                            :stored => coder.options[:stored].to_s,
                            :multi_valued => coder.options[:multi_valued].to_s })
           end
@@ -75,7 +75,8 @@ module DatastaxRails
           say "Using custom solrconfig file", :subitem
           solrconfig = Rails.root.join('config','solr',"#{model.column_family}-solrconfig.xml").read
         else
-          solrconfig = File.read(File.join(File.dirname(__FILE__),"..","..","..","config","solrconfig.xml"))
+          @legacy = model.legacy_mapping?
+          solrconfig = ERB.new(File.read(File.join(File.dirname(__FILE__),"..","..","..","config","solrconfig.xml.erb"))).result(binding)
         end
         if Rails.root.join('config','solr',"#{model.column_family}-stopwords.txt").exist?
           say "Using custom stopwords file", :subitem

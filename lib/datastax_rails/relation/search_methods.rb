@@ -184,7 +184,7 @@ module DatastaxRails
       return self if attribute.blank?
 
       clone.tap do |r|
-        r.order_values << attribute.is_a?(Hash) ? attribute : {attribute.to_sym => :asc}
+        r.order_values << (attribute.is_a?(Hash) ? attribute : {attribute.to_sym => :asc})
       end
     end
     

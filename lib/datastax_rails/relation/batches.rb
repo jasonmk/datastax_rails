@@ -75,8 +75,8 @@ module DatastaxRails
 
       start = options.delete(:start)
       batch_size = options.delete(:batch_size) || 1000
-
-      batch_order = relation.use_solr_value ? :created_at : :key
+      
+      batch_order = (relation.use_solr_value ? :created_at : :key)
       relation = relation.limit(batch_size)
       relation = relation.order(batch_order) if relation.use_solr_value
       records = start ? relation.where(batch_order).greater_than(start).to_a : relation.to_a

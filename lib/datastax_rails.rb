@@ -13,11 +13,13 @@ module DatastaxRails
   autoload :Base
   autoload :Batches
   autoload :Callbacks
+  autoload :CassandraOnlyModel
   autoload :Collection
   autoload :Connection
   autoload :Cql
   autoload :GroupedCollection
   autoload :Identity
+  autoload :Index
   autoload :Inheritance
   autoload :PayloadModel
   autoload :Persistence
@@ -54,6 +56,15 @@ module DatastaxRails
       autoload :Definition
       autoload :Dirty
       autoload :Typecasting
+    end
+  end
+  
+  module Scoping
+    extend ActiveSupport::Autoload
+
+    eager_autoload do
+      autoload :Named
+      autoload :Default
     end
   end
 

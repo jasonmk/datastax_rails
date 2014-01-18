@@ -32,6 +32,14 @@ module DatastaxRails
       def attribute(name, options)
         type  = options.delete :type
         coder = options.delete :coder
+        
+        if self <= CassandraOnlyModel
+          if options[:indexed] == :both || options[:indexed] == :cassandra
+            options[:indexed] = :cassandra
+          else
+            options[:indexed] = false
+          end
+        end
 
         if type.is_a?(Symbol)
           coder = DatastaxRails::Type.get_coder(type) || (raise "Unknown type #{type}")
@@ -47,7 +55,7 @@ module DatastaxRails
           readonly_attributes << name.to_sym
         end
 
-        attribute_definitions[name.to_sym] = AttributeMethods::Definition.new(name, coder, options)
+        attribute_definitions[name.to_sym] = AttributeMethods::Definition.new(self, name, coder, options)
       end
     end
     

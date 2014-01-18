@@ -3,7 +3,12 @@ require 'active_support/concern'
 module DatastaxRails
   module AttributeAssignment
     extend ActiveSupport::Concern
-    include ActiveModel::MassAssignmentSecurity
+    if Rails.version =~ /^3.*/
+      include ActiveModel::MassAssignmentSecurity
+    elsif Rails.version =~ /^4.*/
+      include ActiveModel::DeprecatedMassAssignmentSecurity
+      include ActiveModel::ForbiddenAttributesProtection
+    end
 
     module ClassMethods
       private
@@ -69,7 +74,11 @@ module DatastaxRails
       @mass_assignment_options = options
 
       unless options[:without_protection]
-        attributes = sanitize_for_mass_assignment(attributes, mass_assignment_role)
+        if Rails.version =~ /3.*/
+          attributes = sanitize_for_mass_assignment(attributes, mass_assignment_role)
+        else
+          attributes = sanitize_for_mass_assignment(attributes)
+        end
       end
 
       attributes.each do |k, v|

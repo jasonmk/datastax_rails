@@ -6,19 +6,20 @@ module DatastaxRails
       
       cattr_accessor :verbose
       self.verbose = true
+      attr_accessor :errors
       
       def initialize(keyspace)
         @keyspace = keyspace
         check_schema_migrations unless keyspace == 'system'
+        @errors = []
       end
 
       def migrate_all(force = false)
         say_with_time("Migrating all models") do
           # Ensure all models are loaded (necessary for non-production mode)
-          Dir[Rails.root.join("app","models",'*.rb').to_s].each do |file| 
+          Dir[Rails.root.join("app","models",'*.rb').to_s].each do |file|
             require File.basename(file, File.extname(file))
           end
-          
           count = 0
           DatastaxRails::Base.models.each do |m|
             if !m.abstract_class?
@@ -42,6 +43,13 @@ module DatastaxRails
               create_wide_storage_column_family(model)
               count += 1
             end
+            count += check_missing_schema(model)
+          elsif model <= DatastaxRails::CassandraOnlyModel
+            unless column_family_exists?(model.column_family.to_s)
+              create_cassandra_column_family(model)
+              count += 1
+            end
+            count += check_key_name(model)
             count += check_missing_schema(model)
           else
             count += check_key_name(model)

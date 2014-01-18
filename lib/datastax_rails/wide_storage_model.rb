@@ -19,26 +19,11 @@ module DatastaxRails
   #     string :message
   #     timestamps
   #   end
-  class WideStorageModel < Base
+  class WideStorageModel < CassandraOnlyModel
     self.abstract_class = true
     
     def self.cluster_by(attr = nil)
       @cluster_by ||= attr.is_a?(Hash) ? attr : {attr => :asc}
-    end
-    
-    def self.scoped
-      super.with_cassandra
-    end
-    
-    def self.encode_attributes(attributes)
-      encoded = {}
-      attributes.each do |column_name, value|
-        encoded[column_name.to_s] = attribute_definitions[column_name.to_sym].coder.encode(value)
-        if attribute_definitions[column_name.to_sym].coder.options[:cassandra_type] == 'timestamp'
-          encoded[column_name.to_s] = encoded[column_name.to_s][0..-2]
-        end
-      end
-      encoded
     end
     
     def self.write(key, attributes, options = {})

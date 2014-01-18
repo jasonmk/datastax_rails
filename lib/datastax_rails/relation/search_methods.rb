@@ -1,6 +1,23 @@
 module DatastaxRails
   module SearchMethods
     
+    # By default, Cassandra will throw an error if you try to set a where condition
+    # on either a column with no index or on more than one column that isn't part
+    # of the primary key. If you are confident that the number of records that need
+    # to be searched is low, then you can instruct it to ignore the warning.  Generally
+    # you only want to do this when either the number of records in the table is very
+    # small or when one of the other where conditions that has an index will reduce the
+    # number of records to a small number.
+    #
+    #   Model.where(:name => 'johndoe', :active => true).allow_filtering
+    #
+    # @return [DatastaxRails::Relation] a new Relation object
+    def allow_filtering
+      clone.tap do |r|
+        r.allow_filtering_value = true
+      end
+    end
+    
     # The default consistency level for DSR is QUORUM when searching by ID.
     # For all searches using SOLR, the default consistency is ONE.  Use this
     # to override it in either case.
@@ -157,15 +174,41 @@ module DatastaxRails
     #   Model.order(:name)
     #   Model.order(:name => :desc)
     #
+    # WARNING: If this call is combined with #with_cassandra, you can only
+    # order on the clustering column of the primary key.  If this doesn't
+    # mean anything to you, then you probably don't want to use these together.
+    #
     # @param attribute [Symbol, String, Hash] the attribute to sort by and optionally the direction to sort in
     # @return [DatastaxRails::Relation] a new Relation object
     def order(attribute)
       return self if attribute.blank?
 
       clone.tap do |r|
-        order_by = attribute.is_a?(Hash) ? attribute.dup : {attribute.to_sym => :asc}
-        
-        r.order_values << order_by 
+        r.order_values << (attribute.is_a?(Hash) ? attribute : {attribute.to_sym => :asc})
+      end
+    end
+    
+    # Orders the result set in memory after all matching records have been
+    # retrieved.
+    #
+    # This means that limit is ignored until the end.  ALL matching records WILL
+    # be retrieved and sorted before taking #limit records and returning them to
+    # the caller.
+    #
+    # Why would you do this?  If you are retrieving records from a cassandra index
+    # but don't have the appropriate clustering order you can use this, but you should
+    # only do so if you are confident that the number of records returned will be low.
+    #
+    # A warning will be printed to the log if this results in a very inefficient operation.
+    #
+    # USE WITH CARE!!!!!!
+    #
+    # @param attribute [Symbol, String, Hash] the attribute to sort by and optionally the direction to sort in
+    # @return [DatastaxRails::Relation] a new Relation object
+    def slow_order(attribute)
+      return self if attribute.blank?
+      clone.tap do |r|
+        r.slow_order_values << (attribute.is_a?(Hash) ? attribute : {attribute.to_sym => :asc}) 
       end
     end
     
@@ -492,7 +535,7 @@ module DatastaxRails
         when value.is_a?(Date)
           value.strftime(DatastaxRails::Types::TimeType::FORMAT)
         when value.is_a?(Array)
-          value.collect {|v| v.gsub(/ /,"\\ ") }.join(" OR ")
+          value.collect {|v| v.to_s.gsub(/ /,"\\ ") }.join(" OR ")
         when value.is_a?(Fixnum)
           value < 0 ? "\\#{value}" : value
         when value.is_a?(Range)
@@ -505,27 +548,6 @@ module DatastaxRails
           value
       end
     end
-    
-    protected
-      def find_by_attributes(match, attributes, *args) #:nodoc:
-       
-        conditions =  Hash[attributes.map {|a| [a, args[attributes.index(a)]]}]
-        if Rails.version =~ /^3.*/
-          self.where_values << escape_attributes(conditions)
-          result = self.send(match.finder)
-        elsif Rails.version =~ /^4.*/
-          result = self.send(match.finder, conditions)
-        end
-
-        #result = where(conditions).send(match.finder)
-        
-        if match.blank? && result.blank?
-          raise RecordNotFound, "Couldn't find #{klass.name} with #{conditions.to_a.collect {|p| p.join('=')}.join(', ')}"
-        else
-          yield(result) if block_given?
-          result
-        end
-      end
     
     class WhereProxy #:nodoc:
       def initialize(relation, attribute, invert = false) #:nodoc:

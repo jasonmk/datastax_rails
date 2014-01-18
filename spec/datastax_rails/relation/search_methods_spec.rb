@@ -58,10 +58,26 @@ describe DatastaxRails::Relation do
     
     it "should return items in descending order" do
       %w[fishing hiking boating jogging swimming chess].each do |word|
-        Hobby.create(:name => word)
+        Hobby.create!(:name => word)
       end
       @relation.commit_solr
       @relation.order(:name => :desc).collect {|h| h.name}.should == %w[swimming jogging hiking fishing chess boating]
+    end
+  end
+  
+  describe "#slow_order" do
+    it "should manually order items coming from Cassandra" do
+      %w[john jason michael tony billy jim phil].each_with_index do |name,i|
+        AuditLog.create!(:uuid => "c1401540-f092-11e2-9001-6a5ab73a986#{i}", :user => name, :message => 'changed')
+      end
+      AuditLog.unscoped.slow_order(:user => :asc).collect {|log| log.user}.should == %w[billy jason jim john michael phil tony]
+    end
+    
+    it "should manually order items coming from Cassandra in descending order" do
+      %w[john jason michael tony billy jim phil].each_with_index do |name,i|
+        AuditLog.create!(:uuid => "c1401540-f092-11e2-9001-6a5ab73a986#{i}", :user => name, :message => 'changed')
+      end
+      AuditLog.unscoped.slow_order(:user => :desc).collect {|log| log.user}.should == %w[tony phil michael john jim jason billy]
     end
   end
   

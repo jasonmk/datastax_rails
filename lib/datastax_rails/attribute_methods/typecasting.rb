@@ -7,7 +7,7 @@ module DatastaxRails
         class_attribute :attribute_definitions
         class_attribute :lazy_attributes
         class_attribute :readonly_attributes
-        self.attribute_definitions = {}
+        self.attribute_definitions = ActiveSupport::HashWithIndifferentAccess.new
         self.lazy_attributes = []
         self.readonly_attributes = []
 
@@ -20,12 +20,9 @@ module DatastaxRails
         end 
         
         # We need to ensure that inherited classes get their own attribute definitions.
-        # In addition, we take the opportunity to track all the DatastaxRails::Base decendents.
-        # This will be useful when it comes to things like schema generation.
         def inherited(child)
           super
           child.attribute_definitions = attribute_definitions.dup
-          self.models << child
         end
         
         # @!group Attribute Types

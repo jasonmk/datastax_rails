@@ -10,6 +10,8 @@ module DatastaxRails
       
       merged_relation = clone
       
+      r = r.with_default_scope if r.default_scoped? && r.klass != klass
+      
       (Relation::MULTI_VALUE_METHODS - [:where, :where_not]).each do |method|
         value = r.send(:"#{method}_values")
         merged_relation.send(:"#{method}_values=", merged_relation.send(:"#{method}_values") + value) if value.present?
@@ -31,7 +33,7 @@ module DatastaxRails
       
       (Relation::SINGLE_VALUE_METHODS).each do |method|
         value = r.send(:"#{method}_value")
-        merged_relation.send(:"#{method}_value=", value) unless value.nil?
+        merged_relation.send(:"#{method}_value=", value) unless value.nil? || value == :default
       end
       
       merged_relation

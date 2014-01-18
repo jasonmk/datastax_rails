@@ -2,6 +2,16 @@ require 'spec_helper'
 
 describe "DatastaxRails::Base" do
   describe "persistence" do
+    describe "#update_attributes" do
+      it "only overwrites attributes that are passed in as part of the hash" do
+        person = Person.create(:name => 'Jason', :birthdate => Date.parse("Oct 19, 1981"), :nickname => 'Jas')
+        person.birthdate = Date.parse("Oct 19, 1980")
+        person.update_attributes(:nickname => 'Jace')
+        person.birthdate.should eql(Date.parse("Oct 19, 1980"))
+        person.nickname.should eql('Jace')
+      end
+    end
+    
     describe "with cql" do
       describe "#create" do
         it "should persist at the given consistency level" do

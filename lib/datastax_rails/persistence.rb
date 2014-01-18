@@ -112,7 +112,7 @@ module DatastaxRails
         end
         
         attribute_definitions.each do |k,definition|
-          casted[k.to_s] = definition.instantiate(object, attributes[k])#.to_s
+          casted[k.to_s] = definition.instantiate(object, attributes[k.to_sym])#.to_s
         end
         casted
       end
@@ -158,29 +158,67 @@ module DatastaxRails
       freeze
     end
 
-    def update_attribute(name, value, options = {})
-      name = name.to_s
-      send("#{name}=", value)
-      save(options.merge(:validate => false))
+    # Updates a single attribute and saves the record.
+    # This is especially useful for boolean flags on existing records. Also note that
+    #
+    # * Validation is skipped.
+    # * Callbacks are invoked.
+    # * updated_at/updated_on column is updated if that column is available.
+    # * Updates all the attributes that are dirty in this object.
+    #
+    def update_attribute(name, value)
+      send("#{name.to_s}=", value)
+      save(:validate => false)
     end
 
-    def update(attributes, options = {})
-      puts "DEBUG: #{attributes}"
-      self.attributes = attributes
-      save(options)
+    # Updates the attributes of the model from the passed-in hash and saves the
+    # record If the object is invalid, the saving will fail and false will be returned.
+    #
+    # When updating model attributes, mass-assignment security protection is respected.
+    # If no +:as+ option is supplied then the +:default+ role will be used.
+    # If you want to bypass the protection given by +attr_protected+ and
+    # +attr_accessible+ then you can do so using the +:without_protection+ option.
+    def update_attributes(attributes, options = {})
+      self.assign_attributes(attributes, options)
+      save
     end
 
-    alias update_attributes update
- 
-    def update!(attributes, options = {})
-      self.attributes = attributes
-      save!(options)
+    # Updates its receiver just like +update_attributes+ but calls <tt>save!</tt> instead
+    # of +save+, so an exception is raised if the record is invalid.
+    def update_attributes!(attributes, options = {})
+      self.assign_attributes(attributes, options)
+      save!
+    end
+    
+    # Assigns to +attribute+ the boolean opposite of <tt>attribute?</tt>. So
+    # if the predicate returns +true+ the attribute will become +false+. This
+    # method toggles directly the underlying value without calling any setter.
+    # Returns +self+.
+    def toggle(attribute)
+      self[attribute] = !send("#{attribute}?")
+      self
     end
 
-    alias update_attributes! update!
+    # Wrapper around +toggle+ that saves the record. This method differs from
+    # its non-bang version in that it passes through the attribute setter.
+    # Saving is not subjected to validation checks. Returns +true+ if the
+    # record could be saved.
+    def toggle!(attribute)
+      toggle(attribute).update_attribute(attribute, self[attribute])
+    end
+    
+    # Reloads the attributes of this object from the database.
+    # The optional options argument is passed to find when reloading so you
+    # may do e.g. record.reload(:lock => true) to reload the same record with
+    # an exclusive row lock.
+    def reload(options = nil)
+      clear_association_cache
 
-    def reload
-      @attributes.update(self.class.find(self.id).instance_variable_get('@attributes'))
+      fresh_object = self.class.unscoped { self.class.find(self.id, options) }
+      @attributes.update(fresh_object.instance_variable_get('@attributes'))
+
+      @attributes_cache = {}
+      self
     end
 
     private

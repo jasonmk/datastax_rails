@@ -3,6 +3,7 @@ require 'spec_helper'
 describe DatastaxRails::Relation do
   before(:each) do
     @relation = DatastaxRails::Relation.new(Hobby, "hobbies")
+    @relation.default_scoped = true
     @relation.commit_solr
   end
   
@@ -31,6 +32,7 @@ describe DatastaxRails::Relation do
     end
     
     it "should cache the total count on any solr query" do
+      @relation = @relation.with_solr
       @relation.should_receive(:query_via_solr).and_return(double("ResultSet", :total_entries => 42))
       @relation.all
       @relation.count.should == 42
@@ -39,6 +41,7 @@ describe DatastaxRails::Relation do
     it "should execute a fast search to determine the count" do
       mock_relation = double(DatastaxRails::Relation)
       mock_relation.stub_chain(:select, :to_a, :total_entries).and_return(37)
+      @relation = @relation.with_solr
       @relation.should_receive(:limit).with(1).and_return(mock_relation)
       @relation.count.should == 37
     end
@@ -62,6 +65,12 @@ describe DatastaxRails::Relation do
       relation = @relation.where("name" => "hiking")
       relation.count.should == 0
       relation.default_scope.count.should == 1
+    end
+    
+    it "should return a relation that has a default scope set" do
+      relation = DatastaxRails::Relation.new(Boat, "boats")
+      relation.default_scoped = true
+      relation.default_scope.order_values.should_not be_empty
     end
   end
   

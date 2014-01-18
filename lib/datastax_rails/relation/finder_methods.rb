@@ -136,6 +136,27 @@ module DatastaxRails
       last or raise RecordNotFound
     end
     
+    protected
+      def find_by_attributes(match, attributes, *args) #:nodoc:
+       
+        conditions =  Hash[attributes.map {|a| [a, args[attributes.index(a)]]}]
+        if Rails.version =~ /^3.*/
+          self.where_values << escape_attributes(conditions)
+          result = self.send(match.finder)
+        elsif Rails.version =~ /^4.*/
+          result = self.send(match.finder, conditions)
+        end
+
+        #result = where(conditions).send(match.finder)
+        
+        if match.blank? && result.blank?
+          raise RecordNotFound, "Couldn't find #{klass.name} with #{conditions.to_a.collect {|p| p.join('=')}.join(', ')}"
+        else
+          yield(result) if block_given?
+          result
+        end
+      end
+    
     private
 
       def escape_attributes(conditions)

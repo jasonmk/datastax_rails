@@ -325,13 +325,13 @@ module DatastaxRails #:nodoc:
     extend ActiveModel::Naming
     include ActiveModel::Conversion
     extend ActiveSupport::DescendantsTracker
-    include ActiveModel::MassAssignmentSecurity if Rails.version =~ /^3.*/
     
     include Connection
     include Inheritance
     include Identity
     include FinderMethods
     include Batches
+    include AttributeAssignment
     include AttributeMethods
     include AttributeMethods::Dirty
     include AttributeMethods::Typecasting
@@ -358,9 +358,6 @@ module DatastaxRails #:nodoc:
     class_attribute :storage_method
     self.storage_method = :cql
     
-    class_attribute :models
-    self.models = []
-    
     attr_reader :attributes
     attr_reader :loaded_attributes
     attr_accessor :key
@@ -370,12 +367,14 @@ module DatastaxRails #:nodoc:
     class_attribute :serialized_attributes
     self.serialized_attributes = {}
     
+    # Whether or not we are using solr legacy mappings
+    class_attribute :legacy_mapping
+    
     def initialize(attributes = {}, options = {})
       @key = attributes.delete(:key)
       @attributes = {}.with_indifferent_access
       @loaded_attributes = {}.with_indifferent_access
       
-      @relation = nil
       @new_record = true
       @destroyed = false
       @previously_changed = {}
@@ -385,19 +384,7 @@ module DatastaxRails #:nodoc:
       
       populate_with_current_scope_attributes
       
-      if Rails.version =~ /^3.*/
-        sanitize_for_mass_assignment(attributes).each do |k,v|
-          if respond_to?("#{k.to_s.downcase}=")
-            send("#{k.to_s.downcase}=",v)
-          else
-            raise(DatastaxRails::UnknownAttributeError, "unknown attribute: #{k}")
-          end
-        end
-      else
-        attributes.each do |k,v|
-          send("#{k.to_s.downcase}=",v) if respond_to?("#{k.to_s.downcase}=")
-        end
-      end
+      assign_attributes(attributes, options) if attributes
       
       yield self if block_given?
       run_callbacks :initialize
@@ -442,55 +429,6 @@ module DatastaxRails #:nodoc:
       self == (comparison_object)
     end
     
-    # Allows you to set all the attributes for a particular mass-assignment
-    # security role by passing in a hash of attributes with keys matching
-    # the attribute names (which again matches the column names) and the role
-    # name using the :as option.
-    #
-    # To bypass mass-assignment security you can use the :without_protection => true
-    # option.
-    #
-    #   class User < ActiveRecord::Base
-    #     attr_accessible :name
-    #     attr_accessible :name, :is_admin, :as => :admin
-    #   end
-    #
-    #   user = User.new
-    #   user.assign_attributes({ :name => 'Josh', :is_admin => true })
-    #   user.name # => "Josh"
-    #   user.is_admin? # => false
-    #
-    #   user = User.new
-    #   user.assign_attributes({ :name => 'Josh', :is_admin => true }, :as => :admin)
-    #   user.name # => "Josh"
-    #   user.is_admin? # => true
-    #
-    #   user = User.new
-    #   user.assign_attributes({ :name => 'Josh', :is_admin => true }, :without_protection => true)
-    #   user.name # => "Josh"
-    #   user.is_admin? # => true
-    def assign_attributes(new_attributes, options = {})
-      return unless new_attributes
-
-      attributes = new_attributes.stringify_keys
-      multi_parameter_attributes = []
-      @mass_assignment_options = options
-
-      if Rails.version =~ /^3.*/ && !options[:without_protection]  
-        attributes = sanitize_for_mass_assignment(attributes, mass_assignment_role)
-      end
-
-      attributes.each do |k, v|
-        if respond_to?("#{k.to_s.downcase}=")
-          send("#{k.to_s.downcase}=",v)
-        else
-          raise(UnknownAttributeError, "unknown attribute: #{k}")
-        end
-      end
-
-      @mass_assignment_options = nil
-    end
-    
     def attribute_names
       self.class.attribute_names
     end
@@ -511,11 +449,11 @@ module DatastaxRails #:nodoc:
     class << self
       delegate :find, :find_by, :find_by!, :first, :all, :exists?, :any?, :many?, :to => :scoped
       delegate :destroy, :destroy_all, :delete, :update, :update_all, :to => :scoped
-      delegate :order, :limit, :where, :where_not, :page, :paginate, :select, :to => :scoped
+      delegate :order, :limit, :where, :where_not, :page, :paginate, :select, :slow_order, :to => :scoped
       delegate :per_page, :each, :group, :total_pages, :search, :fulltext, :to => :scoped
       delegate :count, :first, :first!, :last, :last!, :compute_stats, :to => :scoped
       delegate :sum, :average, :minimum, :maximum, :stddev, :to => :scoped
-      delegate :cql, :with_cassandra, :with_solr, :commit_solr, :to => :scoped
+      delegate :cql, :with_cassandra, :with_solr, :commit_solr, :allow_filtering, :to => :scoped
       delegate :find_each, :find_in_batches, :consistency, :to => :scoped
       delegate :field_facet, :range_facet, :to => :scoped
 
@@ -534,12 +472,20 @@ module DatastaxRails #:nodoc:
         @column_family || name.underscore.pluralize
       end
       
+      def models
+        self.descendants.reject {|m|m.abstract_class?}
+      end
+      
       def payload_model?
         self.ancestors.include?(DatastaxRails::PayloadModel)
       end
       
       def wide_storage_model?
         self.ancestors.include?(DatastaxRails::WideStorageModel)
+      end
+      
+      def legacy_mapping?
+        @legacy_mapping
       end
       
       def base_class
@@ -696,7 +642,7 @@ module DatastaxRails #:nodoc:
         end
         
         def relation #:nodoc:
-          @relation ||= Relation.new(self, column_family)
+          Relation.new(self, column_family)
         end
         
         # Returns the class type of the record using the current module as a prefix. So descendants of

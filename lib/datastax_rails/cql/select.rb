@@ -8,7 +8,13 @@ module DatastaxRails#:nodoc:
         @conditions = {}
         @order = nil
         @paginate = nil
+        @allow_filtering = nil
         super
+      end
+      
+      def allow_filtering
+        @allow_filtering = true
+        self
       end
       
       def using(consistency)
@@ -58,12 +64,16 @@ module DatastaxRails#:nodoc:
           stmt << "WHERE #{conditions.join(" AND ")} "
         end
         
+        if @order
+          stmt << "ORDER BY #{@order} "
+        end
+        
         if @limit
           stmt << "LIMIT #{@limit} "
         end
         
-        if @order
-          stmt << "ORDER BY #{@order}"
+        if @allow_filtering
+          stmt << "ALLOW FILTERING "
         end
         
         CassandraCQL::Statement.sanitize(stmt, values)

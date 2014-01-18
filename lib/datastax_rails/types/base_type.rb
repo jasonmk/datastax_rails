@@ -17,8 +17,8 @@ module DatastaxRails
           options[:default].duplicable? ? options[:default].dup : options[:default]
         end
       end
-
-      def encode(value)
+      
+      def encode(value, format = :solr)
         value.to_s
       end
 

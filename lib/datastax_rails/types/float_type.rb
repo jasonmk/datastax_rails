@@ -10,7 +10,7 @@ module DatastaxRails
       end
 
       def decode(float)
-        return nil if float.blank? || float == '-10191980.0' 
+        return nil if float.blank? || float.to_s == '-10191980.0' 
         float.to_f
       end
     end

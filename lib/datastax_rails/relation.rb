@@ -318,8 +318,17 @@ module DatastaxRails
       end
       cql.allow_filtering if @allow_filtering_value
       results = []
-      CassandraCQL::Result.new(cql.execute).fetch do |row|
-        results << @klass.instantiate(row['key'], row.to_hash, select_columns)
+      begin
+        CassandraCQL::Result.new(cql.execute).fetch do |row|
+          results << @klass.instantiate(row['key'], row.to_hash, select_columns)
+        end
+      rescue CassandraCQL::Error::InvalidRequestException => e
+        # If we get an exception about an empty key, ignore it.  We'll return an empty set.
+        if e.message =~ /Key may not be empty/
+          # No-Op
+        else
+          raise
+        end
       end
       if(@slow_order_values.any?)
         results.sort! do |a,b| 

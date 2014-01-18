@@ -41,7 +41,7 @@ module DatastaxRails
       # The following is an example production configuration document.  Assume that your setup consists
       # of three datacenters each with three servers and RF=3 (i.e., you're storing your data 9 times)
       #
-      #   servers: ["10.1.2.5:9160", "10.1.2.6:9160", "10.1.2.7:9160"]
+      #   servers: ["10.1.2.5"]
       #   keyspace: "datastax_rails_production"
       #   strategy_class: "org.apache.cassandra.locator.NetworkTopologyStrategy"
       #   strategy_options: {"DS1": "3", "DS2": "3", "DS3": "3"} 
@@ -58,8 +58,9 @@ module DatastaxRails
       #       key: config/datastax_rails.key
       #       keypass: changeme
       #
-      # The +servers+ entry should be a list of all of the servers in your local datacenter.  These
-      # are the servers that DSR will attempt to connect to and will round-robin through.
+      # The +servers+ entry should be a list of all seed nodes for servers you wish to connect to.  DSR
+      # will automatically connect to all nodes in the cluster or in the datacenter if you are using multiple
+      # datacenters.
       #
       # Since we're using the NetworkTopologyStrategy for our locator, it is important that you configure
       # cassandra-topology.properties.  See the DSE documentation at http://www.datastax.com for more
@@ -94,7 +95,7 @@ module DatastaxRails
         DatastaxRails::Base.config = spec.with_indifferent_access
         spec.reverse_merge!(DEFAULT_OPTIONS)
         connection_options = spec[:connection_options] || {}
-        self.connection = CassandraCQL::Database.new(spec[:servers], {:keyspace => spec[:keyspace], :cql_version => spec[:cql_version]}, connection_options.symbolize_keys)
+        self.connection = Cql::Client.connect(:hosts => spec[:servers], :keyspace => spec[:keyspace], :connection_timeout => spec[:connection_options][:timeout])
       end
       
       # Returns the base portion of the URL for connecting to SOLR based on the current Cassandra server.

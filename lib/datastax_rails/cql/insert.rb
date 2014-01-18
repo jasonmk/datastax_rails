@@ -9,11 +9,6 @@ module DatastaxRails
         super
       end
       
-      def using(consistency)
-        @consistency = consistency
-        self
-      end
-      
       def columns(columns)
         @columns.merge!(columns)
         self

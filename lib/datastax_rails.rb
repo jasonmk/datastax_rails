@@ -1,5 +1,4 @@
 require 'active_support/all'
-require 'cassandra-cql/1.2'
 require 'blankslate'
 require 'schema_migration'
 

@@ -93,5 +93,6 @@ end
 
 require 'datastax_rails/railtie' if defined?(Rails)
 require 'datastax_rails/errors'
+require 'cql-rb_extensions'
 
 ActiveSupport.run_load_hooks(:datastax_rails, DatastaxRails::Base)

@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
   s.add_dependency "cql-rb"
   s.add_dependency "rsolr", "~> 1.0.9"
   s.add_dependency "rsolr-client-cert"
+  s.add_dependency "simple_uuid"
   
   s.add_development_dependency "rspec-rails"
   s.add_development_dependency "appraisal", "1.0.0.beta2"

@@ -11,7 +11,8 @@ productiont:
     path: /solr
 
 development:
-  servers: ["127.0.0.1:9160"]
+  servers: ["127.0.0.1"]
+  port: 9042
   keyspace: "datastax_rails_development"
   strategy_class: "org.apache.cassandra.locator.SimpleStrategy"
   strategy_options: {"replication_factor": "1"}

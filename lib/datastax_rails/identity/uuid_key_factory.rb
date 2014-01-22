@@ -1,3 +1,5 @@
+require 'simple_uuid'
+
 module DatastaxRails
   module Identity
     # Key factories need to support 3 operations

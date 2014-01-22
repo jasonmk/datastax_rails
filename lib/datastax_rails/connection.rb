@@ -1,6 +1,8 @@
 # require 'datastax_rails/rsolr_client_wrapper'
 require 'rsolr/client_cert'
 require 'rest_client'
+require 'cql'
+
 module DatastaxRails
   # The connection module holds all the code for establishing and maintaining a connection to
   # Datastax Exterprise.  This includes both the Cassandra and Solr connections.
@@ -26,12 +28,7 @@ module DatastaxRails
       #
       # @return [String] the hostname or ip address of the current server
       def current_server
-        thrift_client.instance_variable_get(:@current_server).to_s.split(/\:/).first
-      end
-      
-      # Returns the thrift client object
-      def thrift_client
-        self.connection.instance_variable_get(:@connection)
+        connection.current_connection.instance_variable_get(:@connection).host
       end
       
       # Establish a Cassandra connection to DSE.  datastax.yml will be read and the current environment's
@@ -41,13 +38,12 @@ module DatastaxRails
       # of three datacenters each with three servers and RF=3 (i.e., you're storing your data 9 times)
       #
       #   servers: ["10.1.2.5"]
+      #   port: 9042
       #   keyspace: "datastax_rails_production"
       #   strategy_class: "org.apache.cassandra.locator.NetworkTopologyStrategy"
       #   strategy_options: {"DS1": "3", "DS2": "3", "DS3": "3"} 
       #   connection_options:
       #     timeout: 10
-      #     retries: 2
-      #     server_max_requests: 1000
       #   solr:
       #     port: 8983
       #     path: /solr
@@ -59,7 +55,10 @@ module DatastaxRails
       #
       # The +servers+ entry should be a list of all seed nodes for servers you wish to connect to.  DSR
       # will automatically connect to all nodes in the cluster or in the datacenter if you are using multiple
-      # datacenters.
+      # datacenters.  You can safely just list all nodes in a particular datacenter if you would like.
+      #
+      # The port to connect to, this port will be used for all nodes. Because the `system.peers` table does not contain the port that the nodes are 
+      # listening on, the port must be the same for all nodes.
       #
       # Since we're using the NetworkTopologyStrategy for our locator, it is important that you configure
       # cassandra-topology.properties.  See the DSE documentation at http://www.datastax.com for more
@@ -94,7 +93,7 @@ module DatastaxRails
         DatastaxRails::Base.config = spec.with_indifferent_access
         spec.reverse_merge!(DEFAULT_OPTIONS)
         connection_options = spec[:connection_options] || {}
-        self.connection = Cql::Client.connect(:hosts => spec[:servers], :keyspace => spec[:keyspace], :connection_timeout => spec[:connection_options][:timeout])
+        self.connection = ::Cql::Client.connect(:hosts => spec[:servers], :keyspace => spec[:keyspace], :connection_timeout => spec[:connection_options][:timeout])
       end
       
       # Returns the base portion of the URL for connecting to SOLR based on the current Cassandra server.

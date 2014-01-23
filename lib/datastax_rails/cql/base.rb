@@ -5,6 +5,7 @@ module DatastaxRails
       def initialize(klass, *args)
         @consistency = klass.default_consistency.to_s.downcase.to_sym
         @keyspace = DatastaxRails::Base.config[:keyspace]
+        @values = []
       end
       
       def using(consistency)
@@ -27,7 +28,12 @@ module DatastaxRails
       def execute
         cql = self.to_cql
         puts cql if ENV['DEBUG_CQL'] == 'true'
-        DatastaxRails::Base.connection.execute(cql, :consistency => @consistency)
+        if(@values.empty?)
+          DatastaxRails::Base.connection.execute(cql, :consistency => @consistency)
+        else
+          stmt = DatastaxRails::Base.connection.prepare(cql)
+          stmt.execute(*@values, :consistency => @consistency)
+        end
       end
       
       def escape(str)

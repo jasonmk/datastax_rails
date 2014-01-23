@@ -13,18 +13,22 @@ describe "DatastaxRails::Base" do
     end
     
     describe "with cql" do
+      before(:each) do
+        Person.storage_method = :cql
+        @statement = double("prepared statement")
+        DatastaxRails::Base.connection.stub(:prepare).and_return(@statement)
+      end
+      
       describe "#create" do
         it "should persist at the given consistency level" do
-          Person.storage_method = :cql
-          DatastaxRails::Base.connection.should_receive(:execute_cql_query).with(an_instance_of(String), :consistency => CassandraCQL::Thrift::ConsistencyLevel::LOCAL_QUORUM)
+          @statement.should_receive(:execute).with(an_instance_of(Array), :consistency => :local_quorum)
           Person.create({:name => 'Steven'},{:consistency => 'LOCAL_QUORUM'})
         end
       end
     
       describe "#save" do
         it "should persist at the given consistency level" do
-          Person.storage_method = :cql
-          DatastaxRails::Base.connection.should_receive(:execute_cql_query).with(an_instance_of(String), :consistency => CassandraCQL::Thrift::ConsistencyLevel::LOCAL_QUORUM)
+          @statement.should_receive(:execute).with(an_instance_of(Array), :consistency => :local_quorum)
           p=Person.new(:name => 'Steven')
           p.save(:consistency => 'LOCAL_QUORUM')
         end
@@ -66,7 +70,7 @@ describe "DatastaxRails::Base" do
     describe "#remove" do
       it "should remove at the given consistency level" do
         p=Person.create(:name => 'Steven')
-        DatastaxRails::Base.connection.should_receive(:execute_cql_query).with(an_instance_of(String), :consistency => CassandraCQL::Thrift::ConsistencyLevel::LOCAL_QUORUM)
+        DatastaxRails::Base.connection.should_receive(:execute_cql_query).with(an_instance_of(String), :consistency => :local_quorum)
         p.destroy(:consistency => :local_quorum)
       end
     end

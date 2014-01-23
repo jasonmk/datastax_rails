@@ -292,7 +292,7 @@ module DatastaxRails
         cql.conditions(wv)
       end
       cql.allow_filtering if @allow_filtering_value
-      CassandraCQL::Result.new(cql.execute).fetch['count']
+      cql.execute.first['count']
     end
     
     # Constructs a CQL query and runs it against Cassandra directly.  For this to
@@ -319,10 +319,10 @@ module DatastaxRails
       cql.allow_filtering if @allow_filtering_value
       results = []
       begin
-        CassandraCQL::Result.new(cql.execute).fetch do |row|
-          results << @klass.instantiate(row['key'], row.to_hash, select_columns)
+        cql.execute.each do |row|
+          results << @klass.instantiate(row['key'], row, select_columns)
         end
-      rescue CassandraCQL::Error::InvalidRequestException => e
+      rescue ::Cql::CqlError => e # TODO: Break out the various exception types
         # If we get an exception about an empty key, ignore it.  We'll return an empty set.
         if e.message =~ /Key may not be empty/
           # No-Op

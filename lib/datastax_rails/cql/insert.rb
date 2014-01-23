@@ -25,11 +25,10 @@ module DatastaxRails
       end
       
       def to_cql
-        values = []
         keys = []
         @columns.each do |k,v|
           keys << k.to_s
-          values << v
+          @values << v
         end
         stmt = "INSERT INTO #{@klass.column_family} (#{keys.join(',')}) VALUES (#{('?'*keys.size).split(//).join(',')}) "
         
@@ -41,7 +40,7 @@ module DatastaxRails
           stmt << "AND TIMESTAMP #{@timestamp}"
         end
         
-        CassandraCQL::Statement.sanitize(stmt, values).force_encoding('UTF-8')
+        stmt.force_encoding('UTF-8')
       end
     end
   end

@@ -37,7 +37,7 @@ module DatastaxRails
       end
       
       def to_cql
-        values = [@keys.collect{|k|k.to_s}]
+        @values = [@keys.collect{|k|k.to_s}]
         stmt = "DELETE #{@columns.join(',')} FROM #{@klass.column_family} "
         
         if(@timestamp)
@@ -48,10 +48,10 @@ module DatastaxRails
         
         @conditions.each do |col,val|
           stmt << " AND #{col} = ?"
-          values << val
+          @values << val
         end
         
-        CassandraCQL::Statement.sanitize(stmt, values)
+        stmt
       end
     end
   end

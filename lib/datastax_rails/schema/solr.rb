@@ -93,7 +93,7 @@ module DatastaxRails
         force ||= newcf
         
         results = DatastaxRails::Cql::Select.new(SchemaMigration, ['*']).conditions(:key => model.column_family).execute
-        sm_digests = CassandraCQL::Result.new(results).fetch.try(:to_hash) || {}
+        sm_digests = results.first || {}
         
         solr_url = "#{DatastaxRails::Base.solr_base_url}/resource/#{@keyspace}.#{model.column_family}"
         

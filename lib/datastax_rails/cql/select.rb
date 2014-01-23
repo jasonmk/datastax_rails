@@ -44,7 +44,6 @@ module DatastaxRails#:nodoc:
       
       def to_cql
         conditions = []
-        values = []
         stmt = "SELECT #{@select} FROM #{@klass.column_family} "
         
         if @paginate
@@ -52,7 +51,7 @@ module DatastaxRails#:nodoc:
         end
         
         @conditions.each do |k,v|
-          values << v
+          @values << v
           if v.kind_of?(Array)
             conditions << "\"#{k.to_s}\" IN (?)"
           else
@@ -76,7 +75,7 @@ module DatastaxRails#:nodoc:
           stmt << "ALLOW FILTERING "
         end
         
-        CassandraCQL::Statement.sanitize(stmt, values)
+        stmt
       end
     end
   end

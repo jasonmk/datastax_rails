@@ -108,8 +108,8 @@ module DatastaxRails
         end
         klass = OpenStruct.new(:column_family => 'system.schema_columnfamilies', :default_consistency => 'QUORUM')
         cql = DatastaxRails::Cql::ColumnFamily.new(klass)
-        results = CassandraCQL::Result.new(cql.select("key_alias, key_aliases").conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf).execute)
-        result = results.fetch
+        results = cql.select("key_alias, key_aliases").conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf).execute
+        result = results.first
         if(result && (result['key_alias'] == 'KEY' || result['key_aliases'].include?('KEY')) && (result['key_aliases'].blank? || !result['key_aliases'].include?('key')))
           count += 1
           say "Renaming KEY column", :subitem
@@ -132,22 +132,22 @@ module DatastaxRails
       def column_family_exists?(cf)
         klass = OpenStruct.new(:column_family => 'system.schema_columnfamilies', :default_consistency => 'QUORUM')
         cql = DatastaxRails::Cql::ColumnFamily.new(klass)
-        results = CassandraCQL::Result.new(cql.select("count(*)").conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf).execute)
-        results.fetch['count'] > 0
+        results = cql.select("count(*)").conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf).execute
+        results.first['count'] > 0
       end
       
       # Checks the Cassandra system tables to see if a column exists on a column family
       def column_exists?(cf, col)
         klass = OpenStruct.new(:column_family => 'system.schema_columns', :default_consistency => 'QUORUM')
         cql = DatastaxRails::Cql::ColumnFamily.new(klass)
-        results = CassandraCQL::Result.new(cql.select("count(*)").conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf, 'column_name' => col).execute)
-        exists = results.fetch['count'] > 0
+        results = cql.select("count(*)").conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf, 'column_name' => col).execute
+        exists = results.first['count'] > 0
         unless exists
           # We need to check if it's part of the primary key (ugh)
           klass = OpenStruct.new(:column_family => 'system.schema_columnfamilies', :default_consistency => 'QUORUM')
           cql = DatastaxRails::Cql::ColumnFamily.new(klass)
-          results = CassandraCQL::Result.new(cql.select("column_aliases, key_aliases").conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf).execute)
-          row = results.fetch
+          results = cql.select("column_aliases, key_aliases").conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf).execute
+          row = results.first
           exists = row['key_aliases'].include?(col.to_s) || row['column_aliases'].include?(col.to_s)
         end
         exists
@@ -157,8 +157,8 @@ module DatastaxRails
       def index_exists?(cf, col)
         klass = OpenStruct.new(:column_family => 'system.schema_columns', :default_consistency => 'QUORUM')
         cql = DatastaxRails::Cql::ColumnFamily.new(klass)
-        results = CassandraCQL::Result.new(cql.select("index_name").conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf, 'column_name' => col).execute)
-        results.fetch['index_name'] != nil
+        results = cql.select("index_name").conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf, 'column_name' => col).execute
+        results.first['index_name'] != nil
       end
     end
   end

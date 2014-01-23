@@ -31,7 +31,6 @@ module DatastaxRails
       def to_cql
         column_names = @columns.keys
         
-        
         stmt = "update #{@klass.column_family} "
         
         if(@ttl)
@@ -44,22 +43,23 @@ module DatastaxRails
         
         unless @columns.empty?
           stmt << "SET "
-          
-          first_entry = column_names.first
-          
-          stmt << CassandraCQL::Statement.sanitize("\"#{first_entry.to_s}\" = ?", [@columns[first_entry]])
-          column_names[1..-1].each do |col|
-            stmt << CassandraCQL::Statement.sanitize(", \"#{col.to_s}\" = ?", [@columns[col]])
+          updates = []
+          @columns.each do |k,v|
+            @values << v
+            if v.kind_of?(Array)
+              updates << "\"#{k.to_s}\" IN (?)"
+            else
+              updates << "\"#{k.to_s}\" = ?"
+            end
           end
+          
+          stmt << updates.join(", ")
         end
         
-        stmt << CassandraCQL::Statement.sanitize(" WHERE key IN (?)", [@key])
+        stmt << " WHERE key IN (?)"
+        @values << @key
         stmt.force_encoding('UTF-8')
       end
-      
-      # def execute
-        # puts to_cql.truncate(50)
-      # end
     end
   end
 end

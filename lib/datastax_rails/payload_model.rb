@@ -31,8 +31,8 @@ module DatastaxRails
       c.using(options[:consistency]) if options[:consistency]
       io = StringIO.new("","w+")
       found = false
-      CassandraCQL::Result.new(c.execute).fetch do |row|
-        io << Base64.decode64(row.to_hash['payload'])
+      c.execute.each do |row|
+        io << Base64.decode64(row['payload'])
         found = true
       end
       raise DatastaxRails::RecordNotFound unless found
@@ -43,7 +43,7 @@ module DatastaxRails
     def self.write(key, attributes, options = {})
       raise ArgumentError, "'#{options[:consistency]}' is not a valid Cassandra consistency level" unless valid_consistency?(options[:consistency].to_s.upcase) if options[:consistency]
       c = self.cql.select("count(*)").conditions(:digest => key)
-      count = CassandraCQL::Result.new(c.execute).fetch.to_hash["count"]
+      count = c.execute.first["count"]
       
       i = 0
       io = StringIO.new(attributes['payload'])

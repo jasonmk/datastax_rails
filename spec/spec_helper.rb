@@ -29,7 +29,7 @@ RSpec.configure do |config|
   
   config.after(:each) do
     DatastaxRails::Base.recorded_classes.keys.each do |klass|
-      DatastaxRails::Base.connection.connection.truncate(klass.column_family.to_s)
+      DatastaxRails::Base.connection.execute("TRUNCATE #{klass.column_family.to_s}")
     end
   end
   

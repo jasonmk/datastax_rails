@@ -8,6 +8,10 @@ module DatastaxRails
         def to_s
           to_guid
         end
+        
+        def value
+          to_i
+        end
       end
       
       def initialize(options = {})

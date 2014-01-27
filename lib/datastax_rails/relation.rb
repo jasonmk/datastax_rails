@@ -319,8 +319,9 @@ module DatastaxRails
       cql.allow_filtering if @allow_filtering_value
       results = []
       begin
+        byebug
         cql.execute.each do |row|
-          results << @klass.instantiate(row['key'], row, select_columns)
+          results << @klass.instantiate(row['key'].to_s, row, select_columns)
         end
       rescue ::Cql::CqlError => e # TODO: Break out the various exception types
         # If we get an exception about an empty key, ignore it.  We'll return an empty set.

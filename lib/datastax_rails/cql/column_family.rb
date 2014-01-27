@@ -30,8 +30,8 @@ module DatastaxRails
         DatastaxRails::Cql::Truncate.new(@klass)
       end
       
-      def update(*keys)
-        DatastaxRails::Cql::Update.new(@klass, keys.flatten)
+      def update(key)
+        DatastaxRails::Cql::Update.new(@klass, key)
       end
     end
   end

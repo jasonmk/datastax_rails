@@ -55,7 +55,6 @@ module DatastaxRails
       # @param [Hash] options a hash containing various options
       # @option options [Symbol] :consistency the consistency to set for the Cassandra operation (e.g., ALL)
       def write(key, attributes, options = {})
-        attributes = encode_attributes(attributes)
         level = (options[:consistency] || self.default_consistency).to_s.upcase
         if(valid_consistency?(level))
           options[:consistency] = level
@@ -119,10 +118,12 @@ module DatastaxRails
       
       private
         def write_with_cql(key, attributes, options)
-          cql.update(key.to_s).columns(attributes).using(options[:consistency]).execute
+          attributes = encode_attributes(attributes) if self.legacy_mapping?
+          cql.update(key).columns(attributes).using(options[:consistency]).execute
         end
         
         def write_with_solr(key, attributes, options)
+          attributes = encode_attributes(attributes)
           xml_doc = RSolr::Xml::Generator.new.add(attributes.merge(:id => key))
           self.solr_connection.update(:data => xml_doc, :params => {:replacefields => false, :cl => options[:consistency]})
         end

@@ -28,11 +28,11 @@ module DatastaxRails
       def execute
         cql = self.to_cql
         puts cql if ENV['DEBUG_CQL'] == 'true'
-        if(@values.empty?)
-          DatastaxRails::Base.connection.execute(cql, :consistency => @consistency)
-        else
+        if(@values.present?)
           stmt = DatastaxRails::Base.connection.prepare(cql)
           stmt.execute(*@values, :consistency => @consistency)
+        else
+          DatastaxRails::Base.connection.execute(cql, :consistency => @consistency)
         end
       end
       

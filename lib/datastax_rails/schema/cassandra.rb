@@ -79,7 +79,7 @@ module DatastaxRails
         opts = { :name => keyspace.to_s,
                  :strategy_class => 'org.apache.cassandra.locator.NetworkTopologyStrategy'}.with_indifferent_access.merge(options)
 
-        if(connection.keyspaces.collect(&:name).include?(keyspace.to_s))
+        if(keyspace_exists?(keyspace.to_s))
           say "Keyspace #{keyspace.to_s} already exists"
           return false
         else
@@ -126,6 +126,14 @@ module DatastaxRails
       # Computes the expected cassandra index name as reported by CQL.
       def cassandra_index_cql_name(cf, column)
         "#{cf.to_s}_#{column.to_s}_idx"
+      end
+      
+      # Checks the Cassandra system tables to see if a keyspace exists
+      def keyspace_exists?(keyspace)
+        klass = OpenStruct.new(:column_family => 'system.schema_keyspaces', :default_consistency => 'QUORUM')
+        cql = DatastaxRails::Cql::ColumnFamily.new(klass)
+        results = cql.select("count(*)").conditions('keyspace_name' => keyspace).execute
+        results.first['count'].to_i > 0
       end
       
       # Checks the Cassandra system tables to see if a column family exists

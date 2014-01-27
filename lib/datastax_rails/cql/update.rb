@@ -47,9 +47,9 @@ module DatastaxRails
           @columns.each do |k,v|
             @values << v
             if v.kind_of?(Array)
-              updates << "\"#{k.to_s}\" IN (?)"
+              updates << "\"#{k}\" IN (?)"
             else
-              updates << "\"#{k.to_s}\" = ?"
+              updates << "\"#{k}\" = ?"
             end
           end
           

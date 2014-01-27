@@ -70,7 +70,7 @@ module DatastaxRails
         def check_schema_migrations
           unless column_family_exists?('schema_migrations')
             say "Creating schema_migrations column family"
-            connection.execute_cql_query(DatastaxRails::Cql::CreateColumnFamily.new('schema_migrations').key_type(:text).columns(:digest => :text, :solrconfig => :text, :stopwords => :text).to_cql)
+            DatastaxRails::Cql::CreateColumnFamily.new('schema_migrations').key_type(:text).columns(:digest => :text, :solrconfig => :text, :stopwords => :text).execute
           end
           
           check_key_name('schema_migrations')

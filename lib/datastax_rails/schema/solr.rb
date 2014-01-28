@@ -48,8 +48,8 @@ module DatastaxRails
       
       # Sends a command to Solr instructing it to reindex the data.  The data is reindexed in the background,
       # and the new index is swapped in once it is finished.
-      def reindex_solr(model)
-        url = "#{DatastaxRails::Base.solr_base_url}/admin/cores?action=RELOAD&name=#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}&reindex=true&deleteAll=false"
+      def reindex_solr(model, destructive=false)
+        url = "#{DatastaxRails::Base.solr_base_url}/admin/cores?action=RELOAD&name=#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}&reindex=true&deleteAll=#{destructive.to_s}"
         say "Posting reindex command to '#{url}'", :subitem
         `curl -s -X POST '#{url}'`
         say "Reindexing will run in the background", :subitem

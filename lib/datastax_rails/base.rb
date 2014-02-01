@@ -485,7 +485,7 @@ module DatastaxRails #:nodoc:
       end
       
       def legacy_mapping?
-        @legacy_mapping
+        self.legacy_mapping
       end
       
       def base_class

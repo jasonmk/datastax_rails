@@ -82,14 +82,14 @@ module DatastaxRails
     # Post.find_by "published_at < ?", 2.weeks.ago
     def find_by(*args)
       where_values << escape_attributes(args.first)
-      first
+      dont_escape.first
     end
 
     # Like <tt>find_by</tt>, except that if no record is found, raises
     # an <tt>DatastaxRails::RecordNotFound</tt> error.
     def find_by!(*args)
       where_values << escape_attributes(args.first)
-      first!
+      dont_escape.first!
     end
 
     # A convenience wrapper for <tt>find(:first, *args)</tt>. You can pass in all the
@@ -142,11 +142,11 @@ module DatastaxRails
         conditions =  Hash[attributes.map {|a| [a, args[attributes.index(a)]]}]
         if Rails.version =~ /^3.*/
           self.where_values << escape_attributes(conditions)
-          result = self.send(match.finder)
+          result = self.dont_escape.send(match.finder)
         elsif Rails.version =~ /^4.*/
-          result = self.send(match.finder, conditions)
+          result = self.dont_escape.send(match.finder, conditions)
         end
-
+        
         #result = where(conditions).send(match.finder)
         
         if match.blank? && result.blank?
@@ -163,7 +163,7 @@ module DatastaxRails
         escaped = {}
         conditions.each do |k,v|
           if(v.is_a?(String))
-            escaped[k] = v.gsub(/(\W)/, '\\\\\1')
+            escaped[k] = v.gsub(/([^\w ])/, '\\\\\1')
           else
             escaped[k] = v
           end

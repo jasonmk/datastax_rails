@@ -388,7 +388,7 @@ module DatastaxRails
               end
               attributes.delete(k)
             else
-              attributes[k] = solr_format(v)
+              attributes[k] = v
             end
           end
           r.where_values << attributes unless attributes.empty?
@@ -432,7 +432,7 @@ module DatastaxRails
               end
               attributes.delete(k)
             else
-              attributes[k] = solr_format(v)
+              attributes[k] = v
             end
           end
           r.where_not_values << attributes unless attributes.empty?
@@ -524,31 +524,6 @@ module DatastaxRails
       raise ArgumentError, "#greater_than can only be called after an appropriate where call. e.g. where(:created_at).greater_than(1.day.ago)"
     end
     
-    # Formats a value for solr (assuming this is a solr query).
-    def solr_format(value)
-      return value unless use_solr_value
-      case
-        when value.is_a?(Time)
-          value.utc.strftime(DatastaxRails::Types::TimeType::FORMAT)
-        when value.is_a?(DateTime)
-          value.to_time.utc.strftime(DatastaxRails::Types::TimeType::FORMAT)
-        when value.is_a?(Date)
-          value.strftime(DatastaxRails::Types::TimeType::FORMAT)
-        when value.is_a?(Array)
-          value.collect {|v| v.to_s.gsub(/ /,"\\ ") }.join(" OR ")
-        when value.is_a?(Fixnum)
-          value < 0 ? "\\#{value}" : value
-        when value.is_a?(Range)
-          "[#{solr_format(value.first)} TO #{solr_format(value.last)}]"
-        when value.is_a?(String)
-          solr_escape(downcase_query(value.gsub(/ /,"\\ ")))
-        when value.is_a?(FalseClass), value.is_a?(TrueClass)
-          value.to_s
-        else
-          value
-      end
-    end
-    
     class WhereProxy #:nodoc:
       def initialize(relation, attribute, invert = false) #:nodoc:
         @relation, @attribute, @invert = relation, attribute, invert
@@ -557,9 +532,9 @@ module DatastaxRails
       def equal_to(value) #:nodoc:
         @relation.clone.tap do |r|
           if @invert
-            r.where_not_values << {@attribute => r.solr_format(value)}
+            r.where_not_values << {@attribute => value}
           else
-            r.where_values << {@attribute => r.solr_format(value)}
+            r.where_values << {@attribute => value}
           end
         end
       end
@@ -567,9 +542,9 @@ module DatastaxRails
       def greater_than(value) #:nodoc:
         @relation.clone.tap do |r|
           if @invert
-            r.less_than_values << {@attribute => r.solr_format(value)}
+            r.less_than_values << {@attribute => value}
           else
-            r.greater_than_values << {@attribute => r.solr_format(value)}
+            r.greater_than_values << {@attribute => value}
           end
         end
       end
@@ -577,9 +552,9 @@ module DatastaxRails
       def less_than(value) #:nodoc:
         @relation.clone.tap do |r|
           if @invert
-            r.greater_than_values << {@attribute => r.solr_format(value)}
+            r.greater_than_values << {@attribute => value}
           else
-            r.less_than_values << {@attribute => r.solr_format(value)}
+            r.less_than_values << {@attribute => value}
           end
         end
       end

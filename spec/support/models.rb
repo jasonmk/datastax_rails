@@ -1,5 +1,6 @@
 class Person < DatastaxRails::Base
   self.column_family = "people"
+  self.legacy_mapping = true
   
   has_one :job
   has_many :cars, :dependent => :destroy
@@ -32,6 +33,7 @@ end
 
 class Car < DatastaxRails::Base
   self.column_family = "cars"
+  self.legacy_mapping = true
   
   belongs_to :person
   
@@ -61,6 +63,7 @@ end
 
 class Job < DatastaxRails::Base
   self.column_family = "jobs"
+  self.legacy_mapping = true
   
   belongs_to :person
   
@@ -75,6 +78,7 @@ end
 
 class Boat < DatastaxRails::Base
   self.column_family = "boats"
+  self.legacy_mapping = true
   
   key :uuid
   string :name
@@ -87,6 +91,7 @@ end
 
 class Hobby < DatastaxRails::Base
   self.column_family = "hobbies"
+  self.legacy_mapping = true
   
   has_and_belongs_to_many :people
   

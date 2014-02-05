@@ -6,6 +6,14 @@ describe DatastaxRails::Relation do
     Hobby.commit_solr
   end
   
+  describe "#find" do
+    it "finds multiple records by key" do
+      h1=Hobby.create(:name => 'biking')
+      h2=Hobby.create(:name => 'swimming')
+      @relation.find([h1.id,h2.id]).should have(2).hobbies
+    end
+  end
+  
   describe "#first" do
     it "should return the first result if records are already loaded" do
       a_record = mock_model(Hobby)

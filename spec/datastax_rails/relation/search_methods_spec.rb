@@ -147,6 +147,12 @@ describe DatastaxRails::Relation do
       @relation.where(:complexity => 1..2).should_not be_empty
       @relation.where(:complexity => 2..3).should be_empty
     end
+    
+    it "finds multiple records by key" do
+      h1=Hobby.create(:name => 'biking')
+      h2=Hobby.create(:name => 'swimming')
+      @relation.where(:key => [h1.id,h2.id]).all.should have(2).hobbies
+    end
   end
   
   describe "#where_not" do

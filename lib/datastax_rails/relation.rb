@@ -260,7 +260,7 @@ module DatastaxRails
         return :solr unless page_value == 1
         @where_values.each do |wv|
           wv.each do |k,v|
-            next if k.to_sym == :id
+            next if [:id, :key].include?(k.to_sym)
             if(klass.attribute_definitions[k].indexed == :solr || !klass.attribute_definitions[k].indexed)
               return :solr
             end
@@ -394,6 +394,7 @@ module DatastaxRails
       orders = []
       @where_values.each do |wv|
         wv.each do |k,v|
+          v = solr_format(v)
           # If v is blank, check that there is no value for the field in the document
           filter_queries << (v.blank? ? "-#{k}:#{full_solr_range(k)}" : "#{k}:(#{v})")
         end
@@ -401,6 +402,7 @@ module DatastaxRails
       
       @where_not_values.each do |wnv|
         wnv.each do |k,v|
+          v = solr_format(v)
           # If v is blank, check for any value for the field in document
           filter_queries << (v.blank? ? "#{k}:#{full_solr_range(k)}" : "-#{k}:(#{v})")
         end
@@ -408,12 +410,14 @@ module DatastaxRails
       
       @greater_than_values.each do |gtv|
         gtv.each do |k,v|
+          v = solr_format(v)
           filter_queries << "#{k}:[#{v} TO *]"
         end
       end
       
       @less_than_values.each do |ltv|
         ltv.each do |k,v|
+          v = solr_format(v)
           filter_queries << "#{k}:[* TO #{v}]"
         end
       end
@@ -568,6 +572,31 @@ module DatastaxRails
       results
     end
     protected(:parse_docs)
+    
+    # Formats a value for solr (assuming this is a solr query).
+    def solr_format(value)
+      return value unless use_solr_value
+      case
+        when value.is_a?(Time)
+          value.utc.strftime(DatastaxRails::Types::TimeType::FORMAT)
+        when value.is_a?(DateTime)
+          value.to_time.utc.strftime(DatastaxRails::Types::TimeType::FORMAT)
+        when value.is_a?(Date)
+          value.strftime(DatastaxRails::Types::TimeType::FORMAT)
+        when value.is_a?(Array)
+          value.collect {|v| v.to_s.gsub(/ /,"\\ ") }.join(" OR ")
+        when value.is_a?(Fixnum)
+          value < 0 ? "\\#{value}" : value
+        when value.is_a?(Range)
+          "[#{solr_format(value.first)} TO #{solr_format(value.last)}]"
+        when value.is_a?(String)
+          solr_escape(downcase_query(value.gsub(/ /,"\\ ")))
+        when value.is_a?(FalseClass), value.is_a?(TrueClass)
+          value.to_s
+        else
+          value
+      end
+    end
     
     # Inspects the results of the search instead of the Relation itself.
     # Passing true causes the Relation to be inspected.

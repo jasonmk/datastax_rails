@@ -71,6 +71,15 @@ describe "DatastaxRails::Base" do
       end
     end
     
+    describe "#reload" do
+      it "reloads the object's attributes from the database" do
+        p = Person.create(:name => 'Jim')
+        p.name = 'John'
+        p.reload
+        p.name.should eq('Jim')
+      end
+    end
+    
     describe "#store_file" do
       it "should store a file", :slow => true do
         file = "abcd"*1.megabyte

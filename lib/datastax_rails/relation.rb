@@ -179,10 +179,18 @@ module DatastaxRails
     def clone
       dup.tap do |r|
         MULTI_VALUE_METHODS.each do |m|
-          r.send("#{m}_values=", Marshal.load(Marshal.dump(self.send("#{m}_values"))))
+          begin
+            r.send("#{m}_values=", Marshal.load(Marshal.dump(self.send("#{m}_values"))))
+          rescue
+            r.send("#{m}_values=", self.send("#{m}_values").dup)
+          end
         end
         SINGLE_VALUE_METHODS.each do |m|
-          r.send("#{m}_value=", Marshal.load(Marshal.dump(self.send("#{m}_value")))) if self.send("#{m}_value")
+          begin
+            r.send("#{m}_value=", Marshal.load(Marshal.dump(self.send("#{m}_value")))) if self.send("#{m}_value")
+          rescue
+            r.send("#{m}_value=", self.send("#{m}_value").dup) if self.send("#{m}_value")
+          end
         end
       end
     end

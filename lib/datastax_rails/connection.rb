@@ -90,11 +90,14 @@ module DatastaxRails
       # * *transport_wrapper* - The thrift transport wrapper to use (advanced). Defaults to Thrift::FramedTransport.
       #
       # See +solr_connection+ for a description of the solr options in datastax.yml
-      def establish_connection(spec)
-        DatastaxRails::Base.config = spec.with_indifferent_access
-        spec.reverse_merge!(DEFAULT_OPTIONS)
-        connection_options = spec[:connection_options] || {}
-        self.connection = CassandraCQL::Database.new(spec[:servers], {:keyspace => spec[:keyspace], :cql_version => spec[:cql_version]}, connection_options.symbolize_keys)
+      def establish_connection(spec = {})
+        DatastaxRails::Base.config ||= spec.with_indifferent_access
+        DatastaxRails::Base.config.reverse_merge!(DEFAULT_OPTIONS)
+        connection_options = DatastaxRails::Base.config[:connection_options] || {}
+        self.connection = CassandraCQL::Database.new(DatastaxRails::Base.config[:servers], 
+                                                     {:keyspace => DatastaxRails::Base.config[:keyspace], 
+                                                      :cql_version => DatastaxRails::Base.config[:cql_version]},
+                                                     connection_options.symbolize_keys)
       end
       
       # Returns the base portion of the URL for connecting to SOLR based on the current Cassandra server.
@@ -125,22 +128,37 @@ module DatastaxRails
       #
       # @return [RSolr::Client] RSolr client object
       def establish_solr_connection
-        opts = {:url => "#{solr_base_url}/#{DatastaxRails::Base.connection.keyspace}.#{self.column_family}"}
-        if DatastaxRails::Base.config[:solr].has_key?(:ssl) && 
-            DatastaxRails::Base.config[:solr][:ssl].has_key?(:cert) && 
-            DatastaxRails::Base.config[:solr][:ssl][:use_ssl]
-          cert = Pathname.new(DatastaxRails::Base.config[:solr][:ssl][:cert])
-          key = Pathname.new(DatastaxRails::Base.config[:solr][:ssl][:key])
-          pass = DatastaxRails::Base.config[:solr][:ssl][:keypass]
-          cert = Rails.root.join(cert) unless cert.absolute?
-          key = Rails.root.join(key) unless key.absolute?
-          opts[:ssl_cert_file] = cert.to_s
-          opts[:ssl_key_file] = key.to_s
-          opts[:ssl_key_pass] = pass if pass
-          
-          RSolr::ClientCert.connect opts
-        else
-          RSolr.connect opts
+        try_again = 3
+        begin
+          opts = {:url => "#{solr_base_url}/#{DatastaxRails::Base.connection.keyspace}.#{self.column_family}"}
+          if DatastaxRails::Base.config[:solr].has_key?(:ssl) && 
+              DatastaxRails::Base.config[:solr][:ssl].has_key?(:cert) && 
+              DatastaxRails::Base.config[:solr][:ssl][:use_ssl]
+            cert = Pathname.new(DatastaxRails::Base.config[:solr][:ssl][:cert])
+            key = Pathname.new(DatastaxRails::Base.config[:solr][:ssl][:key])
+            pass = DatastaxRails::Base.config[:solr][:ssl][:keypass]
+            cert = Rails.root.join(cert) unless cert.absolute?
+            key = Rails.root.join(key) unless key.absolute?
+            opts[:ssl_cert_file] = cert.to_s
+            opts[:ssl_key_file] = key.to_s
+            opts[:ssl_key_pass] = pass if pass
+            
+            RSolr::ClientCert.connect opts
+          else
+            RSolr.connect opts
+          end
+        rescue => e
+          Rails.logger.warn "Error connecting to database"
+          Rails.logger.warn e
+          if try_again > 0
+            Rails.logger.info "Reconnecting and retrying"
+            DatastaxRails::Base.establish_connection
+            try_again -= 1
+            retry
+          else
+            Rails.logger.error "Could not reconnect to database"
+            raise
+          end
         end
       end
     end

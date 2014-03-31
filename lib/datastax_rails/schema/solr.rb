@@ -41,6 +41,9 @@ module DatastaxRails
         if Rails.root.join('config','solr',"#{model.column_family}-schema.xml.erb").exist?
           say "Using custom schema for #{model.name}", :subitem
           ERB.new(Rails.root.join('config','solr',"#{model.column_family}-schema.xml.erb").read).result(binding)
+        elsif Rails.root.join('config','solr','application-schema.xml.erb').exist?
+          say 'Using application default schema', :subitem
+          ERB.new(Rails.root.join('config','solr','application-schema.xml.erb').read).result(binding)
         else
           ERB.new(File.read(File.join(File.dirname(__FILE__),"..","..","..","config","schema.xml.erb"))).result(binding)
         end
@@ -74,6 +77,9 @@ module DatastaxRails
         if Rails.root.join('config','solr',"#{model.column_family}-solrconfig.xml").exist?
           say "Using custom solrconfig file", :subitem
           solrconfig = Rails.root.join('config','solr',"#{model.column_family}-solrconfig.xml").read
+        elsif Rails.root.join('config','solr','application-solrconfig.xml').exist?
+          say "Using application solrconfig file", :subitem
+          solrconfig = Rails.root.join('config','solr', 'application-solrconfig.xml').read
         else
           @legacy = model.legacy_mapping?
           solrconfig = ERB.new(File.read(File.join(File.dirname(__FILE__),"..","..","..","config","solrconfig.xml.erb"))).result(binding)
@@ -81,6 +87,9 @@ module DatastaxRails
         if Rails.root.join('config','solr',"#{model.column_family}-stopwords.txt").exist?
           say "Using custom stopwords file", :subitem
           stopwords = Rails.root.join('config','solr',"#{model.column_family}-stopwords.txt").read
+        elsif Rails.root.join('config','solr','application-stopwords.txt').exist?
+          say "Using application stopwords file", :subitem
+          stopwords = Rails.root.join('config','solr','application-stopwords.txt').read
         else
           stopwords = File.read(File.join(File.dirname(__FILE__),"..","..","..","config","stopwords.txt"))
         end

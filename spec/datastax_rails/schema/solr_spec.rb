@@ -26,6 +26,11 @@ describe DatastaxRails::Schema::Solr do
       model = mock_model("Article", :column_family => 'articles', :name => 'Article', :attribute_definitions => {})
       expect(subject.generate_solr_schema(model)).to match(/This is my custom schema/)
     end
+
+    it "uses a default application config if present" do
+      model = mock_model("Articlel", :column_family => 'articlez', :name => 'Articlel', :attribute_definitions => {})
+      expect(subject.generate_solr_schema(model)).to match(/This is the application schema/)
+    end
   end
   
   describe "#upload_solr_configuration" do

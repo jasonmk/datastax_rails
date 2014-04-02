@@ -22,14 +22,33 @@ describe DatastaxRails::Schema::Solr do
   end
   
   describe "#generate_solr_schema" do
+    it "uses the default config" do
+      model = mock_model("Foo", :column_family => 'foos', :name => 'Foo', :attribute_definitions => {})
+      expect(subject.generate_solr_schema(model)).to match(/schema name="datastax_rails"/)
+      expect(subject.generate_solr_schema(model)).not_to match(/application default schema/)
+    end
+
     it "uses a custom config if one is present" do
       model = mock_model("Article", :column_family => 'articles', :name => 'Article', :attribute_definitions => {})
       expect(subject.generate_solr_schema(model)).to match(/This is my custom schema/)
     end
 
-    it "uses a default application config if present" do
-      model = mock_model("Articlel", :column_family => 'articlez', :name => 'Articlel', :attribute_definitions => {})
-      expect(subject.generate_solr_schema(model)).to match(/This is the application schema/)
+    describe "application default schema" do
+      before do
+        @builtin_schema = File.join(File.dirname(__FILE__),"..","..","..","config","schema.xml.erb")
+        @app_default_schema = Rails.root.join('config','solr','application-schema.xml.erb')
+        File.write(@app_default_schema, File.read(@builtin_schema) + %{<!-- application default schema -->})
+      end
+
+      it "should be used when present" do
+        model = mock_model("Foo", :column_family => 'foos', :name => 'Foo', :attribute_definitions => {})
+        expect(subject.generate_solr_schema(model)).to match(/schema name="datastax_rails"/)
+        expect(subject.generate_solr_schema(model)).to match(/application default schema/)
+      end
+
+      after do
+        FileUtils.remove_file(@app_default_schema)
+      end
     end
   end
   

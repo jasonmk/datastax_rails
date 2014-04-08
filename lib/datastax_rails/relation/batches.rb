@@ -86,7 +86,6 @@ module DatastaxRails
         records_size = records.size
         offset = use_solr ? records.last.created_at.to_time : records.last.id
         yield records
-
         break if records_size < batch_size
         if offset
           if use_solr

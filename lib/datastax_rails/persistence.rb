@@ -20,8 +20,8 @@ module DatastaxRails
         if keys.last.is_a?(Hash)
           options = keys.pop
         end
-        ActiveSupport::Notifications.instrument("remove.datastax_rails", :column_family => column_family, :key => key) do
-          c = cql.delete(keys)
+        ActiveSupport::Notifications.instrument("remove.datastax_rails", :column_family => column_family, :key => keys.collect(&:to_s).join(",")) do
+          c = cql.delete(keys.collect(&:to_s))
           if(options[:consistency])
             level = options[:consistency].to_s.upcase
             if(valid_consistency?(level))
@@ -63,11 +63,11 @@ module DatastaxRails
           raise ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
         end
         key.tap do |key|
-          ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => key, :attributes => attributes) do
+          ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => key.to_s, :attributes => attributes) do
             if(self.storage_method == :solr)
-              write_with_solr(key, attributes, options)
+              write_with_solr(key.to_s, attributes, options)
             else
-              write_with_cql(key, attributes, options)
+              write_with_cql(key.to_s, attributes, options)
             end
           end
         end
@@ -123,7 +123,7 @@ module DatastaxRails
         end
         
         def write_with_solr(key, attributes, options)
-          xml_doc = RSolr::Xml::Generator.new.add(attributes.merge(:id => key))
+          xml_doc = RSolr::Xml::Generator.new.add(attributes.merge(:id => key.to_s))
           self.solr_connection.update(:data => xml_doc, :params => {:replacefields => false, :cl => options[:consistency]})
         end
     end

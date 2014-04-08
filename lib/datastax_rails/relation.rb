@@ -308,10 +308,10 @@ module DatastaxRails
     # For ad-hoc queries, you will have to use Solr.
     def query_via_cql
       select_columns = select_values.empty? ? (@klass.attribute_definitions.keys - @klass.lazy_attributes) : select_values.flatten
-      cql = @cql.select((select_columns + @klass.key_factory.key_columns).uniq)
+      cql = @cql.select((select_columns + @klass.key_factory.key_columns).collect(&:to_sym).uniq)
       cql.using(@consistency_value) if @consistency_value
       @where_values.each do |wv|
-        cql.conditions(Hash[wv.map {|k,v| [(k.to_sym == :id ? :key : k), v]}])
+        cql.conditions(Hash[wv.map {|k,v| [(k.to_sym == :id ? klass.primary_key_name.to_sym : k), v]}])
       end
       @greater_than_values.each do |gtv|
         gtv.each do |k,v|

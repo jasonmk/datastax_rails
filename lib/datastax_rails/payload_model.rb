@@ -43,13 +43,13 @@ module DatastaxRails
     
     def self.write(key, attributes, options = {})
       raise ArgumentError, "'#{options[:consistency]}' is not a valid Cassandra consistency level" unless valid_consistency?(options[:consistency].to_s.upcase) if options[:consistency]
-      c = self.cql.select("count(*)").conditions(:digest => key)
+      c = self.cql.select("count(*)").conditions(:digest => key.to_s)
       count = CassandraCQL::Result.new(c.execute).fetch.to_hash["count"]
       
       i = 0
       io = StringIO.new(attributes['payload'])
       while chunk = io.read(1.megabyte)
-        c = cql.insert.columns(:digest => key, :chunk => i, :payload => Base64.encode64(chunk))
+        c = cql.insert.columns(:digest => key.to_s, :chunk => i, :payload => Base64.encode64(chunk))
         c.using(options[:consistency]) if options[:consistency]
         c.execute
         i += 1

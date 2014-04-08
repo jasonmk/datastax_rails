@@ -374,7 +374,10 @@ module DatastaxRails #:nodoc:
     class_attribute :legacy_mapping
     
     def initialize(attributes = {}, options = {})
-      @key = self.class.parse_key(attributes.delete(:key))
+      @key = self.class.parse_key(attributes[self.class.primary_key_name.to_sym])
+      unless(self.class.key_factory.class.to_s == 'DatastaxRails::Identity::NaturalKeyFactory')
+        attributes.delete(self.class.primary_key_name.to_sym)
+      end
       @attributes = {}.with_indifferent_access
       @association_cache = {}
       @loaded_attributes = {}.with_indifferent_access

@@ -7,7 +7,7 @@ module DatastaxRails
         @timestamp = nil
         @columns = []
         @conditions = {}
-        @key_name = "key"
+        @key_name = klass.primary_key_name
         super
       end
       

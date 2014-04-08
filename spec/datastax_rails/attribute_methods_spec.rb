@@ -1,11 +1,13 @@
 require 'spec_helper'
 
 class AttributeMethodsTester < DatastaxRails::Base
+  key :uuid
   string :test_string
   string :non_search_string, :searchable => false
 end 
 
 class CassandraOnlyTester < DatastaxRails::CassandraOnlyModel
+  key :uuid
   string :test_string
   string :test_string2, :indexed => :both
 end

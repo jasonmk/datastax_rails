@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe DatastaxRails::Cql::Select do
   before(:each) do
-    @model_class = double("Model Class", :column_family => 'users', :default_consistency => DatastaxRails::Cql::Consistency::QUORUM)
+    @model_class = double("Model Class", :column_family => 'users', :default_consistency => DatastaxRails::Cql::Consistency::QUORUM, :primary_key_name => 'key')
   end
   
   it "should generate valid CQL" do

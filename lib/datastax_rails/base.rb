@@ -374,7 +374,7 @@ module DatastaxRails #:nodoc:
     class_attribute :legacy_mapping
     
     def initialize(attributes = {}, options = {})
-      @key = parse_key(attributes.delete(:key))
+      @key = self.class.parse_key(attributes.delete(:key))
       @attributes = {}.with_indifferent_access
       @association_cache = {}
       @loaded_attributes = {}.with_indifferent_access

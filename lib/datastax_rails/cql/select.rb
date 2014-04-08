@@ -9,11 +9,17 @@ module DatastaxRails#:nodoc:
         @order = nil
         @paginate = nil
         @allow_filtering = nil
+        @key_name = klass.primary_key_name
         super
       end
       
       def allow_filtering
         @allow_filtering = true
+        self
+      end
+      
+      def key_name(name)
+        @key_name = name
         self
       end
       
@@ -48,7 +54,7 @@ module DatastaxRails#:nodoc:
         stmt = "SELECT #{@select} FROM #{@klass.column_family} "
         
         if @paginate
-          conditions << "token(key) > token('#{@paginate}')"
+          conditions << "token(#{@key_name}) > token('#{@paginate}')"
         end
         
         @conditions.each do |k,v|

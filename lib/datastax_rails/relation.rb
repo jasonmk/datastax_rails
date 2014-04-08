@@ -316,7 +316,7 @@ module DatastaxRails
       @greater_than_values.each do |gtv|
         gtv.each do |k,v|
           # Special case if inequality is equal to the primary key (we're paginating)
-          if(k == :key)
+          if(k.to_sym == klass.primary_key_name.to_sym)
             cql.paginate(v)
           end
         end
@@ -328,7 +328,7 @@ module DatastaxRails
       results = []
       begin
         CassandraCQL::Result.new(cql.execute).fetch do |row|
-          results << @klass.instantiate(row['key'], row.to_hash, select_columns)
+          results << @klass.instantiate(row[klass.primary_key_name.to_s], row.to_hash, select_columns)
         end
       rescue CassandraCQL::Error::InvalidRequestException => e
         # If we get an exception about an empty key, ignore it.  We'll return an empty set.

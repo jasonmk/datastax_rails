@@ -19,6 +19,7 @@ module DatastaxRails
     
     def self.inherited(child)
       super
+      child.primary_key_name = 'digest'
       child.key :natural, :attributes => :digest
       child.string :digest
       child.binary :payload

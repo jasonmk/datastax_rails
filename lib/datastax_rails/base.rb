@@ -358,6 +358,9 @@ module DatastaxRails #:nodoc:
     class_attribute :storage_method
     self.storage_method = :cql
     
+    class_attribute :primary_key_name
+    self.primary_key_name = 'key'
+    
     attr_reader :attributes
     attr_reader :loaded_attributes
     attr_accessor :key
@@ -371,7 +374,7 @@ module DatastaxRails #:nodoc:
     class_attribute :legacy_mapping
     
     def initialize(attributes = {}, options = {})
-      @key = attributes.delete(:key)
+      @key = parse_key(attributes.delete(:key))
       @attributes = {}.with_indifferent_access
       @association_cache = {}
       @loaded_attributes = {}.with_indifferent_access

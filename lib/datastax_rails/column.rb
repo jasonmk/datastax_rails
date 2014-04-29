@@ -10,7 +10,7 @@ module DatastaxRails
       ISO_DATETIME = /\A(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)(\.\d+)?\z/
     end
 
-    attr_reader :name, :default, :type, :cql_type, :solr_type
+    attr_reader :name, :default, :type, :cql_type, :solr_type, :options
     attr_accessor :primary, :coder
 
     alias :encoded? :coder
@@ -26,9 +26,10 @@ module DatastaxRails
     # +cql_type+ is the type of column as specified in the schema. e.g., 'text' in
     # <tt>first_name text</tt>.
     # +solr_type+ overrides the normal CQL <-> SOLR type mapping (uncommon)
-    def initialize(name, default, type, options = {})#cql_type = nil, solr_type = nil)
+    def initialize(name, default, type, options = {})
       @name      = name
       @type      = type.to_sym
+      raise ArgumentError, "Unknown type #{type}" unless self.klass
       @cql_type  = cql_type(type, options)
       @solr_type = solr_type(type, options)
       @default   = extract_default(default)
@@ -61,7 +62,7 @@ module DatastaxRails
       when :date                           then Date
       when :text, :string, :binary, :ascii then String
       when :boolean                        then Object
-      when :uuid                           then ::Cql::Uuid
+      when :uuid                           then ::Cql::TimeUuid
       when :list, :set                     then Array
       when :map                            then Hash
       end
@@ -185,6 +186,11 @@ module DatastaxRails
         else
           value.to_s.to_d
         end
+      end
+      
+      # convert something to a TimeUuid
+      def value_to_uuid(value)
+        ::Cql::TimeUuid.new(value) rescue nil
       end
 
       protected

@@ -229,7 +229,8 @@ module DatastaxRails
       end
 
       def _create(options)
-        @key ||= self.class.next_key(self)
+        # TODO: handle the non-UUID case
+        @key ||= ::Cql::TimeUuid::Generator.new.next
         _write(options)
         @new_record = false
         @key

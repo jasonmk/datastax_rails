@@ -53,9 +53,10 @@ module DatastaxRails
     extend ActiveSupport::Autoload
 
     eager_autoload do
-      autoload :Definition
       autoload :Dirty
+      autoload :Read
       autoload :Typecasting
+      autoload :Write
     end
   end
   

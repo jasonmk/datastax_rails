@@ -3,6 +3,7 @@ if Rails.version =~ /^3.*/
   require 'active_record/dynamic_finder_match'
   require 'active_record/dynamic_scope_match'
 elsif Rails.version =~ /^4.*./
+  require 'active_record/dynamic_matchers'
   require 'active_record/deprecated_finders/dynamic_matchers'
 end
 require 'datastax_rails/types'
@@ -333,8 +334,6 @@ module DatastaxRails #:nodoc:
     include Batches
     include AttributeAssignment
     include AttributeMethods
-    include AttributeMethods::Dirty
-    include AttributeMethods::Typecasting
     include Persistence
     include Callbacks
     include Validations

@@ -1,24 +1,62 @@
+require 'mutex_m'
+
 module DatastaxRails
   module AttributeMethods
     extend ActiveSupport::Concern
     include ActiveModel::AttributeMethods
     
     included do
+      initialize_generated_modules
+
+      include Dirty
+      include Read
+      include PrimaryKey
+      include Typecasting
+      include Write
+      
       alias :[] :read_attribute
       alias :[]= :write_attribute
-
-      attribute_method_suffix("=")
+      alias has_attribute? attribute_exists?
     end
     
     module ClassMethods
+      def initialize_generated_modules
+        @generated_attribute_methods = Module.new {
+          extend Mutex_m
+
+          const_set :AttrNames, Module.new {
+            def self.set_name_cache(name, value)
+              const_name = "ATTR_#{name}"
+              unless const_defined? const_name
+                const_set const_name, value.dup.freeze
+              end
+            end
+          }
+        }
+        @attribute_methods_generated = false
+        include @generated_attribute_methods
+      end
+      
       def define_attribute_methods
-        return if attribute_methods_generated?
-        super(attribute_definitions.keys)
-        # Remove setter methods from readonly attributes
-        readonly_attributes.each do |attr|
-          remove_method("#{attr}=".to_sym) if method_defined?("#{attr}=".to_sym)
+        # Use a mutex; we don't want two thread simultaneously trying to define
+        # attribute methods.
+        generated_attribute_methods.synchronize do
+          return false if attribute_methods_generated?
+          super(attribute_definitions.keys)
+          # Remove setter methods from readonly attributes
+          readonly_attributes.each do |attr|
+            remove_method("#{attr}=".to_sym) if method_defined?("#{attr}=".to_sym)
+          end
+          @attribute_methods_generated = true
         end
-        @attribute_methods_generated = true
+        true
+      end
+      
+      def undefine_attribute_methods
+        generated_attribute_methods.synchronize do
+          super if attribute_methods_generated?
+          @attribute_methods_generated = false
+        end
       end
 
       def attribute_methods_generated?
@@ -32,6 +70,7 @@ module DatastaxRails
       def attribute(name, options)
         type  = options.delete :type
         coder = options.delete :coder
+        default = options.delete :default
         
         if self <= CassandraOnlyModel
           if options[:indexed] == :both || options[:indexed] == :cassandra
@@ -41,12 +80,6 @@ module DatastaxRails
           end
         end
 
-        if type.is_a?(Symbol)
-          coder = DatastaxRails::Type.get_coder(type) || (raise "Unknown type #{type}")
-        elsif coder.nil?
-          raise "Must supply a :coder for #{name}"
-        end
-        
         if(options[:lazy])
           lazy_attributes << name.to_sym
         end
@@ -54,8 +87,17 @@ module DatastaxRails
         if(options[:readonly])
           readonly_attributes << name.to_sym
         end
-
-        attribute_definitions[name.to_sym] = AttributeMethods::Definition.new(self, name, coder, options)
+         
+        column = Column.new(name, default, type, options)
+        if coder
+          coder = coder.constantize
+          if coder.class == Class && (coder.instance_methods & [:dump, :load]).size == 2
+            column.coder = coder.new(self)
+          else
+            raise ArgumentError, "Coder must be a class that responds the dump and load instance variables"
+          end
+        end
+        attribute_definitions[name.to_sym] = column
       end
     end
     
@@ -70,14 +112,14 @@ module DatastaxRails
 
     # Returns the attribute out of the attribute hash.  If the attribute is lazy loaded and hasn't
     # been loaded yet it will be done so now.
-    def read_attribute(name)
-      if(!loaded_attributes[name] && persisted? && !key.blank?)
-        @attributes[name.to_s] = self.class.select(name).with_cassandra.find(self.id).read_attribute(name)
-        loaded_attributes[name] = true
-      end
-        
-      @attributes[name.to_s]
-    end
+    # def read_attribute(name)
+      # if(!loaded_attributes[name] && persisted? && !key.blank?)
+        # @attributes[name.to_s] = self.class.select(name).with_cassandra.find(self.id).read_attribute(name)
+        # loaded_attributes[name] = true
+      # end
+#         
+      # @attributes[name.to_s]
+    # end
 
     def attribute_exists?(name)
       @attributes.key?(name.to_s)
@@ -96,10 +138,41 @@ module DatastaxRails
       self.class.define_attribute_methods unless self.class.attribute_methods_generated?
       super
     end
+    
+    # Returns the column object for the named attribute. Returns +nil+ if the
+    # named attribute not exists.
+    #
+    #   class Person < DatastaxRails::Base
+    #   end
+    #
+    #   person = Person.new
+    #   person.column_for_attribute(:name)
+    #   # => #<DatastaxRails::Base:0x007ff4ab083980 @name="name", @sql_type="varchar(255)", @null=true, ...>
+    #
+    # person.column_for_attribute(:nothing)
+    # # => nil
+    def column_for_attribute(name)
+      # FIXME: should this return a null object for columns that don't exist?
+      self.class.columns_hash[name.to_s]
+    end
 
     protected
       def attribute_method?(name)
         !!attribute_definitions[name.to_sym]
+      end
+      
+      def clone_attributes(reader_method = :read_attribute, attributes = {}) # :nodoc:
+        attribute_names.each do |name|
+          attributes[name] = clone_attribute_value(reader_method, name)
+        end
+        attributes
+      end
+  
+      def clone_attribute_value(reader_method, attribute_name) # :nodoc:
+        value = send(reader_method, attribute_name)
+        value.duplicable? ? value.clone : value
+      rescue TypeError, NoMethodError
+        value
       end
 
     private

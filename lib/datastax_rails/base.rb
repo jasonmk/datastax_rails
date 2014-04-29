@@ -352,6 +352,9 @@ module DatastaxRails #:nodoc:
     # Stores the configuration information
     class_attribute :config
     
+    class_attribute :default_timezone, :instance_writer => false
+    self.default_timezone = :utc
+    
     class_attribute :default_consistency
     self.default_consistency = :quorum
 

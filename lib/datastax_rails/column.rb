@@ -4,7 +4,7 @@ module DatastaxRails
   class Column
     TRUE_VALUES = [true, 1, '1', 't', 'T', 'true', 'TRUE', 'on', 'ON'].to_set
     FALSE_VALUES = [false, 0, '0', 'f', 'F', 'false', 'FALSE', 'off', 'OFF'].to_set
-
+    
     module Format
       ISO_DATE = /\A(\d{4})-(\d\d)-(\d\d)\z/
       ISO_DATETIME = /\A(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)(\.\d+)?\z/
@@ -26,13 +26,13 @@ module DatastaxRails
     # +cql_type+ is the type of column as specified in the schema. e.g., 'text' in
     # <tt>first_name text</tt>.
     # +solr_type+ overrides the normal CQL <-> SOLR type mapping (uncommon)
-    def initialize(name, default, type, cql_type = nil, solr_type = nil)
+    def initialize(name, default, type, options = {})#cql_type = nil, solr_type = nil)
       @name      = name
-      @type      = type
-      @cql_type  = cql_type
-      @null      = null
-      @solr_type = solr_type || cql_to_solr_type(cql_type)
+      @type      = type.to_sym
+      @cql_type  = cql_type(type, options)
+      @solr_type = solr_type(type, options)
       @default   = extract_default(default)
+      @options   = options
       @primary   = nil
       @coder     = nil
     end
@@ -57,11 +57,13 @@ module DatastaxRails
       when :integer                        then Fixnum
       when :float                          then Float
       when :decimal, :double               then BigDecimal
-      when :timestamp, :time               then Time
+      when :timestamp, :time, :datetime    then Time
       when :date                           then Date
       when :text, :string, :binary, :ascii then String
       when :boolean                        then Object
       when :uuid                           then ::Cql::Uuid
+      when :list, :set                     then Array
+      when :map                            then Hash
       end
     end
 
@@ -73,35 +75,21 @@ module DatastaxRails
       klass = self.class
 
       case type
-      when :string, :text        then value.force_encoding('utf-8')
+      when :string, :text        then value
       when :ascii                then value.force_encoding('ascii')
       when :integer              then klass.value_to_integer(value)
       when :float                then value.to_f
       when :decimal              then klass.value_to_decimal(value)
-      when :time, :timestamp     then klass.value_to_time(value)
+      when :datetime, :timestamp then klass.string_to_time(value)
+      when :time                 then klass.string_to_dummy_time(value)
       when :date                 then klass.value_to_date(value)
       when :binary               then klass.binary_to_string(value)
       when :boolean              then klass.value_to_boolean(value)
       when :uuid, :timeuuid      then klass.value_to_uuid(value)
+      when :list                 then klass.value_to_list(value)
+      when :set                  then klass.value_to_set(value)
+      when :map                  then klass.value_to_map(value)
       else value
-      end
-    end
-
-    def type_cast_code(var_name)
-      klass = self.class.name
-
-      case type
-      when :string, :text        then "#{var_name}.force_encoding('utf-8')"
-      when :ascii                then "#{var_name}.force_encoding('ascii')"
-      when :integer              then "#{klass}.value_to_integer(#{var_name})"
-      when :float                then "#{var_name}.to_f"
-      when :decimal              then "#{klass}.value_to_decimal(#{var_name})"
-      when :time, :timestamp     then "#{klass}.value_to_time(#{var_name})"
-      when :date                 then "#{klass}.value_to_date(#{var_name})"
-      when :binary               then "#{klass}.binary_to_string(#{var_name})"
-      when :boolean              then "#{klass}.value_to_boolean(#{var_name})"
-      when :uuid, :timeuuid      then "#{klass}.value_to_uuid(#{var_name})"
-      else var_name
       end
     end
 
@@ -135,25 +123,40 @@ module DatastaxRails
         value
       end
 
-      def value_to_date(string)
-        return string.to_date if string.respond_to?(:to_date)
-        return string unless string.is_a?(String)
-        return nil if string.empty?
-
-        fast_string_to_date(string) || fallback_string_to_date(string)
+      def value_to_date(value)
+        if value.is_a?(String)
+          return nil if value.empty?
+          fast_string_to_date(value) || fallback_string_to_date(value)
+        elsif value.respond_to?(:to_date)
+          value.to_date
+        else
+          value
+        end
       end
 
-      def value_to_time(string)
-        return string.to_time if string.respond_to?(:to_time)
+      def string_to_time(string)
         return string unless string.is_a?(String)
         return nil if string.empty?
 
         fast_string_to_time(string) || fallback_string_to_time(string)
       end
+      
+      def string_to_dummy_time(string)
+        return string unless string.is_a?(String)
+        return nil if string.empty?
+
+        dummy_time_string = "2000-01-01 #{string}"
+
+        fast_string_to_time(dummy_time_string) || begin
+          time_hash = Date._parse(dummy_time_string)
+          return nil if time_hash[:hour].nil?
+          new_time(*time_hash.values_at(:year, :mon, :mday, :hour, :min, :sec, :sec_fraction))
+        end
+      end
 
       # convert something to a boolean
       def value_to_boolean(value)
-        if (value.is_a?(String) && value.blank?) || value.nil?
+        if value.is_a?(String) && value.empty?
           nil
         else
           TRUE_VALUES.include?(value)
@@ -162,7 +165,12 @@ module DatastaxRails
 
       # Used to convert values to integer.
       def value_to_integer(value)
+        case value
+        when TrueClass, FalseClass
+          value ? 1 : 0
+        else
           value.to_i rescue nil
+        end
       end
 
       # convert something to a BigDecimal
@@ -192,11 +200,19 @@ module DatastaxRails
           end
         end
 
-        def new_time(year, mon, mday, hour, min, sec, microsec)
+        def new_time(year, mon, mday, hour, min, sec, microsec, offset = nil)
           # Treat 0000-00-00 00:00:00 as nil.
           return nil if year.nil? || (year == 0 && mon == 0 && mday == 0)
 
-          Time.time_with_datetime_fallback(Base.default_timezone, year, mon, mday, hour, min, sec, microsec) rescue nil
+          if offset
+            time = Time.utc(year, mon, mday, hour, min, sec, microsec) rescue nil
+            return nil unless time
+
+            time -= offset
+            Base.default_timezone == :utc ? time : time.getlocal
+          else
+            Time.public_send(Base.default_timezone, year, mon, mday, hour, min, sec, microsec) rescue nil
+          end
         end
 
         def fast_string_to_date(string)
@@ -205,20 +221,11 @@ module DatastaxRails
           end
         end
 
-        if RUBY_VERSION >= '1.9'
-          # Doesn't handle time zones.
-          def fast_string_to_time(string)
-            if string =~ Format::ISO_DATETIME
-              microsec = ($7.to_r * 1_000_000).to_i
-              new_time $1.to_i, $2.to_i, $3.to_i, $4.to_i, $5.to_i, $6.to_i, microsec
-            end
-          end
-        else
-          def fast_string_to_time(string)
-            if string =~ Format::ISO_DATETIME
-              microsec = ($7.to_f * 1_000_000).round.to_i
-              new_time $1.to_i, $2.to_i, $3.to_i, $4.to_i, $5.to_i, $6.to_i, microsec
-            end
+        # Doesn't handle time zones.
+        def fast_string_to_time(string)
+          if string =~ Format::ISO_DATETIME
+            microsec = ($7.to_r * 1_000_000).to_i
+            new_time $1.to_i, $2.to_i, $3.to_i, $4.to_i, $5.to_i, $6.to_i, microsec
           end
         end
 
@@ -233,5 +240,30 @@ module DatastaxRails
           new_time(*time_hash.values_at(:year, :mon, :mday, :hour, :min, :sec, :sec_fraction))
         end
     end
+    
+    private
+      def cql_type(field_type, options)
+        options[:cql_type] || case type
+        when :integer                        then 'int'
+        when :time, :date                    then 'timestamp' 
+        when :binary                         then 'blob'
+        when :list                           then "list<#{options[:type] || text}>"
+        when :set                            then "set<#{options[:type] || text}>"
+        when :map                            then "map<#{options[:from_type] || text}, #{options[:to_type] || text}>"
+        when :string                         then 'text'
+        else field_type.to_s
+        end
+      end
+      
+      def solr_type(field_type, options)
+        options[:solr_type] || case type
+        when :integer                        then 'int'
+        when :decimal                        then 'double'
+        when :timestamp, :time               then 'date'
+        when :list, :set                     then options[:type].to_s || 'string'
+        when :map                            then options[:to_type].to_s || 'string'
+        else field_type.to_s
+        end
+      end
   end
 end

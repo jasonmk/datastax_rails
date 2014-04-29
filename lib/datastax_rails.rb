@@ -13,6 +13,7 @@ module DatastaxRails
   autoload :Batches
   autoload :Callbacks
   autoload :CassandraOnlyModel
+  autoload :Column
   autoload :Collection
   autoload :Connection
   autoload :Cql

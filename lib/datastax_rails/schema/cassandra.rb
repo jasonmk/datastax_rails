@@ -44,35 +44,48 @@ module DatastaxRails
         count
       end
       
-      # Creates a payload column family via CQL
-      def create_payload_column_family(model)
-        say "Creating Payload Column Family", :subitem
-        columns = {:chunk => :int, :payload => :text}
-        DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).key_name(:digest).key_columns("digest, chunk").key_type(:text).columns(columns).with("COMPACT STORAGE").execute
+      # # Creates a payload column family via CQL
+      # def create_payload_column_family(model)
+        # say "Creating Payload Column Family", :subitem
+        # columns = {:chunk => :int, :payload => :text}
+        # DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).key_name(:digest).key_columns("digest, chunk").key_type(:text).columns(columns).with("COMPACT STORAGE").execute
+      # end
+      
+      # Creates a CQL3 backed column family
+      def create_cql3_column_family(model)
+        say "Creating Column Family via CQL3", :subitem
+        pk = model.primary_key
+        columns = {}
+        model.attribute_definitions.each {|k,col| columns[k] = col.cql_type}
+        cql = DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).primary_key(pk).columns(columns)
+        if model.payload_model?
+          cql.with("COMPACT STORAGE")
+        end
+        cql.execute
       end
       
-      # Creates a wide-storage column family via CQL
-      def create_wide_storage_column_family(model)
-        say "Creating Wide-Storage Column Family", :subitem
-        key_name = model.key_factory.attributes.join
-        cluster_by = model.cluster_by.keys.first
-        cluster_dir = model.cluster_by.values.first
-        key_columns = "#{key_name}, #{cluster_by}"
-        columns = {}
-        model.attribute_definitions.each {|k,v| columns[k] = v.coder.options[:cassandra_type] unless k.to_s == key_name}
-        DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).key_name(key_name).key_columns(key_columns).key_type(:text).columns(columns).
-          with("CLUSTERING ORDER BY (#{cluster_by} #{cluster_dir.to_s.upcase})").execute
-      end
+      # # Creates a wide-storage column family via CQL
+      # def create_wide_storage_column_family(model)
+        # say "Creating Wide-Storage Column Family", :subitem
+        # key_name = model.key_factory.attributes.join
+        # cluster_by = model.cluster_by.keys.first
+        # cluster_dir = model.cluster_by.values.first
+        # key_columns = "#{key_name}, #{cluster_by}"
+        # columns = {}
+        # model.attribute_definitions.each {|k,v| columns[k] = v.coder.options[:cassandra_type] unless k.to_s == key_name}
+        # DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).key_name(key_name).key_columns(key_columns).key_type(:text).columns(columns).
+          # with("CLUSTERING ORDER BY (#{cluster_by} #{cluster_dir.to_s.upcase})").execute
+      # end
       
-      # Creates a regular cassandra-only column family via CQL
-      def create_cassandra_column_family(model)
-        say "Creating Cassandra-Only Column Family", :subitem
-        key_name = "key"
-        key_columns = "#{key_name}"
-        columns = {}
-        model.attribute_definitions.each {|k,v| columns[k] = v.coder.options[:cassandra_type]}
-        DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).key_name(key_name).key_columns(key_columns).key_type(:text).columns(columns).execute
-      end
+      # # Creates a regular cassandra-only column family via CQL
+      # def create_cassandra_column_family(model)
+        # say "Creating Cassandra-Only Column Family", :subitem
+        # key_name = "key"
+        # key_columns = "#{key_name}"
+        # columns = {}
+        # model.attribute_definitions.each {|k,v| columns[k] = v.coder.options[:cassandra_type]}
+        # DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).key_name(key_name).key_columns(key_columns).key_type(:text).columns(columns).execute
+      # end
       
       # Creates the named keyspace
       def create_keyspace(keyspace, options = {})

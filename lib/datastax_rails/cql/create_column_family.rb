@@ -5,22 +5,11 @@ module DatastaxRails#:nodoc:
         @cf_name = cf_name
         @columns = {}
         @storage_parameters = []
-        @key_type = 'uuid'
-        @key_columns = @key_name = "key"
+        @primary_key = 'id'
       end
-      
-      def key_type(key_type)
-        @key_type = key_type
-        self
-      end
-      
-      def key_name(key_name)
-        @key_name = key_name
-        self
-      end
-      
-      def key_columns(key_columns)
-        @key_columns = key_columns
+
+      def primary_key(pk)
+        @primary_key = pk
         self
       end
       

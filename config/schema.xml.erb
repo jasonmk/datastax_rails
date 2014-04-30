@@ -49,6 +49,7 @@
   <fieldType name="long" class="solr.TrieLongField" precisionStep="0" positionIncrementGap="0"/>
   <fieldType name="double" class="solr.TrieDoubleField" precisionStep="0" positionIncrementGap="0"/>
   <fieldType name="uuid" class="solr.UUIDField" indexed="true" />
+  <fieldType name="binary" class="solr.BinaryField" indexed="false" />
  </types>
  <fields>
     <field name="id"  type="uuid" indexed="true"  stored="true"/>
@@ -60,7 +61,7 @@
 
 <defaultSearchField>text</defaultSearchField>
 <solrQueryParser defaultOperator="AND"/>
-<uniqueKey>id</uniqueKey>
+<uniqueKey><% @primary_key %></uniqueKey>
 <% @fulltext_fields.each do |field| %>
   <copyField source="<%= field %>" dest="text"/>
 <% end %>

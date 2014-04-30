@@ -33,28 +33,17 @@ module DatastaxRails
       def migrate_one(model, force = false)
         count = 0
         say_with_time("Migrating #{model.name} to latest version") do
-          if model.payload_model?
-            unless column_family_exists?(model.column_family.to_s)
-              create_payload_column_family(model)
-              count += 1
-            end
-          elsif model.wide_storage_model?
-            unless column_family_exists?(model.column_family.to_s)
-              create_wide_storage_column_family(model)
-              count += 1
-            end
-            count += check_missing_schema(model)
-          elsif model <= DatastaxRails::CassandraOnlyModel
-            unless column_family_exists?(model.column_family.to_s)
-              create_cassandra_column_family(model)
-              count += 1
-            end
-            count += check_key_name(model)
-            count += check_missing_schema(model)
-          else
-            count += check_key_name(model)
+          count += check_key_name(model)
+          
+          unless column_family_exists?(model.column_family.to_s)
+            create_cql3_column_family(model)
+            count += 1
+          end
+          
+          count += check_missing_schema(model)
+          
+          unless model <= DatastaxRails::CassandraOnlyModel
             count += upload_solr_configuration(model, force)
-            count += check_missing_schema(model)
           end
         end
         count

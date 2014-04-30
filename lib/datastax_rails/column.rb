@@ -33,9 +33,13 @@ module DatastaxRails
       @cql_type  = cql_type(type, options)
       @solr_type = solr_type(type, options)
       @default   = extract_default(default)
-      @options   = options
+      @options   = default_options.merge(options)
       @primary   = nil
       @coder     = nil
+    end
+    
+    def default_options
+      {} # TODO: set defaults
     end
     
     # Returns +true+ if the column is either of type ascii or text.

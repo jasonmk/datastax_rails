@@ -329,7 +329,6 @@ module DatastaxRails #:nodoc:
     
     include Connection
     include Inheritance
-    include Identity
     include FinderMethods
     include Batches
     include AttributeAssignment

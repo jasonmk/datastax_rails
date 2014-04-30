@@ -93,6 +93,36 @@ module DatastaxRails
       else value
       end
     end
+    
+    # Cql-rb does a really good job of typecasting, so for the most part we
+    # just pass in the native types.  The only exception is for UUIDs that
+    # are passed in as strings.
+    def type_cast_for_cql3(value)
+      return nil if value.nil?
+      return coder.dump(value) if encoded?
+      
+      if type == :uuid && value.class == String
+        self.class.value_to_uuid(value)
+      else
+        value
+      end
+    end
+    
+    # By contrast, since Solr isn't doing things like prepared statements
+    # it doesn't know what the types are so we have to handle any casting
+    # or encoding ourselves.
+    def type_cast_for_solr(value, column_type = nil)
+      return nil if value.nil?
+      return coder.dump(value) if encoded?
+      
+      case (column_type || type)
+      when :boolean                            then value ? 1 : 0
+      when :date, :time, :datetime, :timestamp then value.strftime('%Y-%m-%dT%H:%M:%SZ')
+      when :list, :set                         then self.class.list_to_solr_value(value)
+      when :map                                then self.class.map_to_solr_value(value)
+      else value
+      end
+    end
 
     # Returns the human name of the column name.
     #
@@ -112,6 +142,17 @@ module DatastaxRails
     end
 
     class << self
+      def list_to_solr_value(value)
+        value.map {|v| type_cast_for_solr(v, @options[:type])}
+      end
+      
+      def map_to_solr_value(value)
+        value.map do |a,b| 
+          { type_cast_for_solr(a, @options[:from_type]) =>
+            type_case_for_solr(b, @options[:to_type]) }
+        end
+      end
+      
       # Used to convert from Strings to BLOBs
       def string_to_binary(value)
         # TODO: Figure out what Cassandra's blobs look like
@@ -190,7 +231,11 @@ module DatastaxRails
       
       # convert something to a TimeUuid
       def value_to_uuid(value)
-        ::Cql::TimeUuid.new(value) rescue nil
+        if value.is_a?(::Cql::TimeUuid)
+          value
+        else
+          ::Cql::TimeUuid.new(value) rescue nil
+        end
       end
 
       protected

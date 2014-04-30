@@ -18,7 +18,6 @@ module DatastaxRails
   autoload :Connection
   autoload :Cql
   autoload :GroupedCollection
-  autoload :Identity
   autoload :Index
   autoload :Inheritance
   autoload :PayloadModel
@@ -54,6 +53,7 @@ module DatastaxRails
 
     eager_autoload do
       autoload :Dirty
+      autoload :PrimaryKey
       autoload :Read
       autoload :Typecasting
       autoload :Write

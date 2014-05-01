@@ -8,6 +8,7 @@ module DatastaxRails
     module Format
       ISO_DATE = /\A(\d{4})-(\d\d)-(\d\d)\z/
       ISO_DATETIME = /\A(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)(\.\d+)?\z/
+      SOLR_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ".force_encoding('utf-8').freeze
     end
 
     attr_reader :name, :default, :type, :cql_type, :solr_type, :options
@@ -33,13 +34,32 @@ module DatastaxRails
       @cql_type  = cql_type(type, options)
       @solr_type = solr_type(type, options)
       @default   = extract_default(default)
-      @options   = default_options.merge(options)
+      @options   = configure_options(type, options)
       @primary   = nil
       @coder     = nil
     end
     
-    def default_options
-      {} # TODO: set defaults
+    def configure_options(type, options)
+      case type
+      when :set, :list, :map then
+        configure_options(options[:type], options).merge(:multi_valued => true)
+      when :binary then
+        {:solr_index => false,   :solr_store => false, 
+         :multi_valued => false, :sortable => false, 
+         :tokenized => false,    :fulltext => false}
+      when :boolean, :date, :time, :timestamp, :datetime, :float, :integer  then
+        {:solr_index => true,    :solr_store => true,
+         :multi_valued => true,  :sortable => true,
+         :tokenized => false,    :fulltext => false}
+      when :string then
+        {:solr_index => true,    :solr_store => true,
+         :multi_valued => true,  :sortable => true,
+         :tokenized => false,    :fulltext => true}
+      when :text then
+        {:solr_index => true,    :solr_store => true,
+         :multi_valued => false, :sortable => false,
+         :tokenized => true,     :fulltext => true}
+      end.merge(:options)
     end
     
     # Returns +true+ if the column is either of type ascii or text.
@@ -73,13 +93,14 @@ module DatastaxRails
     end
 
     # Casts value (which can be a String) to an appropriate instance.
-    def type_cast(value)
+    def type_cast(value, dest_type = nil)
       return nil if value.nil?
       return coder.load(value) if encoded?
+      dest_type ||= type
 
       klass = self.class
 
-      case type
+      case dest_type
       when :string, :text        then value
       when :ascii                then value.force_encoding('ascii')
       when :integer              then klass.value_to_integer(value)
@@ -91,9 +112,8 @@ module DatastaxRails
       when :binary               then klass.binary_to_string(value)
       when :boolean              then klass.value_to_boolean(value)
       when :uuid, :timeuuid      then klass.value_to_uuid(value)
-      when :list                 then klass.value_to_list(value)
-      when :set                  then klass.value_to_set(value)
-      when :map                  then klass.value_to_map(value)
+      when :list, :set           then value.collect {|v| type_cast(v,@options[:type])}
+      when :map                  then value.collect {|a,b| {a => type_cast(b,@options[:type])}}
       else value
       end
     end
@@ -121,11 +141,19 @@ module DatastaxRails
       
       case (column_type || type)
       when :boolean                            then value ? 1 : 0
-      when :date, :time, :datetime, :timestamp then value.strftime('%Y-%m-%dT%H:%M:%SZ')
-      when :list, :set                         then self.class.list_to_solr_value(value)
-      when :map                                then self.class.map_to_solr_value(value)
+      when :date, :time, :datetime, :timestamp then value.strftime(Format::SOLR_TIME_FORMAT)
+      when :list, :set                         then self.list_to_solr_value(value)
+      when :map                                then self.map_to_solr_value(value)
       else value
       end
+    end
+    
+    def list_to_solr_value(value)
+      value.map {|v| type_cast_for_solr(v, @options[:type])}
+    end
+    
+    def map_to_solr_value(value)
+      value.map { |a,b| { a.to_s => type_cast_for_solr(b, @options[:type]) } }
     end
 
     # Returns the human name of the column name.
@@ -146,17 +174,6 @@ module DatastaxRails
     end
 
     class << self
-      def list_to_solr_value(value)
-        value.map {|v| type_cast_for_solr(v, @options[:type])}
-      end
-      
-      def map_to_solr_value(value)
-        value.map do |a,b| 
-          { type_cast_for_solr(a, @options[:from_type]) =>
-            type_case_for_solr(b, @options[:to_type]) }
-        end
-      end
-      
       # Used to convert from Strings to BLOBs
       def string_to_binary(value)
         # TODO: Figure out what Cassandra's blobs look like
@@ -241,7 +258,7 @@ module DatastaxRails
           ::Cql::TimeUuid.new(value) rescue nil
         end
       end
-
+      
       protected
         # '0.123456' -> 123456
         # '1.123456' -> 123456
@@ -304,7 +321,7 @@ module DatastaxRails
         when :binary                         then 'blob'
         when :list                           then "list<#{options[:type] || text}>"
         when :set                            then "set<#{options[:type] || text}>"
-        when :map                            then "map<#{options[:from_type] || text}, #{options[:to_type] || text}>"
+        when :map                            then "map<text, #{options[:type] || text}>"
         when :string                         then 'text'
         else field_type.to_s
         end
@@ -315,8 +332,7 @@ module DatastaxRails
         when :integer                        then 'int'
         when :decimal                        then 'double'
         when :timestamp, :time               then 'date'
-        when :list, :set                     then options[:type].to_s || 'string'
-        when :map                            then options[:to_type].to_s || 'string'
+        when :list, :set, :map               then options[:type].to_s || 'string'
         else field_type.to_s
         end
       end

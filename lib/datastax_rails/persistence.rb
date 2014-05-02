@@ -1,7 +1,7 @@
 module DatastaxRails
   module Persistence
     extend ActiveSupport::Concern
-    
+
     module ClassMethods
       # Removes one or more records with corresponding keys.  Last parameter can be a hash
       # specifying the consistency level.
@@ -47,7 +47,7 @@ module DatastaxRails
           object.save(options)
         end
       end
-      
+
       # Write a record to cassandra.  Can be either an insert or an update (they are exactly the same to cassandra)
       #
       # @param [String] key the primary key for the record
@@ -72,7 +72,7 @@ module DatastaxRails
           end
         end
       end
-      
+
       # Instantiates a new object without calling +initialize+.
       #
       # @param [String] key the primary key for the record
@@ -98,7 +98,7 @@ module DatastaxRails
       def encode_attributes(attributes)
         encoded = {}
         attributes.each do |column_name, value|
-            encoded[column_name.to_s] = attribute_definitions[column_name.to_sym].coder.encode(value)
+          encoded[column_name.to_s] = attribute_definitions[column_name.to_sym].coder.encode(value)
         end
         encoded
       end
@@ -106,22 +106,23 @@ module DatastaxRails
       def typecast_attributes(object, attributes, selected_attributes = [])
         attributes = attributes.symbolize_keys
         casted = {}
-        
+
         selected_attributes.each do |att|
           object.loaded_attributes[att] = true
         end
-        
+
         attribute_definitions.each do |k,definition|
           casted[k.to_s] = definition.instantiate(object, attributes[k.to_sym])#.to_s
         end
         casted
       end
-      
+
       private
         def write_with_cql(key, attributes, options)
-          cql.update(key.to_s).columns(attributes).using(options[:consistency]).execute
+          write_params = options[:insert] ? [:insert] : [:update, self]
+          cql.send(*write_params).columns(attributes).using(options[:consistency]).execute
         end
-        
+
         def write_with_solr(key, attributes, options)
           xml_doc = RSolr::Xml::Generator.new.add(attributes.merge(:id => key.to_s))
           self.solr_connection.update(:data => xml_doc, :params => {:replacefields => false, :cl => options[:consistency]})
@@ -189,7 +190,7 @@ module DatastaxRails
       self.assign_attributes(attributes, options)
       save!
     end
-    
+
     # Assigns to +attribute+ the boolean opposite of <tt>attribute?</tt>. So
     # if the predicate returns +true+ the attribute will become +false+. This
     # method toggles directly the underlying value without calling any setter.
@@ -206,7 +207,7 @@ module DatastaxRails
     def toggle!(attribute)
       toggle(attribute).update_attribute(attribute, self[attribute])
     end
-    
+
     # Reloads the attributes of this object from the database.
     # The optional options argument is passed to find when reloading so you
     # may do e.g. record.reload(:lock => true) to reload the same record with
@@ -233,11 +234,11 @@ module DatastaxRails
         @new_record = false
         @key
       end
-    
+
       def _update(options)
         _write(options)
       end
-      
+
       def _write(options) #:nodoc:
         options[:new_record] = new_record?
         changed_attributes = changed.inject({}) { |h, n| h[n] = read_attribute(n); h }

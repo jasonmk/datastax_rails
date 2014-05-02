@@ -648,13 +648,15 @@ module DatastaxRails
     # Normally, this is done to the query as well, but if your query includes wildcards
     # then analysis isn't performed.  This means that the query does not get downcased.
     # We therefore need to perform the downcasing ourselves.  This does it while still
-    # leaving boolean operations (AND, OR, NOT) upcased.
+    # leaving SOLR reserved/boolean words (AND, OR, NOT, TO) upcased.
     def downcase_query(value)
       if(value.is_a?(String))
         value.split(/\bAND\b/).collect do |a|
           a.split(/\bOR\b/).collect do |o| 
             o.split(/\bNOT\b/).collect do |n| 
-              n.downcase
+              n.split(/\bTO\b/).collect do |t|
+                t.downcase
+              end.join("TO")
             end.join("NOT")
           end.join("OR")
         end.join("AND")

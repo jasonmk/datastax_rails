@@ -3,11 +3,11 @@ require 'active_support/concern'
 module DatastaxRails
   module AttributeAssignment
     extend ActiveSupport::Concern
-    if Rails.version =~ /^3.*/
-      include ActiveModel::MassAssignmentSecurity
-    elsif Rails.version =~ /^4.*/
+    if Rails.version =~ /^4.0.*/
       include ActiveModel::DeprecatedMassAssignmentSecurity
       include ActiveModel::ForbiddenAttributesProtection
+    else
+      include ActiveModel::MassAssignmentSecurity
     end
 
     module ClassMethods

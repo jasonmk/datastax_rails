@@ -31,10 +31,10 @@ module DatastaxRails
       @name      = name
       @type      = type.to_sym
       raise ArgumentError, "Unknown type #{type}" unless self.klass
-      @cql_type  = cql_type(type, options)
-      @solr_type = solr_type(type, options)
+      @cql_type  = compute_cql_type(type, options)
+      @solr_type = compute_solr_type(type, options)
       @default   = extract_default(default)
-      @options   = configure_options(type, options)
+      @options   = configure_options(type, options).with_indifferent_access
       @primary   = nil
       @coder     = nil
     end
@@ -47,19 +47,21 @@ module DatastaxRails
         {:solr_index => false,   :solr_store => false, 
          :multi_valued => false, :sortable => false, 
          :tokenized => false,    :fulltext => false}
-      when :boolean, :date, :time, :timestamp, :datetime, :float, :integer  then
+      when :boolean, :date, :time, :timestamp, :datetime, :float, :integer, :uuid then
         {:solr_index => true,    :solr_store => true,
-         :multi_valued => true,  :sortable => true,
+         :multi_valued => false, :sortable => true,
          :tokenized => false,    :fulltext => false}
       when :string then
         {:solr_index => true,    :solr_store => true,
-         :multi_valued => true,  :sortable => true,
+         :multi_valued => false, :sortable => true,
          :tokenized => false,    :fulltext => true}
       when :text then
         {:solr_index => true,    :solr_store => true,
          :multi_valued => false, :sortable => false,
          :tokenized => true,     :fulltext => true}
-      end.merge(:options)
+      else
+        raise ArgumentError, "Unknown Type: #{type.to_s}"
+      end.merge(options)
     end
     
     # Returns +true+ if the column is either of type ascii or text.
@@ -314,8 +316,8 @@ module DatastaxRails
     end
     
     private
-      def cql_type(field_type, options)
-        options[:cql_type] || case type
+      def compute_cql_type(field_type, options)
+        options[:cql_type] || case type.to_sym
         when :integer                        then 'int'
         when :time, :date                    then 'timestamp' 
         when :binary                         then 'blob'
@@ -327,8 +329,8 @@ module DatastaxRails
         end
       end
       
-      def solr_type(field_type, options)
-        options[:solr_type] || case type
+      def compute_solr_type(field_type, options)
+        options[:solr_type] || case type.to_sym
         when :integer                        then 'int'
         when :decimal                        then 'double'
         when :timestamp, :time               then 'date'

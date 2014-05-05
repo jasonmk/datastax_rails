@@ -32,7 +32,7 @@ module DatastaxRails
           # if column.options[:fulltext]
             # @fulltext_fields << column.name if (column.options[:indexed])
           # end
-        end
+        # end
         # Sort the fields so that no matter what order the attributes are arranged into the
         # same schema file gets generated
         @fields.sort! {|a,b| a[:name] <=> b[:name]}
@@ -41,9 +41,9 @@ module DatastaxRails
         
         if Rails.root.join('config','solr',"#{model.column_family}-schema.xml.erb").exist?
           say "Using custom schema for #{model.name}", :subitem
-          ERB.new(Rails.root.join('config','solr',"#{model.column_family}-schema.xml.erb").read).result(binding)
+          ERB.new(Rails.root.join('config','solr',"#{model.column_family}-schema.xml.erb").read, 0, '>').result(binding)
         else
-          ERB.new(File.read(File.join(File.dirname(__FILE__),"..","..","..","config","schema.xml.erb"))).result(binding)
+          ERB.new(File.read(File.join(File.dirname(__FILE__),"..","..","..","config","schema.xml.erb")), 0, '>').result(binding)
         end
       end
       

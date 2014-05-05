@@ -5,7 +5,7 @@ class Person < DatastaxRails::Base
   has_many :cars, :dependent => :destroy
   has_and_belongs_to_many :hobbies
   
-  key :uuid
+  uuid :id
   text :name, :sortable => true
   date :birthdate
   string :nickname
@@ -35,7 +35,7 @@ class Car < DatastaxRails::Base
   
   belongs_to :person
   
-  key :uuid
+  uuid :id
   string :name
   string :person_id
   string :car_payload_id
@@ -49,11 +49,10 @@ end
 
 class AuditLog < DatastaxRails::WideStorageModel
   self.column_family = "audit_logs"
-  
-  key :natural, :attributes => [:uuid]
+  self.primary_key = :uuid  
   cluster_by :created_at
   
-  string     :uuid
+  uuid       :uuid
   string     :message
   string     :user, :indexed => :cassandra
   timestamps
@@ -64,7 +63,7 @@ class Job < DatastaxRails::Base
   
   belongs_to :person
   
-  key :uuid
+  uuid :id
   string :title
   integer :position_number
   string :person_id
@@ -76,7 +75,7 @@ end
 class Boat < DatastaxRails::Base
   self.column_family = "boats"
   
-  key :uuid
+  uuid :id
   string :name
   integer :registration
   timestamps
@@ -90,7 +89,7 @@ class Hobby < DatastaxRails::Base
   
   has_and_belongs_to_many :people
   
-  key :uuid
+  uuid :id
   string :name
   float :complexity
   timestamps

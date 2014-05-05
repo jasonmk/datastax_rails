@@ -47,23 +47,23 @@
  </types>
  <fields>
     <% @columns.each do |field| %>
-    	<field name="<%= field.name %>" type="<%= field.options[:type] %>" indexed="<%= field.options[:indexed] %>" stored="<%= field.options[:stored] %>" multiValued="<%= field.options[:multi_valued] %>"/>
-    	<% if field.type == :text && field.options[:sortable] %>
+    	<field name="<%= field.name %>" type="<%= field.solr_type %>" indexed="<%= field.options[:solr_index] %>" stored="<%= field.options[:solr_store] %>" multiValued="<%= field.options[:multi_valued] %>"/>
+    	<% if field.solr_type == 'text' && field.options[:sortable] %>
     	    <field name="sort_<%= field.name %>" type="string" indexed="true" stored="fase" multiValued="false"/>
     	<% end %>
     <% end %>
     <field name="text"  type="text" indexed="true"  stored="false" multiValued="true"/>
  </fields>
 
-<defaultSearchField>text</defaultSearchField>
-<solrQueryParser defaultOperator="AND"/>
-<uniqueKey><% @primary_key %></uniqueKey>
-<% @columns.each do |field| %>
-  <% if field.options[:fulltext] %>
-  <copyField source="<%= field.name %>" dest="text"/>
-  <% end %>
-  <% if field.type == :text && field.options[:sortable] %>
-  <copyField source="<%= field.name %>" dest="sort_<%= field.name%>"/>
-  <% end %>
-<% end %>
+ <defaultSearchField>text</defaultSearchField>
+ <solrQueryParser defaultOperator="AND"/>
+ <uniqueKey><%= @primary_key %></uniqueKey>
+ <% @columns.each do |field| %>
+   <% if field.options[:fulltext] %>
+   <copyField source="<%= field.name %>" dest="text"/>
+   <% end %>
+   <% if field.solr_type == 'text' && field.options[:sortable] %>
+   <copyField source="<%= field.name %>" dest="sort_<%= field.name%>"/>
+   <% end %>
+ <% end %>
 </schema>

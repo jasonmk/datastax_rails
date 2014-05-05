@@ -71,14 +71,6 @@ module DatastaxRails
         type  = options.delete :type
         coder = options.delete :coder
         default = options.delete :default
-        
-        if self <= CassandraOnlyModel
-          if options[:indexed] == :both || options[:indexed] == :cassandra
-            options[:indexed] = :cassandra
-          else
-            options[:indexed] = false
-          end
-        end
 
         if(options[:lazy])
           lazy_attributes << name.to_sym
@@ -87,10 +79,10 @@ module DatastaxRails
         if(options[:readonly])
           readonly_attributes << name.to_sym
         end
-         
+        
         column = Column.new(name, default, type, options)
         if coder
-          coder = coder.constantize
+          coder = coder.constantize rescue nil
           if coder.class == Class && (coder.instance_methods & [:dump, :load]).size == 2
             column.coder = coder.new(self)
           else

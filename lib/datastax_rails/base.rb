@@ -394,7 +394,7 @@ module DatastaxRails #:nodoc:
     # Set any default attributes specified by the schema
     def __set_defaults
       self.class.attribute_definitions.each do |a,d|
-        unless(d.coder.default.nil?)
+        unless(d.default.nil?)
           self.attributes[a]=d.coder.default
           self.send(a.to_s+"_will_change!")
         end

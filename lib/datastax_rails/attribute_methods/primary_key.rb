@@ -53,7 +53,7 @@ module DatastaxRails
         # Overwriting will negate any effect of the +primary_key_prefix_type+
         # setting, though.
         def primary_key
-          @primary_key
+          @primary_key || 'id'
         end
 
         # Returns a quoted version of the primary key name, used to construct

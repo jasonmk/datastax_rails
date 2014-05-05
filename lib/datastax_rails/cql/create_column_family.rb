@@ -37,11 +37,11 @@ module DatastaxRails#:nodoc:
       end
       
       def to_cql
-        stmt = "CREATE COLUMNFAMILY #{@cf_name} (#{@key_name} #{@key_type}, "
+        stmt = "CREATE COLUMNFAMILY #{@cf_name} ("
         @columns.each do |name,type|
           stmt << "#{name} #{type}, "
         end
-        stmt << "PRIMARY KEY (#{@key_columns}))"
+        stmt << "PRIMARY KEY (#{@primary_key}))"
         unless @storage_parameters.empty?
           stmt << " WITH "
           stmt << @storage_parameters.join(" AND ")

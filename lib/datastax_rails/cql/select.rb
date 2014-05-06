@@ -47,7 +47,7 @@ module DatastaxRails#:nodoc:
         stmt = "SELECT #{@select} FROM #{@klass.column_family} "
         
         if @paginate
-          conditions << "token(key) > token('#{@paginate}')"
+          conditions << "token(#{@klass.primary_key}) > token('#{@paginate}')"
         end
         
         @conditions.each do |k,v|

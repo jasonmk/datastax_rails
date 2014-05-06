@@ -10,14 +10,26 @@ module DatastaxRails
         self.attribute_definitions = ActiveSupport::HashWithIndifferentAccess.new
         self.lazy_attributes = []
         self.readonly_attributes = []
-
       end
 
       module ClassMethods
         # Provide some measure of compatibility with things that expect this from ActiveRecord.
         def columns_hash
           self.attribute_definitions
-        end 
+        end
+        
+        # This is a hook for use by modules that need to do extra stuff to
+        # attributes when they are initialized. (e.g. attribute
+        # serialization)
+        def initialize_attributes(attributes, options = {}) #:nodoc:
+          attributes
+        end
+        
+        # Returns a hash where the keys are column names and the values are
+        # default values when instantiating the DSR object for this table.
+        def column_defaults
+          @column_defaults ||= Hash[columns.map { |c| [c.name.to_s, c.default] }]
+        end
         
         # We need to ensure that inherited classes get their own attribute definitions.
         def inherited(child)

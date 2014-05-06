@@ -8,11 +8,11 @@ module DatastaxRails
     included do
       initialize_generated_modules
 
+      include Write
       include Dirty
       include Read
       include PrimaryKey
       include Typecasting
-      include Write
       
       alias :[] :read_attribute
       alias :[]= :write_attribute
@@ -20,6 +20,11 @@ module DatastaxRails
     end
     
     module ClassMethods
+      def inherited(child_class)
+        child_class.initialize_generated_modules
+        super
+      end
+      
       def initialize_generated_modules
         @generated_attribute_methods = Module.new {
           extend Mutex_m
@@ -81,6 +86,7 @@ module DatastaxRails
         end
         
         column = Column.new(name, default, type, options)
+        column.primary = (name.to_s == primary_key.to_s)
         if coder
           coder = coder.constantize rescue nil
           if coder.class == Class && (coder.instance_methods & [:dump, :load]).size == 2

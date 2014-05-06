@@ -54,19 +54,19 @@ module DatastaxRails
       # @param [Hash] attributes a hash containing the columns to set on the record
       # @param [Hash] options a hash containing various options
       # @option options [Symbol] :consistency the consistency to set for the Cassandra operation (e.g., ALL)
-      def write(key, attributes, options = {})
+      def write(record, options = {})
         level = (options[:consistency] || self.default_consistency).to_s.upcase
         if(valid_consistency?(level))
           options[:consistency] = level
         else
           raise ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
         end
-        key.tap do |key|
-          ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => key, :attributes => attributes) do
+        record.id.to_s.tap do |key|
+          ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => key, :attributes => record.attributes) do
             if(self.storage_method == :solr)
-              write_with_solr(key, attributes, options)
+              write_with_solr(key, record.attributes, record.changed, options)
             else
-              write_with_cql(key, attributes, options)
+              write_with_cql(key, record.attributes, record.changed, options)
             end
           end
         end
@@ -92,12 +92,16 @@ module DatastaxRails
       # Encodes the attributes in preparation for storing in cassandra. Calls the coders on the various type classes
       # to do the heavy lifting.
       #
-      # @param [Hash] attributes a hash containing the attributes to be encoded for storage
+      # @param [Hash] attributes a hash containing the attributes on the record
+      # @param [Array] changed an array containing the attribute names that are being saved
+      # @param [Boolean] cql True if we're formatting for CQL, otherwise False
       # @return [Hash] a new hash with attributes encoded for storage
-      def encode_attributes(attributes)
+      def encode_attributes(attributes, changed, cql)
         encoded = {}
         attributes.each do |column_name, value|
-            encoded[column_name.to_s] = attribute_definitions[column_name.to_sym].coder.encode(value)
+          next unless changed.include?(column_name)
+          encoded[column_name.to_s] = cql ? attribute_definitions[column_name].type_cast_for_cql3(value) :
+                                            attribute_definitions[column_name].type_cast_for_solr(value)
         end
         encoded
       end
@@ -117,14 +121,18 @@ module DatastaxRails
       end
       
       private
-        def write_with_cql(key, attributes, options)
-          attributes = encode_attributes(attributes) if self.legacy_mapping?
-          cql.update(key).columns(attributes).using(options[:consistency]).execute
+        def write_with_cql(key, attributes, changed, options)
+          encoded = encode_attributes(attributes, changed, true)
+          if options[:new_record]
+            cql.insert.columns(encoded).using(options[:consistency]).execute
+          else
+            cql.update(key).columns(encoded).using(options[:consistency]).execute
+          end
         end
         
-        def write_with_solr(key, attributes, options)
-          attributes = encode_attributes(attributes)
-          xml_doc = RSolr::Xml::Generator.new.add(attributes.merge(:id => key))
+        def write_with_solr(key, attributes, changed, options)
+          encoded = encode_attributes(attributes, changed, false)
+          xml_doc = RSolr::Xml::Generator.new.add(encoded.merge(:id => key))
           self.solr_connection.update(:data => xml_doc, :params => {:replacefields => false, :cl => options[:consistency]})
         end
     end
@@ -224,27 +232,26 @@ module DatastaxRails
 
     private
       def _create_or_update(options)
-        result = new_record? ? _create(options) : _update(options)
+        result = new_record? ? _create_record(options) : _update_record(options)
         result != false
       end
 
-      def _create(options)
+      def _create_record(options)
         # TODO: handle the non-UUID case
-        @key ||= ::Cql::TimeUuid::Generator.new.next
+        write_attribute('id', ::Cql::TimeUuid::Generator.new.next)
         _write(options)
         @new_record = false
-        @key
+        self.id
       end
     
-      def _update(options)
+      def _update_record(options)
         _write(options)
       end
       
       def _write(options) #:nodoc:
         options[:new_record] = new_record?
-        changed_attributes = changed.inject({}) { |h, n| h[n] = read_attribute(n); h }
         return true if changed_attributes.empty?
-        self.class.write(key, changed_attributes, options)
+        self.class.write(self, options)
       end
   end
 end

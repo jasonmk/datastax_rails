@@ -1,11 +1,3 @@
-if Rails.version =~ /^3.*/
-  # Dynamic finders are only supported in Rails 3.x applications (depricated in 4.x)
-  require 'active_record/dynamic_finder_match'
-  require 'active_record/dynamic_scope_match'
-elsif Rails.version =~ /^4.*./
-  require 'active_record/dynamic_matchers'
-  require 'active_record/deprecated_finders/dynamic_matchers'
-end
 require 'datastax_rails/types'
 require 'datastax_rails/errors'
 module DatastaxRails #:nodoc:
@@ -372,32 +364,44 @@ module DatastaxRails #:nodoc:
     class_attribute :legacy_mapping
     
     def initialize(attributes = {}, options = {})
-      @key = attributes.delete(:key)
-      @attributes = {}.with_indifferent_access
-      @loaded_attributes = {}.with_indifferent_access
+      defaults = self.class.column_defaults.dup
+      defaults.each { |k, v| defaults[k] = v.dup if v.duplicable? }
       
-      @new_record = true
-      @destroyed = false
-      @previously_changed = {}
-      @changed_attributes = {}
-      
-      __set_defaults
-      
+      @attributes = self.class.initialize_attributes(defaults)
+      @column_types = self.class.columns_hash
+
+      init_internals
+      init_changed_attributes      
       populate_with_current_scope_attributes
       
-      assign_attributes(attributes, options) if attributes
+      assign_attributes(attributes) if attributes
       
       yield self if block_given?
-      run_callbacks :initialize
+      run_callbacks :initialize unless _initialize_callbacks.empty?
     end
     
-    # Set any default attributes specified by the schema
-    def __set_defaults
-      self.class.attribute_definitions.each do |a,d|
-        unless(d.default.nil?)
-          self.attributes[a]=d.coder.default
-          self.send(a.to_s+"_will_change!")
-        end
+    def init_internals
+      pk = self.class.primary_key
+      @attributes[pk] = nil unless @attributes.key?(pk)
+
+      @association_cache = {}
+      @attributes_cache = {}
+      @previously_changed = {}
+      @changed_attributes = {}
+      @loaded_attributes = {}
+      @readonly = false
+      @destroyed = false
+      @marked_for_destruction = false
+      @destroyed_by_association = nil
+      @new_record = true
+    end
+    
+    def init_changed_attributes
+      # Intentionally avoid using #column_defaults since overridden defaults
+      # won't get written unless they get marked as changed
+      self.class.columns.each do |c|
+        attr, orig_value = c.name, c.default
+        @changed_attributes[attr] = orig_value if _field_changed?(attr, orig_value, @attributes[attr])
       end
     end
     
@@ -507,26 +511,13 @@ module DatastaxRails #:nodoc:
         Rails.logger
       end
       
-      def respond_to?(method_id, include_private = false)
-       
-        if Rails.version =~ /^3.*/
-          if match = ActiveRecord::DynamicFinderMatch.match(method_id)
-            return true if all_attributes_exists?(match.attribute_names)
-          elsif match = ActiveRecord::DynamicScopeMatch.match(method_id)
-            return true if all_attributes_exists?(match.attribute_names)
-          end
-        elsif Rails.version =~ /^4.*/
-          if match = ActiveRecord::DynamicMatchers::Method.match(self, method_id)
-            return true if all_attributes_exists?(match.attribute_names)
-          end
-        end
-        
-        super
-      end
-      
       # Returns an array of attribute names as strings
       def attribute_names
         @attribute_names ||= attribute_definitions.keys.collect {|a|a.to_s}
+      end
+      
+      def columns
+        @columns ||= attribute_definitions.values
       end
       
       # SOLR always paginates all requests.  There is no way to disable it, so we are
@@ -553,9 +544,15 @@ module DatastaxRails #:nodoc:
         DatastaxRails::Cql::Consistency::VALID_CONSISTENCY_LEVELS.include?(level)
       end
       
-      protected
-      
-        
+      # Returns a string like 'Post(id:integer, title:string, body:text)'
+      def inspect
+        if self == Base
+          super
+        else
+          attr_list = columns.map { |c| "#{c.name}: #{c.type}" } * ', '
+          "#{super}(#{attr_list})"
+        end
+      end
       
       private
       
@@ -565,83 +562,6 @@ module DatastaxRails #:nodoc:
           relation
         end
       
-        # Enables dynamic finders like <tt>User.find_by_user_name(user_name)</tt> and
-        # <tt>User.scoped_by_user_name(user_name).
-        #
-        # It's even possible to use all the additional parameters to +find+. For example, the
-        # full interface for +find_all_by_amount+ is actually <tt>find_all_by_amount(amount, options)</tt>.
-        #
-        # Each dynamic finder using <tt>scoped_by_*</tt> is also defined in the class after it
-        # is first invoked, so that future attempts to use it do not run through method_missing.
-        def method_missing(method_id, *arguments, &block)
-          if Rails.version =~ /^3.*/
-            if match = ActiveRecord::DynamicFinderMatch.match(method_id)
-              attribute_names = match.attribute_names
-              super unless all_attributes_exists?(attribute_names)
-              if !arguments.first.is_a?(Hash) && arguments.size < attribute_names.size
-                ActiveSupport::Deprecation.warn(
-                  "Calling dynamic finder with less number of arguments than the number of attributes in " \
-                  "method name is deprecated and will raise an ArguementError in the next version of Rails. " \
-                  "Please passing `nil' to the argument you want it to be nil."
-                )
-              end
-              if match.finder?
-                options = arguments.extract_options!
-                relation = options.any? ? scoped(options) : scoped
-                relation.send :find_by_attributes, match, attribute_names, *arguments
-              elsif match.instantiator?
-                scoped.send :find_or_instantiator_by_attributes, match, attribute_names, *arguments, &block
-              end
-            elsif match = ActiveRecord::DynamicScopeMatch.match(method_id)
-              attribute_names = match.attribute_names
-              super unless all_attributes_exists?(attribute_names)
-              if arguments.size < attribute_names.size
-                ActiveSupport::Deprecation.warn(
-                  "Calling dynamic scope with less number of arguments than the number of attributes in " \
-                  "method name is deprecated and will raise an ArguementError in the next version of Rails. " \
-                  "Please passing `nil' to the argument you want it to be nil."
-                )
-              end
-              if match.scope?
-                self.class_eval <<-METHOD, __FILE__, __LINE__ + 1
-                  def self.#{method_id}(*args)                                    # def self.scoped_by_user_name_and_password(*args)
-                    attributes = Hash[[:#{attribute_names.join(',:')}].zip(args)] #   attributes = Hash[[:user_name, :password].zip(args)]
-                    scoped(:conditions => attributes)                             #   scoped(:conditions => attributes)
-                  end                                                             # end
-                  METHOD
-                send(method_id, *arguments)
-              end
-            else
-              super
-            end
-          elsif Rails.version =~ /^4.*/
-            if match = ActiveRecord::DynamicMatchers::Method.match(self, method_id)
-              attribute_names = match.attribute_names
-              super unless all_attributes_exists?(attribute_names)
-              if !arguments.first.is_a?(Hash) && arguments.size < attribute_names.size
-                ActiveSupport::Deprecation.warn(
-                  "Calling dynamic scope with less number of arguments than the number of attributes in " \
-                  "method name is deprecated and will raise an ArguementError in the next version of Rails. " \
-                  "Please passing `nil' to the argument you want it to be nil."
-                )
-              end
-              if match.finder.present?
-                options = arguments.extract_options!
-                relation = options.any? ? scoped(options) : scoped
-                relation.send :find_by_attributes, match, attribute_names, *arguments
-              elsif match.instantiator?
-                scoped.send :find_or_instantiator_by_attributes, match, attribute_names, *arguments, &block
-              end
-            end
-          else
-            super
-          end
-        end
-        
-        def all_attributes_exists?(attribute_names)
-          (attribute_names - self.attribute_names).empty?
-        end
-        
         def relation #:nodoc:
           Relation.new(self, column_family)
         end

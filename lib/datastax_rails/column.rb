@@ -46,19 +46,23 @@ module DatastaxRails
       when :binary then
         {:solr_index => false,   :solr_store => false, 
          :multi_valued => false, :sortable => false, 
-         :tokenized => false,    :fulltext => false}
+         :tokenized => false,    :fulltext => false,
+         :cql_index => false}
       when :boolean, :date, :time, :timestamp, :datetime, :float, :integer, :uuid then
         {:solr_index => true,    :solr_store => true,
          :multi_valued => false, :sortable => true,
-         :tokenized => false,    :fulltext => false}
+         :tokenized => false,    :fulltext => false,
+         :cql_index => false}
       when :string then
         {:solr_index => true,    :solr_store => true,
          :multi_valued => false, :sortable => true,
-         :tokenized => false,    :fulltext => true}
+         :tokenized => false,    :fulltext => true,
+         :cql_index => false}
       when :text then
         {:solr_index => true,    :solr_store => true,
          :multi_valued => false, :sortable => false,
-         :tokenized => true,     :fulltext => true}
+         :tokenized => true,     :fulltext => true,
+         :cql_index => false}
       else
         raise ArgumentError, "Unknown Type: #{type.to_s}"
       end.merge(options)
@@ -72,6 +76,11 @@ module DatastaxRails
     # Returns +true+ if the column is either of type integer, float or decimal.
     def number?
       [:decimal, :double, :float, :integer].include?(type)
+    end
+    
+    # Returns +true+ if the column is of type binary
+    def binary?
+      [:binary].include?(type)
     end
 
     def has_default?

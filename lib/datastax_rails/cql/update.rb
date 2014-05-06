@@ -56,7 +56,7 @@ module DatastaxRails
           stmt << updates.join(", ")
         end
         
-        stmt << " WHERE key IN (?)"
+        stmt << " WHERE #{@klass.primary_key} IN (?)"
         @values << @key
         stmt.force_encoding('UTF-8')
       end

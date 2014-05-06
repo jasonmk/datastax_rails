@@ -56,7 +56,7 @@ module DatastaxRails
 
           generated_attribute_methods.module_eval <<-STR, __FILE__, __LINE__ + 1
             def __temp__#{safe_name}
-              read_attribute(AttrNames::ATTR_#{safe_name}) { |n| missing_attribute(n, caller) }
+              read_attribute(AttrNames::ATTR_#{safe_name})
             end
             alias_method #{name.inspect}, :__temp__#{safe_name}
             undef_method :__temp__#{safe_name}
@@ -78,6 +78,8 @@ module DatastaxRails
       # it has been typecast (for example, "2004-12-12" in a data column is cast
       # to a date object, like Date.new(2004, 12, 12)).
       def read_attribute(attr_name)
+        name = attr_name.to_s
+        
         # If it's a lazily loaded attribute and hasn't been loaded yet, we need to do that now.
         if(!loaded_attributes[name] && persisted? && !key.blank?)
           @attributes[name.to_s] = self.class.select(name).with_cassandra.find(self.id).read_attribute(name)
@@ -86,10 +88,9 @@ module DatastaxRails
         
         # If it's cached, just return it
         # We use #[] first as a perf optimization for non-nil values. See https://gist.github.com/jonleighton/3552829.
-        name = attr_name.to_s
         @attributes_cache[name] || @attributes_cache.fetch(name) {
           column = @column_types_override[name] if @column_types_override
-          column ||= @column_types[name]
+          column ||= self.class.attribute_definitions[name]
 
           return @attributes.fetch(name) {
             if name == 'id' && self.class.primary_key != name
@@ -97,8 +98,8 @@ module DatastaxRails
             end
           } unless column
 
-          value = @attributes.fetch(name) {
-            return block_given? ? yield(name) : nil
+         value = @attributes.fetch(name) {
+            nil
           }
 
           if self.class.cache_attribute?(name)

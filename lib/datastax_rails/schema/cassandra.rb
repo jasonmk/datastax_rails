@@ -10,7 +10,7 @@ module DatastaxRails
             say "Adding column '#{attribute}'", :subitem
             DatastaxRails::Cql::AlterColumnFamily.new(model.column_family).add(attribute => :text).execute
           end
-          if(definition.indexed == :cassandra)
+          if(definition.options[:cql_index] && !definition.options[:solr_index])
             unless index_exists?(model.column_family.to_s, attribute.to_s)
               if index_exists?(model.column_family.to_s, attribute.to_s)
                 count += 1
@@ -21,12 +21,12 @@ module DatastaxRails
               say "Creating cassandra index on #{attribute.to_s}", :subitem
               DatastaxRails::Cql::CreateIndex.new(cassandra_index_cql_name(model.column_family.to_s, attribute.to_s)).on(model.column_family.to_s).column(attribute.to_s).execute
             end
-          elsif(definition.indexed == :both)
+          elsif(definition.options[:cql_index])
             unless column_exists?(model.column_family.to_s, "__#{attribute.to_s}")
               # Create and populate the new column
               count += 1
               say "Adding column '__#{attribute}'", :subitem
-              DatastaxRails::Cql::AlterColumnFamily.new(model.column_family).add("__#{attribute.to_s}" => model.attribute_definitions[attribute].coder.options[:cassandra_type]).execute
+              DatastaxRails::Cql::AlterColumnFamily.new(model.column_family).add("__#{attribute.to_s}" => definition.cql_type).execute
               say "Populating column '__#{attribute}' (this might take a while)", :subitem
               export = "echo \"copy #{model.column_family.to_s} (key, #{attribute.to_s}) TO 'dsr_export.csv';\" | cqlsh #{model.current_server}"
               import = "echo \"copy #{model.column_family.to_s} (key, __#{attribute.to_s}) FROM 'dsr_export.csv';\" | cqlsh #{model.current_server}"
@@ -44,13 +44,6 @@ module DatastaxRails
         count
       end
       
-      # # Creates a payload column family via CQL
-      # def create_payload_column_family(model)
-        # say "Creating Payload Column Family", :subitem
-        # columns = {:chunk => :int, :payload => :text}
-        # DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).key_name(:digest).key_columns("digest, chunk").key_type(:text).columns(columns).with("COMPACT STORAGE").execute
-      # end
-      
       # Creates a CQL3 backed column family
       def create_cql3_column_family(model)
         say "Creating Column Family via CQL3", :subitem
@@ -63,29 +56,6 @@ module DatastaxRails
         end
         cql.execute
       end
-      
-      # # Creates a wide-storage column family via CQL
-      # def create_wide_storage_column_family(model)
-        # say "Creating Wide-Storage Column Family", :subitem
-        # key_name = model.key_factory.attributes.join
-        # cluster_by = model.cluster_by.keys.first
-        # cluster_dir = model.cluster_by.values.first
-        # key_columns = "#{key_name}, #{cluster_by}"
-        # columns = {}
-        # model.attribute_definitions.each {|k,v| columns[k] = v.coder.options[:cassandra_type] unless k.to_s == key_name}
-        # DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).key_name(key_name).key_columns(key_columns).key_type(:text).columns(columns).
-          # with("CLUSTERING ORDER BY (#{cluster_by} #{cluster_dir.to_s.upcase})").execute
-      # end
-      
-      # # Creates a regular cassandra-only column family via CQL
-      # def create_cassandra_column_family(model)
-        # say "Creating Cassandra-Only Column Family", :subitem
-        # key_name = "key"
-        # key_columns = "#{key_name}"
-        # columns = {}
-        # model.attribute_definitions.each {|k,v| columns[k] = v.coder.options[:cassandra_type]}
-        # DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).key_name(key_name).key_columns(key_columns).key_type(:text).columns(columns).execute
-      # end
       
       # Creates the named keyspace
       def create_keyspace(keyspace, options = {})

@@ -9,4 +9,8 @@ class SchemaMigration
   def self.column_family
     'schema_migrations'
   end
+  
+  def self.primary_key
+    'cf'
+  end
 end

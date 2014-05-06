@@ -90,10 +90,10 @@ module DatastaxRails
         stopwords_digest = Digest::SHA1.hexdigest(stopwords)
         schema_digest = Digest::SHA1.hexdigest(schema)
         
-        newcf = !column_family_exists?(model.column_family.to_s)
+        newcf = !column_exists?(model.column_family, 'solr_query')
         force ||= newcf
         
-        results = DatastaxRails::Cql::Select.new(SchemaMigration, ['*']).conditions(:key => model.column_family).execute
+        results = DatastaxRails::Cql::Select.new(SchemaMigration, ['*']).conditions(:cf => model.column_family).execute
         sm_digests = results.first || {}
         
         solr_url = "#{DatastaxRails::Base.solr_base_url}/resource/#{@keyspace}.#{model.column_family}"

@@ -7,10 +7,6 @@ module DatastaxRails
         super
       end
       
-      def setup(klass)
-        @klass = klass
-      end
-      
       def validate_each(record, attribute, value)
         return true if options[:allow_blank] && value.blank?
         # XXX: The following will break if/when abstract base classes

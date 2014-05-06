@@ -37,8 +37,8 @@ class Car < DatastaxRails::Base
   
   uuid :id
   string :name
-  string :person_id
-  string :car_payload_id
+  uuid :person_id
+  uuid :car_payload_id
   time :last_serviced_at
   timestamps
 end
@@ -66,7 +66,7 @@ class Job < DatastaxRails::Base
   uuid :id
   string :title
   integer :position_number
-  string :person_id
+  uuid :person_id
   timestamps
   
   validates :position_number, :uniqueness => true, :allow_blank => true

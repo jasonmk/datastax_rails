@@ -319,13 +319,13 @@ module DatastaxRails #:nodoc:
     include ActiveModel::Conversion
     extend ActiveSupport::DescendantsTracker
     
+    include Persistence
     include Connection
     include Inheritance
     include FinderMethods
     include Batches
     include AttributeAssignment
     include AttributeMethods
-    include Persistence
     include Callbacks
     include Validations
     include Reflection
@@ -378,6 +378,31 @@ module DatastaxRails #:nodoc:
       
       yield self if block_given?
       run_callbacks :initialize unless _initialize_callbacks.empty?
+    end
+    
+    # Initialize an empty model object from +coder+. +coder+ must contain
+    # the attributes necessary for initializing an empty model object. For
+    # example:
+    #
+    #   class Post < DatastaxRails::Base
+    #   end
+    #
+    #   post = Post.allocate
+    #   post.init_with('attributes' => { 'title' => 'hello world' })
+    #   post.title # => 'hello world'
+    def init_with(coder)
+      @attributes   = self.class.initialize_attributes(coder['attributes'])
+      @column_types_override = coder['column_types']
+      @column_types = self.class.columns_hash
+      
+      init_internals
+
+      @new_record = false
+
+      run_callbacks :find
+      run_callbacks :initialize
+
+      self
     end
     
     def init_internals
@@ -437,6 +462,7 @@ module DatastaxRails #:nodoc:
     def attribute_names
       self.class.attribute_names
     end
+    alias :column_names :attribute_names
     
     def valid_consistency?(level) #:nodoc:
       self.class.validate_consistency(level.to_s.upcase)
@@ -515,6 +541,7 @@ module DatastaxRails #:nodoc:
       def attribute_names
         @attribute_names ||= attribute_definitions.keys.collect {|a|a.to_s}
       end
+      alias :column_names :attribute_names
       
       def columns
         @columns ||= attribute_definitions.values

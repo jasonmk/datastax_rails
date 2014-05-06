@@ -250,8 +250,6 @@ module DatastaxRails
       when true
         return :solr
       else
-        # If we've already decided to use cassandra, just go with it.
-        return :cassandra unless use_solr_value
         [order_values, where_not_values, fulltext_values, greater_than_values, less_than_values, field_facet_values,
          range_facet_values, group_value].each do |solr_only_stuff|
            return :solr unless solr_only_stuff.blank? 
@@ -260,8 +258,7 @@ module DatastaxRails
         return :solr unless page_value == 1
         @where_values.each do |wv|
           wv.each do |k,v|
-            next if k.to_sym == :id
-            if(klass.attribute_definitions[k].indexed == :solr || !klass.attribute_definitions[k].indexed)
+            unless klass.attribute_definitions[k].options[:cql_index]
               return :solr
             end
           end
@@ -300,15 +297,15 @@ module DatastaxRails
     # For ad-hoc queries, you will have to use Solr.
     def query_via_cql
       select_columns = select_values.empty? ? (@klass.attribute_definitions.keys - @klass.lazy_attributes) : select_values.flatten
-      cql = @cql.select((select_columns + @klass.key_factory.key_columns).uniq)
+      cql = @cql.select((select_columns + [@klass.primary_key]).uniq)
       cql.using(@consistency_value) if @consistency_value
       @where_values.each do |wv|
-        cql.conditions(Hash[wv.map {|k,v| [(k.to_sym == :id ? :key : k), v]}])
+        cql.conditions(Hash[wv.map {|k,v| [(k.to_s == 'id' ? @klass.primary_key : k), v]}])
       end
       @greater_than_values.each do |gtv|
         gtv.each do |k,v|
           # Special case if inequality is equal to the primary key (we're paginating)
-          if(k == :key)
+          if(k.to_s == @klass.primary_key)
             cql.paginate(v)
           end
         end
@@ -319,9 +316,8 @@ module DatastaxRails
       cql.allow_filtering if @allow_filtering_value
       results = []
       begin
-        byebug
         cql.execute.each do |row|
-          results << @klass.instantiate(row['key'].to_s, row, select_columns)
+          results << @klass.instantiate(row[@klass.primary_key], row, select_columns)
         end
       rescue ::Cql::CqlError => e # TODO: Break out the various exception types
         # If we get an exception about an empty key, ignore it.  We'll return an empty set.
@@ -557,7 +553,7 @@ module DatastaxRails
       results.current_page = @page_value || 1
       results.total_entries = response['numFound'].to_i
       response['docs'].each do |doc|
-        id = doc['id']
+        id = doc[@klass.primary_key]
         if(@consistency_value)
           obj = @klass.with_cassandra.consistency(@consistency_value).find_by_id(id)
           results << obj if obj

@@ -20,7 +20,8 @@ module DatastaxRails
         if keys.last.is_a?(Hash)
           options = keys.pop
         end
-        ActiveSupport::Notifications.instrument("remove.datastax_rails", :column_family => column_family, :key => key) do
+        keys = keys.flatten.collect {|k| self.attribute_definitions[self.primary_key].type_cast(k)}
+        ActiveSupport::Notifications.instrument("remove.datastax_rails", :column_family => column_family, :key => keys) do
           c = cql.delete(keys)
           if(options[:consistency])
             level = options[:consistency].to_s.upcase
@@ -61,8 +62,8 @@ module DatastaxRails
         else
           raise ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
         end
-        record.id.to_s.tap do |key|
-          ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => key, :attributes => record.attributes) do
+        record.id.tap do |key|
+          ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => key.to_s, :attributes => record.attributes) do
             if(self.storage_method == :solr)
               write_with_solr(key, record.attributes, record.changed, options)
             else
@@ -80,15 +81,9 @@ module DatastaxRails
       #   to build this object.  Used so that we can avoid lazy-loading attributes that don't exist.
       # @return [DatastaxRails::Base] a model with the given attributes
       def instantiate(key, attributes, selected_attributes = [])
-        allocate.tap do |object|
-          object.instance_variable_set("@loaded_attributes", {}.with_indifferent_access)
-          object.instance_variable_set("@key", parse_key(key)) if key
-          object.instance_variable_set("@new_record", false)
-          object.instance_variable_set("@destroyed", false)
-          object.instance_variable_set("@attributes", typecast_attributes(object, attributes, selected_attributes).with_indifferent_access)
-        end
+        allocate.init_with('attributes' => attributes)
       end
-
+      
       # Encodes the attributes in preparation for storing in cassandra. Calls the coders on the various type classes
       # to do the heavy lifting.
       #
@@ -104,20 +99,6 @@ module DatastaxRails
                                             attribute_definitions[column_name].type_cast_for_solr(value)
         end
         encoded
-      end
-
-      def typecast_attributes(object, attributes, selected_attributes = [])
-        attributes = attributes.symbolize_keys
-        casted = {}
-        
-        selected_attributes.each do |att|
-          object.loaded_attributes[att] = true
-        end
-        
-        attribute_definitions.each do |k,definition|
-          casted[k.to_s] = definition.instantiate(object, attributes[k.to_sym])#.to_s
-        end
-        casted
       end
       
       private
@@ -162,7 +143,7 @@ module DatastaxRails
     end
 
     def destroy(options = {})
-      self.class.remove(key, options)
+      self.class.remove(id, options)
       @destroyed = true
       freeze
     end
@@ -182,20 +163,15 @@ module DatastaxRails
 
     # Updates the attributes of the model from the passed-in hash and saves the
     # record If the object is invalid, the saving will fail and false will be returned.
-    #
-    # When updating model attributes, mass-assignment security protection is respected.
-    # If no +:as+ option is supplied then the +:default+ role will be used.
-    # If you want to bypass the protection given by +attr_protected+ and
-    # +attr_accessible+ then you can do so using the +:without_protection+ option.
     def update_attributes(attributes, options = {})
-      self.assign_attributes(attributes, options)
+      self.assign_attributes(attributes)
       save
     end
 
     # Updates its receiver just like +update_attributes+ but calls <tt>save!</tt> instead
     # of +save+, so an exception is raised if the record is invalid.
     def update_attributes!(attributes, options = {})
-      self.assign_attributes(attributes, options)
+      self.assign_attributes(attributes)
       save!
     end
     

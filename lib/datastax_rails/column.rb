@@ -130,14 +130,16 @@ module DatastaxRails
     end
     
     # Cql-rb does a really good job of typecasting, so for the most part we
-    # just pass in the native types.  The only exception is for UUIDs that
-    # are passed in as strings.
+    # just pass in the native types.  The only exceptions are for UUIDs that
+    # are passed in as strings and dates.
     def type_cast_for_cql3(value)
       return nil if value.nil?
       return coder.dump(value) if encoded?
       
       if type == :uuid && value.class == String
         self.class.value_to_uuid(value)
+      elsif type == :date
+        value.to_time
       else
         value
       end
@@ -263,7 +265,7 @@ module DatastaxRails
       
       # convert something to a TimeUuid
       def value_to_uuid(value)
-        if value.is_a?(::Cql::TimeUuid)
+        if value.is_a?(::Cql::Uuid)
           value
         else
           ::Cql::TimeUuid.new(value) rescue nil

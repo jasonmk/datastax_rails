@@ -140,15 +140,8 @@ module DatastaxRails
       def find_by_attributes(match, attributes, *args) #:nodoc:
        
         conditions =  Hash[attributes.map {|a| [a, args[attributes.index(a)]]}]
-        if Rails.version =~ /^3.*/
-          self.where_values << escape_attributes(conditions)
-          result = self.send(match.finder)
-        elsif Rails.version =~ /^4.*/
-          result = self.send(match.finder, conditions)
-        end
+        result = self.send(match.finder, conditions)
 
-        #result = where(conditions).send(match.finder)
-        
         if match.blank? && result.blank?
           raise RecordNotFound, "Couldn't find #{klass.name} with #{conditions.to_a.collect {|p| p.join('=')}.join(', ')}"
         else
@@ -191,11 +184,14 @@ module DatastaxRails
       end
       
       def find_one(id)
-        with_cassandra.where(:key => id).first || raise(RecordNotFound, "Couldn't find #{@klass.name} with ID=#{id}")
+        key = @klass.attribute_definitions[@klass.primary_key].type_cast(id) || raise(RecordNotFound, "Couldn't find #{@klass.name} with an invalid ID=#{id}")
+        
+        with_cassandra.where(@klass.primary_key => key).first || raise(RecordNotFound, "Couldn't find #{@klass.name} with ID=#{id}")
       end
   
       def find_some(ids)
-        result = with_cassandra.where(:key => ids).all
+        keys = ids.collect {|id| @klass.attribute_definitions[@klass.primary_key].type_cast(id) || "Couldn't find #{@klass.name} with an invalid ID=#{id}"}
+        result = with_cassandra.where(@klass.primary_key => keys).all
   
         expected_size =
           if @limit_value && ids.size > @limit_value

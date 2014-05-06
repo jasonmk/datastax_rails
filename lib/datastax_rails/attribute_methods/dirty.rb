@@ -3,6 +3,12 @@ module DatastaxRails
     module Dirty
       extend ActiveSupport::Concern
       include ActiveModel::Dirty
+      
+      included do
+        if self < ::DatastaxRails::Timestamps
+          raise "You cannot include Dirty after Timestamps"
+        end
+      end
 
       # Attempts to +save+ the record and clears changed attributes if successful.
       def save(*) #:nodoc:
@@ -22,10 +28,10 @@ module DatastaxRails
       end
 
       # <tt>reload</tt> the record and clears changed attributes.
-      def reload
+      def reload(*)
         super.tap do
-          @previously_changed.try :clear
-          @changed_attributes.try :clear
+          @previously_changed.clear
+          @changed_attributes.clear
         end
       end
 

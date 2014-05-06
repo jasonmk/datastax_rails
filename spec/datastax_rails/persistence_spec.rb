@@ -21,25 +21,39 @@ describe "DatastaxRails::Base" do
       
       describe "#create" do
         it "should persist at the given consistency level" do
-          @statement.should_receive(:execute).with(an_instance_of(Array), :consistency => :local_quorum)
+          @statement.should_receive(:execute).with(anything, anything, anything, anything, anything, :consistency => :local_quorum)
           Person.create({:name => 'Steven'},{:consistency => 'LOCAL_QUORUM'})
         end
       end
     
       describe "#save" do
         it "should persist at the given consistency level" do
-          @statement.should_receive(:execute).with(an_instance_of(Array), :consistency => :local_quorum)
+          @statement.should_receive(:execute).with(anything, anything, anything, anything, anything, :consistency => :local_quorum)
           p=Person.new(:name => 'Steven')
           p.save(:consistency => 'LOCAL_QUORUM')
+        end
+      end
+      
+      describe "#remove" do
+        it "should remove at the given consistency level" do
+          @statement.stub(:execute)
+          p=Person.create(:name => 'Steven')
+          @statement.should_receive(:execute).with(anything, :consistency => :local_quorum)
+          p.destroy(:consistency => :local_quorum)
         end
       end
     end
 
     describe "with solr" do
+      around(:each) do |example|
+        Person.storage_method = :solr
+        example.run
+        Person.storage_method = :cql
+      end
+      
       describe "#create" do
         it "should persist at the given consistency level" do
           Person.solr_connection.should_receive(:update).with(hash_including(:params => hash_including({:cl => 'LOCAL_QUORUM'}))).and_return(true)
-          Person.storage_method = :solr
           Person.create({:name => 'Steven'},{:consistency => 'LOCAL_QUORUM'})
         end
       end
@@ -47,14 +61,12 @@ describe "DatastaxRails::Base" do
       describe "#save" do
         it "should persist at the given consistency level" do
           Person.solr_connection.should_receive(:update).with(hash_including(:params => hash_including({:cl => 'LOCAL_QUORUM'}))).and_return(true)
-          Person.storage_method = :solr
           p=Person.new(:name => 'Steven')
           p.save(:consistency => 'LOCAL_QUORUM')
         end
         
         it "should successfully remove columns that are set to nil" do
           pending do 
-            Person.storage_method = :solr
             p = Person.create!(:name => 'Steven', :birthdate => Date.today)
             Person.commit_solr
             p = Person.find_by_name('Steven')
@@ -64,14 +76,6 @@ describe "DatastaxRails::Base" do
             Person.find by_name('Steven').birthdate.should be_nil
           end
         end
-      end
-    end
-    
-    describe "#remove" do
-      it "should remove at the given consistency level" do
-        p=Person.create(:name => 'Steven')
-        DatastaxRails::Base.connection.should_receive(:execute_cql_query).with(an_instance_of(String), :consistency => :local_quorum)
-        p.destroy(:consistency => :local_quorum)
       end
     end
     

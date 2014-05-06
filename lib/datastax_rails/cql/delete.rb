@@ -7,13 +7,8 @@ module DatastaxRails
         @timestamp = nil
         @columns = []
         @conditions = {}
-        @key_name = "key"
+        @key_name = @klass.primary_key
         super
-      end
-      
-      def using(consistency)
-        @consistency = consistency
-        self
       end
       
       def columns(columns)
@@ -37,7 +32,7 @@ module DatastaxRails
       end
       
       def to_cql
-        @values = [@keys.collect{|k|k.to_s}]
+        @values = @keys
         stmt = "DELETE #{@columns.join(',')} FROM #{@klass.column_family} "
         
         if(@timestamp)

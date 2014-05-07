@@ -39,7 +39,7 @@ class Car < DatastaxRails::Base
   string :name
   uuid :person_id
   uuid :car_payload_id
-  time :last_serviced_at
+  datetime :last_serviced_at
   timestamps
 end
 

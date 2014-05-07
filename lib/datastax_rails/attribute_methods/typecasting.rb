@@ -54,8 +54,8 @@ module DatastaxRails
         # 
         # @param [Hash] options the options to use in setting up the attribute
         def timestamps(options = {})
-          attribute(:created_at, options.update(:type => :time))
-          attribute(:updated_at, options.update(:type => :time))
+          attribute(:created_at, options.update(:type => :timestamp))
+          attribute(:updated_at, options.update(:type => :timestamp))
         end
         
         # @!method array(name, options = {})
@@ -63,6 +63,8 @@ module DatastaxRails
         # @!method boolean(name, options = {})
         #   @macro attr_doc
         # @!method date(name, options = {})
+        #   @macro attr_doc
+        # @!method datetime(name, options = {})
         #   @macro attr_doc
         # @!method float(name, options = {})
         #   @macro attr_doc
@@ -76,13 +78,15 @@ module DatastaxRails
         #   @macro attr_doc
         # @!method time(name, options = {})
         #   @macro attr_doc
+        # @!method timestamp(name, options = {})
+        #   @macro attr_doc
         # @!method time_with_zone(name, options = {})
         #   @macro attr_doc
         # @!method uuid(name, options = {})
         #   @macro attr_doc
         
         # The following sets up a bunch of nearly identical attribute methods
-        %w(array boolean date float integer json string text time time_with_zone uuid).each do |type|
+        %w(array boolean date datetime float integer json string text time timestamp time_with_zone uuid).each do |type|
           class_eval <<-EOV, __FILE__, __LINE__ + 1
             def #{type}(name, options = {})                               # def string(name, options = {})
               attribute(name, options.update(:type => :#{type}))             #   attribute(name, options.update(type: :string))

@@ -329,23 +329,23 @@ module DatastaxRails
     private
       def compute_cql_type(field_type, options)
         options[:cql_type] || case type.to_sym
-        when :integer                        then 'int'
-        when :time, :date                    then 'timestamp' 
-        when :binary                         then 'blob'
-        when :list                           then "list<#{options[:type] || text}>"
-        when :set                            then "set<#{options[:type] || text}>"
-        when :map                            then "map<text, #{options[:type] || text}>"
-        when :string                         then 'text'
+        when :integer                            then 'int'
+        when :time, :date, :timestamp, :datetime then 'timestamp' 
+        when :binary                             then 'blob'
+        when :list                               then "list<#{options[:type] || text}>"
+        when :set                                then "set<#{options[:type] || text}>"
+        when :map                                then "map<text, #{options[:type] || text}>"
+        when :string                             then 'text'
         else field_type.to_s
         end
       end
       
       def compute_solr_type(field_type, options)
         options[:solr_type] || case type.to_sym
-        when :integer                        then 'int'
-        when :decimal                        then 'double'
-        when :timestamp, :time               then 'date'
-        when :list, :set, :map               then options[:type].to_s || 'string'
+        when :integer                            then 'int'
+        when :decimal                            then 'double'
+        when :timestamp, :time, :datetime        then 'date'
+        when :list, :set, :map                   then options[:type].to_s || 'string'
         else field_type.to_s
         end
       end

@@ -40,15 +40,15 @@ module DatastaxRails
       self.instantiate(digest, {:digest => digest, :payload => io.read}, [:digest, :payload])
     end
     
-    def self.write(key, attributes, options = {})
+    def self.write(record, options = {})
       raise ArgumentError, "'#{options[:consistency]}' is not a valid Cassandra consistency level" unless valid_consistency?(options[:consistency].to_s.upcase) if options[:consistency]
-      c = self.cql.select("count(*)").conditions(:digest => key)
+      c = self.cql.select("count(*)").conditions(:digest => record.id)
       count = c.execute.first["count"]
       
       i = 0
-      io = StringIO.new(attributes['payload'])
+      io = StringIO.new(record.attributes['payload'])
       while chunk = io.read(1.megabyte)
-        c = cql.insert.columns(:digest => key, :chunk => i, :payload => Base64.encode64(chunk))
+        c = cql.insert.columns(:digest => record.id, :chunk => i, :payload => Base64.encode64(chunk))
         c.using(options[:consistency]) if options[:consistency]
         c.execute
         i += 1
@@ -56,7 +56,7 @@ module DatastaxRails
       
       if count and count > i
         i.upto(count) do |j|
-          c = cql.delete(key.to_s).key_name('digest').conditions(:chunk => j)
+          c = cql.delete(record.id).key_name('digest').conditions(:chunk => j)
           c.using(options[:consistency]) if options[:consistency]
           c.execute
         end

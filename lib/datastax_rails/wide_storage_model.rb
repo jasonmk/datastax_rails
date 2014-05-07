@@ -6,7 +6,7 @@ module DatastaxRails
   # there were multiple rows.
   #
   # CAVEATS: 
-  # * Wide Storage Models cannot be indexed into Solr.
+  # * Wide Storage Models cannot be indexed into Solr (yet).
   # * Once the cluster is set, it cannot be changed as it becomes the column header in Cassandra
   #
   #   class AuditLog < DatastaxRails::WideStorageModel
@@ -26,16 +26,16 @@ module DatastaxRails
       @cluster_by ||= attr.is_a?(Hash) ? attr : {attr => :asc}
     end
     
-    def self.write(key, attributes, options = {})
-      attributes = encode_attributes(attributes)
+    def self.write(record, options = {})
+      attributes = encode_attributes(record.attributes, record.changed, options)
       level = (options[:consistency] || self.default_consistency).to_s.upcase
       if(valid_consistency?(level))
         options[:consistency] = level
       else
         raise ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
       end
-      key.tap do |key|
-        ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => key, :attributes => attributes) do
+      record.id.tap do |key|
+        ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => record.id.to_s, :attributes => attributes) do
             cql.insert.using(level).columns(attributes).execute
         end
       end

@@ -81,26 +81,6 @@ module DatastaxRails
         DatastaxRails::Cql::DropKeyspace.new(@keyspace.to_s).execute
       end
       
-      # Checks the Cassandra system tables to see if the key column is named properly.  This is
-      # a migration method to handle the fact that Solr used to create column families with "KEY"
-      # instead of the now default "key".
-      def check_key_name(cf)
-        count = 0
-        if(cf.respond_to?(:column_family))
-          cf = cf.column_family
-        end
-        klass = OpenStruct.new(:column_family => 'system.schema_columnfamilies', :default_consistency => 'QUORUM')
-        cql = DatastaxRails::Cql::ColumnFamily.new(klass)
-        results = cql.select("key_alias, key_aliases").conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf).execute
-        result = results.first
-        if(result && (result['key_alias'] == 'KEY' || result['key_aliases'].include?('KEY')) && (result['key_aliases'].blank? || !result['key_aliases'].include?('key')))
-          count += 1
-          say "Renaming KEY column", :subitem
-          DatastaxRails::Cql::AlterColumnFamily.new(cf).rename("KEY",'key').execute
-        end
-        count
-      end
-      
       # Computes the expected solr index name as reported by CQL.
       def solr_index_cql_name(cf, column)
         "#{@keyspace}_#{cf.to_s}_#{column.to_s}_index"

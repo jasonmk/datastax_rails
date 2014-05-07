@@ -23,7 +23,7 @@ describe DatastaxRails::Schema::Solr do
   
   describe "#generate_solr_schema" do
     it "uses a custom config if one is present" do
-      model = mock_model("Article", :column_family => 'articles', :name => 'Article', :attribute_definitions => {})
+      model = mock_model("Article", :column_family => 'articles', :name => 'Article', :attribute_definitions => {}, :primary_key => 'id')
       expect(subject.generate_solr_schema(model)).to match(/This is my custom schema/)
     end
   end

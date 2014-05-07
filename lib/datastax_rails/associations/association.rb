@@ -213,10 +213,7 @@ module DatastaxRails
 
         def build_record(attributes, options)
           reflection.build_association(attributes, options) do |r|
-            r.assign_attributes(
-              create_scope.except(*r.changed),
-              :without_protection => true
-            )
+            r.assign_attributes(create_scope.except(*r.changed))
           end
         end
     end

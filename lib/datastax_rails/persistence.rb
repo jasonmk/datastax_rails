@@ -214,7 +214,7 @@ module DatastaxRails
 
       def _create_record(options)
         # TODO: handle the non-UUID case
-        write_attribute('id', ::Cql::TimeUuid::Generator.new.next)
+        self.id ||= ::Cql::TimeUuid::Generator.new.next
         _write(options)
         @new_record = false
         self.id

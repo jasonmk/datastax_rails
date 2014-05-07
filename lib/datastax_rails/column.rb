@@ -185,6 +185,14 @@ module DatastaxRails
     def string_to_binary(value)
       self.class.string_to_binary(value)
     end
+    
+    def full_solr_range
+      if solr_type == 'date'
+        '[* TO *]'
+      else
+        '[\"\" TO *]'
+      end
+    end
 
     class << self
       # Used to convert from Strings to BLOBs

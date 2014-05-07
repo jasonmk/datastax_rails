@@ -33,8 +33,6 @@ module DatastaxRails
       def migrate_one(model, force = false)
         count = 0
         say_with_time("Migrating #{model.name} to latest version") do
-          count += check_key_name(model)
-          
           unless column_family_exists?(model.column_family.to_s)
             create_cql3_column_family(model)
             count += 1
@@ -61,8 +59,6 @@ module DatastaxRails
             say "Creating schema_migrations column family"
             DatastaxRails::Cql::CreateColumnFamily.new('schema_migrations').primary_key('cf').columns(:cf => :text, :digest => :text, :solrconfig => :text, :stopwords => :text).execute
           end
-          
-          check_key_name('schema_migrations')
         end
         
         def write(text="")

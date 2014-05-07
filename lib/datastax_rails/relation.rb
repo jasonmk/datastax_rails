@@ -374,7 +374,7 @@ module DatastaxRails
     
     def full_solr_range(attr)
       if(self.klass.attribute_definitions[attr])
-        self.klass.attribute_definitions[attr].coder.full_solr_range
+        self.klass.attribute_definitions[attr].full_solr_range
       else
         '[\"\" TO *]'
       end
@@ -553,7 +553,7 @@ module DatastaxRails
       results.current_page = @page_value || 1
       results.total_entries = response['numFound'].to_i
       response['docs'].each do |doc|
-        id = doc[@klass.primary_key]
+        id = @klass.attribute_definitions[@klass.primary_key].type_cast(doc[@klass.primary_key])
         if(@consistency_value)
           obj = @klass.with_cassandra.consistency(@consistency_value).find_by_id(id)
           results << obj if obj

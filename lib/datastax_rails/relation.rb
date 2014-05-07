@@ -651,7 +651,15 @@ module DatastaxRails
     # leaving SOLR reserved/boolean words (AND, OR, NOT, TO) upcased.
     def downcase_query(value)
       if(value.is_a?(String))
-        value.split(/\bAND\b/).collect do |a|
+        
+        date_regex = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/
+        # remove any date from the query, they should not be downcased
+        dates = value.scan(date_regex)
+        # generate random uniq string to replace dates with
+        uniq_str = SecureRandom.hex
+        dates_purged = value.gsub(date_regex, uniq_str)
+        
+        downcased_query = value.split(/\bAND\b/).collect do |a|
           a.split(/\bOR\b/).collect do |o| 
             o.split(/\bNOT\b/).collect do |n| 
               n.split(/\bTO\b/).collect do |t|
@@ -660,6 +668,12 @@ module DatastaxRails
             end.join("NOT")
           end.join("OR")
         end.join("AND")
+        
+        dates.each do |d|
+          downcased_query.sub!(uniq_str, d)
+        end
+        
+        downcased_query
       else
         value
       end

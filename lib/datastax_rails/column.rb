@@ -40,7 +40,7 @@ module DatastaxRails
     end
     
     def configure_options(type, options)
-      case type
+      case type.to_sym
       when :set, :list, :map then
         configure_options(options[:type], options).merge(:multi_valued => true)
       when :binary then

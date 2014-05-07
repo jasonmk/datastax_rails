@@ -371,7 +371,7 @@ module DatastaxRails
     # @return [DatastaxRails::Relation] a new Relation object
     def where(attribute)
       return self if attribute.blank?
-      if attribute.is_a?(Symbol)
+      if attribute.is_a?(Symbol) || attribute.is_a?(String)
         WhereProxy.new(self, attribute)
       else
         clone.tap do |r|

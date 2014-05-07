@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.files = Dir["{app,config,db,lib}/**/*"] + ["MIT-LICENSE", "Rakefile", "README.rdoc"]
   s.test_files = Dir["spec/**/*"]
 
-  s.add_dependency "rails", ">= 3.2.0"
+  s.add_dependency "rails", "~> 4.0.0"
   s.add_dependency "cql-rb"
   s.add_dependency "rsolr", "~> 1.0.9"
   s.add_dependency "rsolr-client-cert"

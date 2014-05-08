@@ -44,7 +44,7 @@ module DatastaxRails#:nodoc:
         stmt << "PRIMARY KEY (#{@primary_key}))"
         unless @storage_parameters.empty?
           stmt << " WITH "
-          stmt << @storage_parameters.join(" AND ")
+          stmt << @storage_parameters.flatten.join(" AND ")
         end
         
         stmt

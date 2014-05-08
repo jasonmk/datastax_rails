@@ -1,9 +1,11 @@
 module DatastaxRails
   # A special model that is designed to efficiently store very wide data.
   # This model type assumes that you have a unique ID and want to either
-  # search or sort on a second piece of data.  The store the data as a
-  # single, very wide row; however you can safely treat them as if
+  # search or sort on a second piece of data.  The data is stored as a
+  # single, very wide row; however you can safely treat it as if
   # there were multiple rows.
+  #
+  # You can also apply secondary indexes onto the other columns.
   #
   # CAVEATS: 
   # * Wide Storage Models cannot be indexed into Solr (yet).
@@ -11,20 +13,20 @@ module DatastaxRails
   #
   #   class AuditLog < DatastaxRails::WideStorageModel
   #     self.column_family = 'audit_logs'
-  #
-  #     key :natural, :attributes => [:uuid]
-  #     cluster_by :created_at => :desc
+  #     self.primary_key = :uuid
+  #     self.cluster_by = :created_at
+  #     # If you don't want the default ascending sort order
+  #     self.create_options = 'CLUSTERING ORDER BY (created_at DESC)' 
   #
   #     string :uuid
   #     string :message
+  #     string :user_id, :cql_index => true
   #     timestamps
   #   end
   class WideStorageModel < CassandraOnlyModel
     self.abstract_class = true
     
-    def self.cluster_by(attr = nil)
-      @cluster_by ||= attr.is_a?(Hash) ? attr : {attr => :asc}
-    end
+    class_attribute :cluster_by
     
     def self.write(record, options = {})
       attributes = encode_attributes(record.attributes, record.changed, options)

@@ -351,6 +351,8 @@ module DatastaxRails #:nodoc:
     class_attribute :storage_method
     self.storage_method = :cql
     
+    class_attribute :create_options
+    
     attr_reader :attributes
     attr_reader :loaded_attributes
     attr_accessor :key
@@ -391,7 +393,7 @@ module DatastaxRails #:nodoc:
     #   post.init_with('attributes' => { 'title' => 'hello world' })
     #   post.title # => 'hello world'
     def init_with(coder)
-      @attributes   = self.class.initialize_attributes(coder['attributes'])
+      @attributes   = self.class.initialize_attributes(coder['attributes']).with_indifferent_access
       @column_types_override = coder['column_types']
       @column_types = self.class.columns_hash
       
@@ -413,7 +415,7 @@ module DatastaxRails #:nodoc:
       @attributes_cache = {}
       @previously_changed = {}
       @changed_attributes = {}
-      @loaded_attributes = {}
+      @loaded_attributes = Hash[@attributes.map{|k,v| [k,true]}].with_indifferent_access
       @readonly = false
       @destroyed = false
       @marked_for_destruction = false

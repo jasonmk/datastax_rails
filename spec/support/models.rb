@@ -49,12 +49,13 @@ end
 
 class AuditLog < DatastaxRails::WideStorageModel
   self.column_family = "audit_logs"
-  self.primary_key = :uuid  
-  cluster_by :created_at
+  self.primary_key = :uuid
+  self.cluster_by  = :created_at
+  self.create_options = 'CLUSTERING ORDER BY (created_at DESC)'
   
   uuid       :uuid
   string     :message
-  string     :user, :indexed => :cassandra
+  string     :user, :cql_index => true
   timestamps
 end
 

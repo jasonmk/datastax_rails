@@ -5,7 +5,7 @@ module DatastaxRails
   # other metadata, you will need another model that points at this
   # one.
   #
-  #   class AttachmentPayload < DatastaxRails::Payload
+  #   class AttachmentPayload < DatastaxRails::PayloadModel
   #     self.column_family = 'attachment_payloads'
   #
   #     validate do
@@ -14,14 +14,17 @@ module DatastaxRails
   #       end
   #     end
   #   end
-  class PayloadModel < CassandraOnlyModel
+  class PayloadModel < WideStorageModel
     self.abstract_class = true
     
     def self.inherited(child)
       super
-      child.primary_key = :digest
+      child.primary_key = 'digest'
+      child.cluster_by = 'chunk'
+      child.create_options = 'COMPACT STORAGE'
       child.string :digest
       child.binary :payload
+      child.integer :chunk
       child.validates :digest, :presence => true
     end
     
@@ -31,13 +34,15 @@ module DatastaxRails
       c.using(options[:consistency]) if options[:consistency]
       io = StringIO.new("","w+")
       found = false
+      chunk = 0
       c.execute.each do |row|
         io << Base64.decode64(row['payload'])
+        chunk = row['chunk']
         found = true
       end
       raise DatastaxRails::RecordNotFound unless found
       io.rewind
-      self.instantiate(digest, {:digest => digest, :payload => io.read}, [:digest, :payload])
+      self.instantiate(digest, {:digest => digest, :payload => io.read, :chunk => chunk}, [:digest, :payload])
     end
     
     def self.write(record, options = {})
@@ -62,25 +67,7 @@ module DatastaxRails
         end
       end
       
-      key
-    end
-    
-    # Instantiates a new object without calling +initialize+.
-    #
-    # @param [String] key the primary key for the record
-    # @param [Hash] attributes a hash containing the columns to set on the record
-    # @param [Array] selected_attributes an array containing the attributes that were originally selected from cassandra
-    #   to build this object.  Used so that we can avoid lazy-loading attributes that don't exist.
-    # @return [DatastaxRails::Base] a model with the given attributes
-    def self.instantiate(key, attributes, selected_attributes = [])
-      allocate.tap do |object|
-        object.instance_variable_set("@loaded_attributes", {}.with_indifferent_access)
-        object.instance_variable_set("@key", parse_key(key)) if key
-        object.instance_variable_set("@new_record", false)
-        object.instance_variable_set("@destroyed", false)
-        object.instance_variable_set("@attributes", attributes.with_indifferent_access)
-        attributes.keys.each {|k| object.instance_variable_get("@loaded_attributes")[k] = true}
-      end
+      record.id
     end
   end
 end

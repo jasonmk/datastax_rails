@@ -47,13 +47,14 @@ module DatastaxRails
       # Creates a CQL3 backed column family
       def create_cql3_column_family(model)
         say "Creating Column Family via CQL3", :subitem
-        pk = model.primary_key
         columns = {}
         model.attribute_definitions.each {|k,col| columns[k] = col.cql_type}
-        cql = DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).primary_key(pk).columns(columns)
-        if model.payload_model?
-          cql.with("COMPACT STORAGE")
+        pk = model.primary_key.to_s
+        if(model.respond_to?(:cluster_by) && model.cluster_by.present?)
+          pk += ", #{model.cluster_by.to_s}"
         end
+        cql = DatastaxRails::Cql::CreateColumnFamily.new(model.column_family).primary_key(pk).columns(columns)
+        cql.with(model.create_options) if model.create_options
         cql.execute
       end
       
@@ -114,12 +115,12 @@ module DatastaxRails
         results = cql.select("count(*)").conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf, 'column_name' => col).execute
         exists = results.first['count'] > 0
         unless exists
-          # We need to check if it's part of the primary key (ugh)
+          # We need to check if it's part of an alias (ugh)
           klass = OpenStruct.new(:column_family => 'system.schema_columnfamilies', :default_consistency => 'QUORUM')
           cql = DatastaxRails::Cql::ColumnFamily.new(klass)
-          results = cql.select("column_aliases, key_aliases").conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf).execute
+          results = cql.select("column_aliases, key_aliases, value_alias").conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf).execute
           row = results.first
-          exists = row['key_aliases'].include?(col.to_s) || row['column_aliases'].include?(col.to_s)
+          exists = row['key_aliases'].include?(col.to_s) || row['column_aliases'].include?(col.to_s) || (row['value_alias'] && row['value_alias'].include?(col.to_s))
         end
         exists
       end

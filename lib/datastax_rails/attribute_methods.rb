@@ -99,26 +99,6 @@ module DatastaxRails
       end
     end
     
-    # Casts the attribute and stores it in the attribute hash.
-    def write_attribute(name, value)
-      if(attribute_definitions[name.to_sym].coder.is_a?(DatastaxRails::Types::BinaryType))
-        @attributes[name.to_s] = value
-      else
-        @attributes[name.to_s] = self.class.typecast_attribute(self, name, value)
-      end
-    end
-
-    # Returns the attribute out of the attribute hash.  If the attribute is lazy loaded and hasn't
-    # been loaded yet it will be done so now.
-    # def read_attribute(name)
-      # if(!loaded_attributes[name] && persisted? && !key.blank?)
-        # @attributes[name.to_s] = self.class.select(name).with_cassandra.find(self.id).read_attribute(name)
-        # loaded_attributes[name] = true
-      # end
-#         
-      # @attributes[name.to_s]
-    # end
-
     def attribute_exists?(name)
       @attributes.key?(name.to_s)
     end

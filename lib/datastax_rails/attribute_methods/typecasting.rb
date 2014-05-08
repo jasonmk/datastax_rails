@@ -95,22 +95,6 @@ module DatastaxRails
         end
         
         # @!endgroup
-
-        # Casts a single attribute according to the appropriate coder.
-        #
-        # @param [DatastaxRails::Base] record the record to which this attribute belongs
-        # @param [String] name the name of the attribute
-        # @param [Object] value the value of the attribute prior to typecasting
-        #
-        # @return the typecast value
-        # @raise [NoMethodError] if the attribute is unknown
-        def typecast_attribute(record, name, value)
-          if attribute_definition = attribute_definitions[name.to_sym]
-            attribute_definition.instantiate(record, value)
-          else
-            raise NoMethodError, "Unknown attribute #{name.inspect}"
-          end
-        end
       end
     end
   end

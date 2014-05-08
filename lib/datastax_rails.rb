@@ -40,7 +40,6 @@ module DatastaxRails
   autoload :Scoping
   autoload :Serialization
   autoload :Timestamps
-  autoload :Type
   autoload_under 'util' do
     autoload :SolrRepair
   end
@@ -74,22 +73,16 @@ module DatastaxRails
     autoload :Keyspace
     autoload :ColumnFamily
   end
-
+  
   module Types
     extend ActiveSupport::Autoload
     
-    autoload :BaseType
-    autoload :BinaryType
-    autoload :ArrayType
-    autoload :BooleanType
-    autoload :DateType
-    autoload :FloatType
-    autoload :IntegerType
-    autoload :JsonType
-    autoload :StringType
-    autoload :TextType
-    autoload :TimeType
-    autoload :TimeWithZoneType
+    eager_autoload do
+      autoload :DirtyCollection
+      autoload :DirtyList
+      autoload :DirtySet
+      autoload :DirtyMap
+    end
   end
 end
 

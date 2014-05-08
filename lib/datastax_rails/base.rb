@@ -1,4 +1,3 @@
-require 'datastax_rails/types'
 require 'datastax_rails/errors'
 module DatastaxRails #:nodoc:
   # = DatastaxRails

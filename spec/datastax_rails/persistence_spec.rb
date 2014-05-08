@@ -21,14 +21,18 @@ describe "DatastaxRails::Base" do
       
       describe "#create" do
         it "should persist at the given consistency level" do
-          @statement.should_receive(:execute).with(anything, anything, anything, anything, anything, :consistency => :local_quorum)
+          @statement.should_receive(:execute) do |*args|
+            expect(args.last).to include(:consistency => :local_quorum)
+          end
           Person.create({:name => 'Steven'},{:consistency => 'LOCAL_QUORUM'})
         end
       end
     
       describe "#save" do
         it "should persist at the given consistency level" do
-          @statement.should_receive(:execute).with(anything, anything, anything, anything, anything, :consistency => :local_quorum)
+          @statement.should_receive(:execute) do |*args|
+            expect(args.last).to include(:consistency => :local_quorum)
+          end
           p=Person.new(:name => 'Steven')
           p.save(:consistency => 'LOCAL_QUORUM')
         end
@@ -38,7 +42,9 @@ describe "DatastaxRails::Base" do
         it "should remove at the given consistency level" do
           @statement.stub(:execute)
           p=Person.create(:name => 'Steven')
-          @statement.should_receive(:execute).with(anything, :consistency => :local_quorum)
+          @statement.should_receive(:execute) do |*args|
+            expect(args.last).to include(:consistency => :local_quorum)
+          end
           p.destroy(:consistency => :local_quorum)
         end
       end

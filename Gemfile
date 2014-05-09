@@ -19,3 +19,4 @@ gem 'pry'
 #gem 'ruby-debug-base19', :platforms => :ruby_20
 #gem 'ruby-debug'
 gem 'byebug'
+gem 'guard-rspec', require: false

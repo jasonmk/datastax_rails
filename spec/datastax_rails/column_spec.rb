@@ -2,6 +2,8 @@ require 'spec_helper'
 
 describe DatastaxRails::Column do
   describe "type casting" do
+    let(:record) {double(Person, :changed_attributes => {}, :attributes => {})}
+    
     describe "boolean" do
       let(:c) {DatastaxRails::Column.new("field", nil, "boolean")}
       
@@ -194,42 +196,42 @@ describe DatastaxRails::Column do
     end
     
     describe "map" do
-      let(:c) {DatastaxRails::Column.new("field", nil, "map", :type => :integer)}
+      let(:c) {DatastaxRails::Column.new("field", nil, "map", :holds => :integer)}
       
       it "casts map keys to strings" do
-        expect(c.type_cast({:key => 7}, "record")).to eq({"key" => 7})
+        expect(c.type_cast({:key => 7}, record)).to eq({"key" => 7})
       end
       
       it "casts map values to the type specified in the options" do
-        expect(c.type_cast({'key' => '7'}, "record")).to eq({"key" => 7})
+        expect(c.type_cast({'key' => '7'}, record)).to eq({"key" => 7})
       end
       
       it "wraps map values in a DirtyMap" do
-        expect(c.type_cast({'key' => '7'}, "record")).to be_a(DatastaxRails::Types::DirtyMap)
+        expect(c.type_cast({'key' => '7'}, record)).to be_a(DatastaxRails::Types::DirtyMap)
       end
     end
     
     describe "list" do
-      let(:c) {DatastaxRails::Column.new("field", nil, "list", :type => :integer)}
+      let(:c) {DatastaxRails::Column.new("field", nil, "list", :holds => :integer)}
       
       it "casts list values to the type specified in the options" do
-        expect(c.type_cast([1,"2",6.minutes], "record")).to eq([1,2,360])
+        expect(c.type_cast([1,"2",6.minutes], record)).to eq([1,2,360])
       end
       
       it "wraps list values in a DirtyList" do
-        expect(c.type_cast([1,"2",6.minutes], "record")).to be_a(DatastaxRails::Types::DirtyList)
+        expect(c.type_cast([1,"2",6.minutes], record)).to be_a(DatastaxRails::Types::DirtyList)
       end
     end
     
     describe "set" do
-      let(:c) {DatastaxRails::Column.new("field", nil, "set", :type => :integer)}
+      let(:c) {DatastaxRails::Column.new("field", nil, "set", :holds => :integer)}
       
       it "casts list values to the type specified in the options" do
-        expect(c.type_cast([1,"2",6.minutes, 2], "record")).to eq([1,2,360])
+        expect(c.type_cast([1,"2",6.minutes, 2], record)).to eq(Set.new([1,2,360]))
       end
       
       it "wraps list values in a DirtySet" do
-        expect(c.type_cast([1,"2",6.minutes, 2], "record")).to be_a(DatastaxRails::Types::DirtySet)
+        expect(c.type_cast([1,"2",6.minutes, 2], record)).to be_a(DatastaxRails::Types::DirtySet)
       end
     end
   end

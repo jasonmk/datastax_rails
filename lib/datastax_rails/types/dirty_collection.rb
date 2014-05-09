@@ -37,6 +37,7 @@ module DatastaxRails
           if !record.changed_attributes.key?(name) && original != self
             record.changed_attributes[name] = original
           end
+          record.attributes[name] = self
 
           result
         end

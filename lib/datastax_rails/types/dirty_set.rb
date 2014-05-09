@@ -1,12 +1,18 @@
 module DatastaxRails
   module Types
-    class DirtySet < DirtyList
+    class DirtySet < Set
+      include DirtyCollection
+
+      methods = [:delete, :<<, :add, :clear, :subtract] +
+                Set.instance_methods(true).select{|m| m.to_s.ends_with?('!')}
       
-      private
-        def organize_collection
-          Array.instance_method(:compact!).bind(self).call
-          Array.instance_method(:uniq!).bind(self).call
+      methods.each do |m|
+        define_method(m) do |*args, &block|
+          modifying do
+            super(*args, &block)
+          end
         end
+      end
     end
   end
 end

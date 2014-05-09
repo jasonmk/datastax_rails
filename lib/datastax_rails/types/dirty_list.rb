@@ -3,7 +3,7 @@ module DatastaxRails
     class DirtyList < Array
       include DirtyCollection
 
-      methods = [:<<, :delete, :[]=, :push, :pop, :unshift, :shift, :insert] +
+      methods = [:<<, :delete, :[]=, :push, :pop, :unshift, :shift, :insert, :clear] +
                 Array.instance_methods(true).select{|m| m.to_s.ends_with?('!')}
       
       methods.each do |m|

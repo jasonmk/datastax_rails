@@ -84,9 +84,15 @@ module DatastaxRails
         #   @macro attr_doc
         # @!method uuid(name, options = {})
         #   @macro attr_doc
+        # @!method map(name, options = {})
+        #   @macro attr_doc
+        # @!method list(name, options = {})
+        #   @macro attr_doc
+        # @!method set(name, options = {})
+        #   @macro attr_doc
         
         # The following sets up a bunch of nearly identical attribute methods
-        %w(array boolean date datetime float integer json string text time timestamp time_with_zone uuid).each do |type|
+        %w(array boolean date datetime float integer json string text time timestamp time_with_zone uuid map set list).each do |type|
           class_eval <<-EOV, __FILE__, __LINE__ + 1
             def #{type}(name, options = {})                               # def string(name, options = {})
               attribute(name, options.update(:type => :#{type}))             #   attribute(name, options.update(type: :string))

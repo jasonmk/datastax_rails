@@ -31,10 +31,11 @@ module DatastaxRails
       @name      = name
       @type      = type.to_sym
       raise ArgumentError, "Unknown type #{type}" unless self.klass
-      @cql_type  = compute_cql_type(type, options)
-      @solr_type = compute_solr_type(type, options)
+      options[:holds] = 'string' if collection? && options[:holds].blank?
+      @options   = configure_options(@type, options).with_indifferent_access
+      @cql_type  = compute_cql_type(@type, @options)
+      @solr_type = compute_solr_type(@type, @options)
       @default   = extract_default(default)
-      @options   = configure_options(type, options).with_indifferent_access
       @primary   = nil
       @coder     = nil
     end
@@ -42,7 +43,7 @@ module DatastaxRails
     def configure_options(type, options)
       case type.to_sym
       when :set, :list, :map then
-        configure_options(options[:type], options).merge(:multi_valued => true)
+        configure_options(options[:holds], options).merge(:multi_valued => true)
       when :binary then
         {:solr_index => false,   :solr_store => false, 
          :multi_valued => false, :sortable => false, 
@@ -81,6 +82,10 @@ module DatastaxRails
     # Returns +true+ if the column is of type binary
     def binary?
       [:binary].include?(type)
+    end
+    
+    def collection?
+      [:set, :list, :map].include?(type)
     end
 
     def has_default?
@@ -123,8 +128,8 @@ module DatastaxRails
       when :binary               then klass.binary_to_string(value)
       when :boolean              then klass.value_to_boolean(value)
       when :uuid, :timeuuid      then klass.value_to_uuid(value)
-      when :list, :set           then wrap_collection(value.collect {|v| type_cast(v, record, @options[:type])}, record)
-      when :map                  then wrap_collection(value.each {|k,v| value[k] = type_cast(v, record, @options[:type])}.stringify_keys, record)
+      when :list, :set           then wrap_collection(value.collect {|v| type_cast(v, record, @options[:holds])}, record)
+      when :map                  then wrap_collection(value.each {|k,v| value[k] = type_cast(v, record, @options[:holds])}.stringify_keys, record)
       else value
       end
     end
@@ -166,19 +171,19 @@ module DatastaxRails
     end
     
     def list_to_solr_value(value)
-      value.map {|v| type_cast_for_solr(v, @options[:type])}
+      value.map {|v| type_cast_for_solr(v, @options[:holds])}
     end
     
     def map_to_solr_value(value)
-      value.map { |a,b| { a.to_s => type_cast_for_solr(b, @options[:type]) } }
+      value.each {|k,v| value[k] = type_cast_for_solr(v, @options[:holds])}.stringify_keys
     end
     
     def list_to_cql3_value(value)
-      value.map {|v| type_cast_for_cql3(v, @options[:type])}
+      value.map {|v| type_cast_for_cql3(v, @options[:holds])}
     end
     
     def map_to_cql3_value(value)
-      value.map { |a,b| { a.to_s => type_cast_for_cql3(b, @options[:type]) } }
+      value.each {|k,v| value[k] = type_cast_for_cql3(v, @options[:holds])}.stringify_keys
     end
 
     # Returns the human name of the column name.
@@ -348,24 +353,24 @@ module DatastaxRails
     
     private
       def compute_cql_type(field_type, options)
-        options[:cql_type] || case type.to_sym
+        options[:cql_type] || case field_type.to_sym
         when :integer                            then 'int'
         when :time, :date, :timestamp, :datetime then 'timestamp' 
         when :binary                             then 'blob'
-        when :list                               then "list<#{options[:type] || text}>"
-        when :set                                then "set<#{options[:type] || text}>"
-        when :map                                then "map<text, #{options[:type] || text}>"
+        when :list                               then "list<#{compute_cql_type(options[:holds], options)}>"
+        when :set                                then "set<#{compute_cql_type(options[:holds], options)}>"
+        when :map                                then "map<text, #{compute_cql_type(options[:holds], options)}>"
         when :string                             then 'text'
         else field_type.to_s
         end
       end
       
       def compute_solr_type(field_type, options)
-        options[:solr_type] || case type.to_sym
+        options[:solr_type] || case field_type.to_sym
         when :integer                            then 'int'
         when :decimal                            then 'double'
         when :timestamp, :time, :datetime        then 'date'
-        when :list, :set, :map                   then options[:type].to_s || 'string'
+        when :list, :set, :map                   then compute_solr_type(options[:holds], options)
         else field_type.to_s
         end
       end

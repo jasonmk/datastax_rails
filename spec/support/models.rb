@@ -9,6 +9,7 @@ class Person < DatastaxRails::Base
   text :name, :sortable => true
   date :birthdate
   string :nickname
+  set :email_addresses
   timestamps
   
   before_create :set_variable2
@@ -40,6 +41,7 @@ class Car < DatastaxRails::Base
   uuid :person_id
   uuid :car_payload_id
   datetime :last_serviced_at
+  map :oil_changes, :holds => :timestamp
   timestamps
 end
 
@@ -68,6 +70,7 @@ class Job < DatastaxRails::Base
   string :title
   integer :position_number
   uuid :person_id
+  list :former_positions, :holds => :integer
   timestamps
   
   validates :position_number, :uniqueness => true, :allow_blank => true

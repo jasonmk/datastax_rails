@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe DatastaxRails::Types::DirtyList do
-  subject {described_class.new(double("record", :changed_attributes => {}), 'list', [])}
+  subject {described_class.new(double("record", :changed_attributes => {}, :attributes => {}), 'list', [])}
   
   before(:each) do
     subject << "Test String 1"
@@ -11,6 +11,7 @@ describe DatastaxRails::Types::DirtyList do
   
   it { should eq(["Test String 1", "Another Test String", "Test String 1"])}
   its('record.changed_attributes') { should include('list' => []) }
+  its('record.attributes') { should include('list' => ["Test String 1", "Another Test String", "Test String 1"])}
   
   it "preserves ordering" do
     subject[1] = "Test String 2"

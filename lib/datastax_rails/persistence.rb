@@ -65,9 +65,9 @@ module DatastaxRails
         record.id.tap do |key|
           ActiveSupport::Notifications.instrument("insert.datastax_rails", :column_family => column_family, :key => key.to_s, :attributes => record.attributes) do
             if(self.storage_method == :solr)
-              write_with_solr(key, record.attributes, record.changed, options)
+              write_with_solr(record, options)
             else
-              write_with_cql(key, record.attributes, record.changed, options)
+              write_with_cql(record, options)
             end
           end
         end
@@ -87,14 +87,13 @@ module DatastaxRails
       # Encodes the attributes in preparation for storing in cassandra. Calls the coders on the various type classes
       # to do the heavy lifting.
       #
-      # @param [Hash] attributes a hash containing the attributes on the record
-      # @param [Array] changed an array containing the attribute names that are being saved
+      # @param [DatastaxRails::Base] record the record whose attributes we're encoding
       # @param [Boolean] cql True if we're formatting for CQL, otherwise False
       # @return [Hash] a new hash with attributes encoded for storage
-      def encode_attributes(attributes, changed, cql)
+      def encode_attributes(record, cql)
         encoded = {}
-        attributes.each do |column_name, value|
-          next unless changed.include?(column_name)
+        record.changed.each do |column_name|
+          value = record.read_attribute(column_name)
           encoded[column_name.to_s] = cql ? attribute_definitions[column_name].type_cast_for_cql3(value) :
                                             attribute_definitions[column_name].type_cast_for_solr(value)
         end
@@ -102,18 +101,18 @@ module DatastaxRails
       end
       
       private
-        def write_with_cql(key, attributes, changed, options)
-          encoded = encode_attributes(attributes, changed, true)
+        def write_with_cql(record, options)
+          encoded = encode_attributes(record, true)
           if options[:new_record]
             cql.insert.columns(encoded).using(options[:consistency]).execute
           else
-            cql.update(key).columns(encoded).using(options[:consistency]).execute
+            cql.update(record.id).columns(encoded).using(options[:consistency]).execute
           end
         end
         
-        def write_with_solr(key, attributes, changed, options)
-          encoded = encode_attributes(attributes, changed, false)
-          xml_doc = RSolr::Xml::Generator.new.add(encoded.merge(:id => key))
+        def write_with_solr(record, options)
+          encoded = encode_attributes(record, false)
+          xml_doc = RSolr::Xml::Generator.new.add(encoded.merge(self.primary_key => record.id.to_s))
           self.solr_connection.update(:data => xml_doc, :params => {:replacefields => false, :cl => options[:consistency]})
         end
     end

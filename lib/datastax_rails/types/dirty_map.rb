@@ -3,7 +3,7 @@ module DatastaxRails
     class DirtyMap < ActiveSupport::HashWithIndifferentAccess
       include DirtyCollection
 
-      methods = [:delete, :[]=, :store] +
+      methods = [:delete, :[]=, :store, :clear] +
                 ActiveSupport::HashWithIndifferentAccess.instance_methods(true).select{|m| m.to_s.ends_with?('!')}
       
       methods.each do |m|

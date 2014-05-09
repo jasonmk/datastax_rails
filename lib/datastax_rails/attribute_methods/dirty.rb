@@ -58,7 +58,7 @@ module DatastaxRails
                                   changes_from_zero_to_string?(old, value))
               value = nil
             else
-              value = column.type_cast(value)
+              value = column.type_cast(value, self)
             end
           end
   

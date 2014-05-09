@@ -103,7 +103,7 @@ module DatastaxRails
           }
 
           if self.class.cache_attribute?(name)
-            @attributes_cache[name] = column.type_cast(value)
+            @attributes_cache[name] = column.type_cast(value, self)
           else
             column.type_cast value
           end

@@ -16,7 +16,7 @@ module DatastaxRails
       end
       
       def dup
-        self.class.new(record, name, self, options).tap do |new_hash|
+        self.class.new(record, name, self).tap do |new_hash|
           new_hash.default = default
         end
       end

@@ -6,15 +6,16 @@ module DatastaxRails
       extend ActiveSupport::Concern
       
       included do
-        attr_accessor :record, :name, :options
+        attr_accessor :record, :name
       end
       
-      def initialize(record, name, collection, options)
+      def initialize(record, name, collection)
         @record   = record
         @name     = name.to_s
-        @options  = options
 
         super(collection)
+        
+        organize_collection
       end
       
       def delete(obj)

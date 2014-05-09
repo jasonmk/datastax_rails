@@ -4,24 +4,46 @@ describe DatastaxRails::Column do
   describe "type casting" do
     describe "boolean" do
       let(:column) {DatastaxRails::Column.new("field", nil, "boolean")}
-
-      it "casts '' to nil" do 
-        expect(column.type_cast('')).to be_nil
-      end
       
-      it "casts nil to nil" do
-        expect(column.type_cast(nil)).to be_nil
-      end
-  
-      [true, 1, '1', 't', 'T', 'true', 'TRUE', 'on', 'ON'].each do |val|
-        it "casts #{val.inspect} to true" do
-          expect(column.type_cast(val)).to eq(true)
+      describe "to ruby" do
+        it "casts '' to nil" do 
+          expect(column.type_cast('')).to be_nil
+        end
+        
+        it "casts nil to nil" do
+          expect(column.type_cast(nil)).to be_nil
+        end
+    
+        [true, 1, '1', 't', 'T', 'true', 'TRUE', 'on', 'ON'].each do |val|
+          it "casts #{val.inspect} to true" do
+            expect(column.type_cast(val)).to eq(true)
+          end
+        end
+        
+        [false, 0, '0', 'f', 'F', 'false', 'FALSE', 'off', 'OFF', ' ', "\u3000\r\n", "\u0000", 'SOMETHING RANDOM'].each do |val|
+          it "casts #{val.inspect} to false" do
+            expect(column.type_cast(val)).to eq(false)
+          end
         end
       end
       
-      [false, 0, '0', 'f', 'F', 'false', 'FALSE', 'off', 'OFF', ' ', "\u3000\r\n", "\u0000", 'SOMETHING RANDOM'].each do |val|
-        it "casts #{val.inspect} to false" do
-          expect(column.type_cast(val)).to eq(false)
+      describe "to cql3" do
+        it "casts false to false" do
+          expect(column.type_cast_for_cql3(false)).to be_false
+        end
+        
+        it "casts true to true" do
+          expect(column.type_cast_for_cql3(true)).to be_true
+        end
+      end
+      
+      describe "to solr" do
+        it "casts false to 'false'" do
+          expect(column.type_cast_for_solr(false)).to eq('false')
+        end
+        
+        it "casts true to 'true'" do
+          expect(column.type_cast_for_solr(true)).to eq('true')
         end
       end
     end
@@ -107,6 +129,46 @@ describe DatastaxRails::Column do
       it "casts a date string to Date" do
         date_string = Time.now.utc.strftime("%F")
         expect(column.type_cast(date_string).strftime("%F")).to eq(date_string)
+      end
+    end
+    
+    describe "map" do
+      let(:column) {DatastaxRails::Column.new("field", nil, "map", :type => :integer)}
+      
+      it "casts map keys to strings" do
+        expect(column.type_cast({:key => 7}, "record")).to eq({"key" => 7})
+      end
+      
+      it "casts map values to the type specified in the options" do
+        expect(column.type_cast({'key' => '7'}, "record")).to eq({"key" => 7})
+      end
+      
+      it "wraps map values in a DirtyMap" do
+        expect(column.type_cast({'key' => '7'}, "record")).to be_a(DatastaxRails::Types::DirtyMap)
+      end
+    end
+    
+    describe "list" do
+      let(:column) {DatastaxRails::Column.new("field", nil, "list", :type => :integer)}
+      
+      it "casts list values to the type specified in the options" do
+        expect(column.type_cast([1,"2",6.minutes], "record")).to eq([1,2,360])
+      end
+      
+      it "wraps list values in a DirtyList" do
+        expect(column.type_cast([1,"2",6.minutes], "record")).to be_a(DatastaxRails::Types::DirtyList)
+      end
+    end
+    
+    describe "set" do
+      let(:column) {DatastaxRails::Column.new("field", nil, "set", :type => :integer)}
+      
+      it "casts list values to the type specified in the options" do
+        expect(column.type_cast([1,"2",6.minutes, 2], "record")).to eq([1,2,360])
+      end
+      
+      it "wraps list values in a DirtySet" do
+        expect(column.type_cast([1,"2",6.minutes, 2], "record")).to be_a(DatastaxRails::Types::DirtySet)
       end
     end
   end

@@ -98,21 +98,21 @@ module DatastaxRails
       when :text, :string, :binary, :ascii then String
       when :boolean                        then Object
       when :uuid                           then ::Cql::TimeUuid
-      when :list, :set                     then Array
-      when :map                            then Hash
+      when :list                           then DatastaxRails::Types::DirtyList
+      when :set                            then DatastaxRails::Types::DirtySet
+      when :map                            then DatastaxRails::Types::DirtyMap
       end
     end
 
     # Casts value (which can be a String) to an appropriate instance.
-    def type_cast(value, dest_type = nil)
+    def type_cast(value, record = nil, dest_type = nil)
       return nil if value.nil?
       return coder.load(value) if encoded?
-      dest_type ||= type
 
       klass = self.class
 
-      case dest_type
-      when :string, :text        then value
+      case dest_type || type
+      when :string, :text        then value.to_s
       when :ascii                then value.force_encoding('ascii')
       when :integer              then klass.value_to_integer(value)
       when :float                then value.to_f
@@ -123,10 +123,14 @@ module DatastaxRails
       when :binary               then klass.binary_to_string(value)
       when :boolean              then klass.value_to_boolean(value)
       when :uuid, :timeuuid      then klass.value_to_uuid(value)
-      when :list, :set           then value.collect {|v| type_cast(v,@options[:type])}
-      when :map                  then value.collect {|a,b| {a => type_cast(b,@options[:type])}}
+      when :list, :set           then wrap_collection(value.collect {|v| type_cast(v, record, @options[:type])}, record)
+      when :map                  then wrap_collection(value.each {|k,v| value[k] = type_cast(v, record, @options[:type])}.stringify_keys, record)
       else value
       end
+    end
+    
+    def wrap_collection(collection, record)
+      klass.new(record, name, collection)
     end
     
     # Cql-rb does a really good job of typecasting, so for the most part we
@@ -140,6 +144,10 @@ module DatastaxRails
         self.class.value_to_uuid(value)
       elsif type == :date
         value.to_time
+      elsif type == :list || type == :set
+        list_to_cql3_value(value)
+      elsif type == :map
+        map_to_cql3_value(value)
       else
         value
       end
@@ -153,7 +161,7 @@ module DatastaxRails
       return coder.dump(value) if encoded?
       
       case (column_type || type)
-      when :boolean                            then value ? 1 : 0
+      when :boolean                            then value ? 'true' : 'false'
       when :date, :time, :datetime, :timestamp then value.strftime(Format::SOLR_TIME_FORMAT)
       when :list, :set                         then self.list_to_solr_value(value)
       when :map                                then self.map_to_solr_value(value)
@@ -167,6 +175,14 @@ module DatastaxRails
     
     def map_to_solr_value(value)
       value.map { |a,b| { a.to_s => type_cast_for_solr(b, @options[:type]) } }
+    end
+    
+    def list_to_cql3_value(value)
+      value.map {|v| type_cast_for_cql3(v, @options[:type])}
+    end
+    
+    def map_to_cql3_value(value)
+      value.map { |a,b| { a.to_s => type_cast_for_cql3(b, @options[:type]) } }
     end
 
     # Returns the human name of the column name.

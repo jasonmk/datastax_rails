@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe DatastaxRails::Types::DirtyList do
-  subject {described_class.new(double("record", :changed_attributes => {}), 'list', [], {})}
+  subject {described_class.new(double("record", :changed_attributes => {}), 'list', [])}
   
   before(:each) do
     subject << "Test String 1"

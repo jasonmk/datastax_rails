@@ -529,11 +529,11 @@ module DatastaxRails
       return value unless use_solr_value
       case
         when value.is_a?(Time)
-          value.utc.strftime(DatastaxRails::Types::TimeType::FORMAT)
+          value.utc.strftime(DatastaxRails::Column::Format::SOLR_TIME_FORMAT)
         when value.is_a?(DateTime)
-          value.to_time.utc.strftime(DatastaxRails::Types::TimeType::FORMAT)
+          value.to_time.utc.strftime(DatastaxRails::Column::Format::SOLR_TIME_FORMAT)
         when value.is_a?(Date)
-          value.strftime(DatastaxRails::Types::TimeType::FORMAT)
+          value.strftime(DatastaxRails::Column::Format::SOLR_TIME_FORMAT)
         when value.is_a?(Array)
           value.collect {|v| v.to_s.gsub(/ /,"\\ ") }.join(" OR ")
         when value.is_a?(Fixnum)

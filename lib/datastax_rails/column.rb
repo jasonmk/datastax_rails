@@ -136,31 +136,27 @@ module DatastaxRails
     # Cql-rb does a really good job of typecasting, so for the most part we
     # just pass in the native types.  The only exceptions are for UUIDs that
     # are passed in as strings and dates.
-    def type_cast_for_cql3(value)
+    def type_cast_for_cql3(value, dest_type = nil)
       return nil if value.nil?
       return coder.dump(value) if encoded?
       
-      if type == :uuid && value.class == String
-        self.class.value_to_uuid(value)
-      elsif type == :date
-        value.to_time
-      elsif type == :list || type == :set
-        list_to_cql3_value(value)
-      elsif type == :map
-        map_to_cql3_value(value)
-      else
-        value
+      case (dest_type || type)
+      when :uuid             then value.is_a?(::Cql::Uuid) ? value : self.class.value_to_uuid(value)
+      when :date             then value.to_time
+      when :list, :set       then list_to_cql3_value(value)
+      when :map              then map_to_cql3_value(value)
+      else value
       end
     end
     
     # By contrast, since Solr isn't doing things like prepared statements
     # it doesn't know what the types are so we have to handle any casting
     # or encoding ourselves.
-    def type_cast_for_solr(value, column_type = nil)
+    def type_cast_for_solr(value, dest_type = nil)
       return nil if value.nil?
       return coder.dump(value) if encoded?
       
-      case (column_type || type)
+      case (dest_type || type)
       when :boolean                            then value ? 'true' : 'false'
       when :date, :time, :datetime, :timestamp then value.strftime(Format::SOLR_TIME_FORMAT)
       when :list, :set                         then self.list_to_solr_value(value)

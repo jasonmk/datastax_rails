@@ -3,172 +3,233 @@ require 'spec_helper'
 describe DatastaxRails::Column do
   describe "type casting" do
     describe "boolean" do
-      let(:column) {DatastaxRails::Column.new("field", nil, "boolean")}
+      let(:c) {DatastaxRails::Column.new("field", nil, "boolean")}
       
       describe "to ruby" do
         it "casts '' to nil" do 
-          expect(column.type_cast('')).to be_nil
+          expect(c.type_cast('')).to be_nil
         end
         
         it "casts nil to nil" do
-          expect(column.type_cast(nil)).to be_nil
+          expect(c.type_cast(nil)).to be_nil
         end
     
         [true, 1, '1', 't', 'T', 'true', 'TRUE', 'on', 'ON'].each do |val|
           it "casts #{val.inspect} to true" do
-            expect(column.type_cast(val)).to eq(true)
+            expect(c.type_cast(val)).to eq(true)
           end
         end
         
         [false, 0, '0', 'f', 'F', 'false', 'FALSE', 'off', 'OFF', ' ', "\u3000\r\n", "\u0000", 'SOMETHING RANDOM'].each do |val|
           it "casts #{val.inspect} to false" do
-            expect(column.type_cast(val)).to eq(false)
+            expect(c.type_cast(val)).to eq(false)
           end
         end
       end
       
       describe "to cql3" do
         it "casts false to false" do
-          expect(column.type_cast_for_cql3(false)).to be_false
+          expect(c.type_cast_for_cql3(false)).to be_false
         end
         
         it "casts true to true" do
-          expect(column.type_cast_for_cql3(true)).to be_true
+          expect(c.type_cast_for_cql3(true)).to be_true
         end
       end
       
       describe "to solr" do
         it "casts false to 'false'" do
-          expect(column.type_cast_for_solr(false)).to eq('false')
+          expect(c.type_cast_for_solr(false)).to eq('false')
         end
         
         it "casts true to 'true'" do
-          expect(column.type_cast_for_solr(true)).to eq('true')
+          expect(c.type_cast_for_solr(true)).to eq('true')
         end
       end
     end
     
     describe "integer" do
-      let(:column) {DatastaxRails::Column.new("field", nil, "integer")}
+      let(:c) {DatastaxRails::Column.new("field", nil, "integer")}
       
-      [1,'1','1ignore','1.7',true].each do |val|
-        it "casts #{val.inspect} to true" do
-          expect(column.type_cast(val)).to eq(1)
+      describe "to ruby" do
+        [1,'1','1ignore','1.7',true].each do |val|
+          it "casts #{val.inspect} to true" do
+            expect(c.type_cast(val)).to eq(1)
+          end
+        end
+        
+        ['bad1','bad',false].each do |val|
+          it "casts #{val.inspect} to 0" do
+            expect(c.type_cast(val)).to eq(0)
+          end
+        end
+        
+        [nil,[1,2],{1 => 2},(1..2),Object.new,Float::NAN,(1.0/0.0)].each do |val|
+          it "casts #{val.inspect} to nil" do
+            expect(c.type_cast(val)).to be_nil
+          end
+        end
+        
+        it "casts a duration to an integer" do
+          expect(c.type_cast(30.minutes)).to be(1800)
         end
       end
       
-      ['bad1','bad',false].each do |val|
-        it "casts #{val.inspect} to 0" do
-          expect(column.type_cast(val)).to eq(0)
+      describe "to cql3" do
+        it "casts 1 to 1" do
+          expect(c.type_cast_for_cql3(1)).to be(1)
         end
       end
       
-      [nil,[1,2],{1 => 2},(1..2),Object.new,Float::NAN,(1.0/0.0)].each do |val|
-        it "casts #{val.inspect} to nil" do
-          expect(column.type_cast(val)).to be_nil
+      describe "to solr" do
+        it "casts 1 to 1" do
+          expect(c.type_cast_for_solr(1)).to be(1)
         end
-      end
-      
-      it "casts a duration to an integer" do
-        expect(column.type_cast(30.minutes)).to be(1800)
       end
     end
     
     describe "time" do
-      let(:column) {DatastaxRails::Column.new("field", nil, "time")}
+      let(:c) {DatastaxRails::Column.new("field", nil, "time")}
       
-      [nil,'ABC',''].each do |val|
-        it "casts #{val.inspect} to nil" do
-          expect(column.type_cast(val)).to be_nil
+      describe "to ruby" do
+        [nil,'ABC',''].each do |val|
+          it "casts #{val.inspect} to nil" do
+            expect(c.type_cast(val)).to be_nil
+          end
+        end
+        
+        it "casts a time string to Time" do
+          time_string = Time.now.utc.strftime("%T")
+          expect(c.type_cast(time_string).strftime("%T")).to eq(time_string)
         end
       end
       
-      it "casts a time string to Time" do
-        time_string = Time.now.utc.strftime("%T")
-        expect(column.type_cast(time_string).strftime("%T")).to eq(time_string)
+      describe "to cql3" do
+        it "casts a Time object to a Time object" do
+          time = Time.parse('1980-10-19 17:55:00')
+          expect(c.type_cast_for_cql3(time)).to eq(time)
+        end
+      end
+      
+      describe "to solr" do
+        it "casts a Time object to a solr formatted time string" do
+          time = Time.parse('1980-10-19 17:55:00')
+          expect(c.type_cast_for_solr(time)).to eq('1980-10-19T17:55:00Z')
+        end
       end
     end
     
     describe "timestamp" do
-      let(:column) {DatastaxRails::Column.new("field", nil, "timestamp")}
+      let(:c) {DatastaxRails::Column.new("field", nil, "timestamp")}
       
-      [nil,'',' ', 'ABC'].each do |val|
-        it "casts #{val.inspect} to nil" do
-          expect(column.type_cast(val)).to be_nil
+      describe "to ruby" do
+        [nil,'',' ', 'ABC'].each do |val|
+          it "casts #{val.inspect} to nil" do
+            expect(c.type_cast(val)).to be_nil
+          end
+        end
+        
+        it "casts a datetime string to Time" do
+          datetime_string = Time.now.utc.strftime("%FT%T")
+          expect(c.type_cast(datetime_string).strftime("%FT%T")).to eq(datetime_string)
+        end
+        
+        it "casts a datetime string with timezone to Time" do
+          begin
+            old = DatastaxRails::Base.default_timezone
+            [:utc, :local].each do |zone|
+              ActiveRecord::Base.default_timezone = zone
+              datetime_string = "Wed, 04 Sep 2013 03:00:00 EAT"
+              expect(c.type_cast(val)).to eq(Time.utc(2013, 9, 4, 0, 0, 0))
+            end
+          rescue
+            DatastaxRails::Base.default_timezone = old
+          end
         end
       end
       
-      it "casts a datetime string to Time" do
-        datetime_string = Time.now.utc.strftime("%FT%T")
-        expect(column.type_cast(datetime_string).strftime("%FT%T")).to eq(datetime_string)
+      describe "to cql3" do
+        it "casts a Time object to a Time object" do
+          time = Time.parse('1980-10-19 17:55:00')
+          expect(c.type_cast_for_cql3(time)).to eq(time)
+        end
       end
       
-      it "casts a datetime string with timezone to Time" do
-        begin
-          old = DatastaxRails::Base.default_timezone
-          [:utc, :local].each do |zone|
-            ActiveRecord::Base.default_timezone = zone
-            datetime_string = "Wed, 04 Sep 2013 03:00:00 EAT"
-            expect(column.type_cast(val)).to eq(Time.utc(2013, 9, 4, 0, 0, 0))
-          end
-        rescue
-          DatastaxRails::Base.default_timezone = old
+      describe "to solr" do
+        it "casts a Time object to a solr formatted time string" do
+          time = Time.parse('1980-10-19 17:55:00')
+          expect(c.type_cast_for_solr(time)).to eq('1980-10-19T17:55:00Z')
         end
       end
     end
     
     describe "date" do
-      let(:column) {DatastaxRails::Column.new("field", nil, "date")}
+      let(:c) {DatastaxRails::Column.new("field", nil, "date")}
       
       [nil,'',' ', 'ABC'].each do |val|
         it "casts #{val.inspect} to nil" do
-          expect(column.type_cast(val)).to be_nil
+          expect(c.type_cast(val)).to be_nil
         end
       end
       
       it "casts a date string to Date" do
         date_string = Time.now.utc.strftime("%F")
-        expect(column.type_cast(date_string).strftime("%F")).to eq(date_string)
+        expect(c.type_cast(date_string).strftime("%F")).to eq(date_string)
+      end
+      
+      describe "to cql3" do
+        it "casts a Date object to a Time object" do
+          time = Time.parse('1980-10-19 00:00:00')
+          date = Date.parse('1980-10-19')
+          expect(c.type_cast_for_cql3(date)).to eq(time)
+        end
+      end
+      
+      describe "to solr" do
+        it "casts a Date object to a solr formatted time string" do
+          date = Date.parse('1980-10-19')
+          expect(c.type_cast_for_solr(date)).to eq('1980-10-19T00:00:00Z')
+        end
       end
     end
     
     describe "map" do
-      let(:column) {DatastaxRails::Column.new("field", nil, "map", :type => :integer)}
+      let(:c) {DatastaxRails::Column.new("field", nil, "map", :type => :integer)}
       
       it "casts map keys to strings" do
-        expect(column.type_cast({:key => 7}, "record")).to eq({"key" => 7})
+        expect(c.type_cast({:key => 7}, "record")).to eq({"key" => 7})
       end
       
       it "casts map values to the type specified in the options" do
-        expect(column.type_cast({'key' => '7'}, "record")).to eq({"key" => 7})
+        expect(c.type_cast({'key' => '7'}, "record")).to eq({"key" => 7})
       end
       
       it "wraps map values in a DirtyMap" do
-        expect(column.type_cast({'key' => '7'}, "record")).to be_a(DatastaxRails::Types::DirtyMap)
+        expect(c.type_cast({'key' => '7'}, "record")).to be_a(DatastaxRails::Types::DirtyMap)
       end
     end
     
     describe "list" do
-      let(:column) {DatastaxRails::Column.new("field", nil, "list", :type => :integer)}
+      let(:c) {DatastaxRails::Column.new("field", nil, "list", :type => :integer)}
       
       it "casts list values to the type specified in the options" do
-        expect(column.type_cast([1,"2",6.minutes], "record")).to eq([1,2,360])
+        expect(c.type_cast([1,"2",6.minutes], "record")).to eq([1,2,360])
       end
       
       it "wraps list values in a DirtyList" do
-        expect(column.type_cast([1,"2",6.minutes], "record")).to be_a(DatastaxRails::Types::DirtyList)
+        expect(c.type_cast([1,"2",6.minutes], "record")).to be_a(DatastaxRails::Types::DirtyList)
       end
     end
     
     describe "set" do
-      let(:column) {DatastaxRails::Column.new("field", nil, "set", :type => :integer)}
+      let(:c) {DatastaxRails::Column.new("field", nil, "set", :type => :integer)}
       
       it "casts list values to the type specified in the options" do
-        expect(column.type_cast([1,"2",6.minutes, 2], "record")).to eq([1,2,360])
+        expect(c.type_cast([1,"2",6.minutes, 2], "record")).to eq([1,2,360])
       end
       
       it "wraps list values in a DirtySet" do
-        expect(column.type_cast([1,"2",6.minutes, 2], "record")).to be_a(DatastaxRails::Types::DirtySet)
+        expect(c.type_cast([1,"2",6.minutes, 2], "record")).to be_a(DatastaxRails::Types::DirtySet)
       end
     end
   end

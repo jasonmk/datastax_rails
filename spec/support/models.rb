@@ -97,5 +97,6 @@ class Hobby < DatastaxRails::Base
   uuid :id
   string :name
   float :complexity
+  map :components, :holds => :integer
   timestamps
 end

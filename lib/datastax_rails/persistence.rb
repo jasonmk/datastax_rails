@@ -92,10 +92,12 @@ module DatastaxRails
       # @return [Hash] a new hash with attributes encoded for storage
       def encode_attributes(record, cql)
         encoded = {}
-        record.changed.each do |column_name|
-          value = record.read_attribute(column_name)
-          encoded[column_name.to_s] = cql ? attribute_definitions[column_name].type_cast_for_cql3(value) :
-                                            attribute_definitions[column_name].type_cast_for_solr(value)
+        Types::DirtyCollection.ignore_modifications do
+          record.changed.each do |column_name|
+            value = record.read_attribute(column_name)
+            encoded[column_name.to_s] = cql ? attribute_definitions[column_name].type_cast_for_cql3(value) :
+                                              attribute_definitions[column_name].type_cast_for_solr(value)
+          end
         end
         encoded
       end

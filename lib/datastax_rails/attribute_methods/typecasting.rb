@@ -11,6 +11,31 @@ module DatastaxRails
         self.lazy_attributes = []
         self.readonly_attributes = []
       end
+      
+      # This is a hook for use by modules that need to do extra stuff to
+      # attributes when they are initialized. (e.g. attribute
+      # serialization)
+      def initialize_attributes(attributes) #:nodoc:
+        attrs = {}
+          Types::DirtyCollection.ignore_modifications do
+          attributes.each do |k,v|
+            if col = column_for_attribute(k)
+              if col.type == :map && k.to_s != col.name.to_s
+                # See if we have a matching dynamic attribute column
+                self.class.map_columns.each do |mcol|
+                  if k.to_s.starts_with?(mcol.name.to_s)
+                    attrs[mcol.name.to_s] ||= mcol.wrap_collection({}, self)
+                    attrs[mcol.name.to_s][k.to_s] = v
+                  end
+                end
+              else
+                attrs[k.to_s] = col.collection? ? col.wrap_collection(v, self) : v
+              end
+            end
+          end
+        end
+        attrs
+      end
 
       module ClassMethods
         # Provide some measure of compatibility with things that expect this from ActiveRecord.
@@ -18,11 +43,9 @@ module DatastaxRails
           self.attribute_definitions
         end
         
-        # This is a hook for use by modules that need to do extra stuff to
-        # attributes when they are initialized. (e.g. attribute
-        # serialization)
-        def initialize_attributes(attributes, options = {}) #:nodoc:
-          attributes
+        # Gives you all of the map columns (useful for detecting dynamic columns)
+        def map_columns
+          @map_columns ||= self.attribute_definitions.values.select {|c| c.type == :map}
         end
         
         # Returns a hash where the keys are column names and the values are

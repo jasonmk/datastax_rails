@@ -32,7 +32,7 @@ module DatastaxRails
     alias attributes= assign_attributes
     
     private
-
+    
       def _assign_attribute(k, v)
         public_send("#{k}=", v)
       rescue NoMethodError

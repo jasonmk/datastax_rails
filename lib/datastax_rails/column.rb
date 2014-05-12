@@ -175,7 +175,7 @@ module DatastaxRails
     end
     
     def map_to_solr_value(value)
-      value.each {|k,v| value[k] = type_cast_for_solr(v, @options[:holds])}.stringify_keys
+      value.each {|k,v| value[k] = type_cast_for_solr(v, @options[:holds])}
     end
     
     def list_to_cql3_value(value)
@@ -183,7 +183,8 @@ module DatastaxRails
     end
     
     def map_to_cql3_value(value)
-      value.each {|k,v| value[k] = type_cast_for_cql3(v, @options[:holds])}.stringify_keys
+      value.dup.each {|k,v| value[k] = type_cast_for_cql3(v, @options[:holds])}
+      value
     end
 
     # Returns the human name of the column name.

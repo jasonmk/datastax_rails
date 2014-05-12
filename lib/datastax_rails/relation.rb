@@ -492,8 +492,9 @@ module DatastaxRails
       end
       
       select_columns = select_values.empty? ? (@klass.attribute_definitions.keys - @klass.lazy_attributes) : select_values.flatten
-      select_columns << "id"
-      params[:fl] = select_columns.collect(&:to_s).join(",")
+      select_columns << @klass.primary_key
+      select_columns.collect! {|c| @klass.column_for_attribute(c).try(:type) == :map ? "#{c.to_s}*" : c.to_s}
+      params[:fl] = select_columns.uniq.join(",")
       unless(@stats_values.empty?)
         params[:stats] = 'true'
         @stats_values.flatten.each do |sv|
@@ -558,7 +559,6 @@ module DatastaxRails
           obj = @klass.with_cassandra.consistency(@consistency_value).find_by_id(id)
           results << obj if obj
         else
-          #byebug
           results << @klass.instantiate(id, doc, select_columns)
         end
       end

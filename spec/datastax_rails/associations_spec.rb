@@ -17,7 +17,6 @@ describe DatastaxRails::Base do
         person = Person.create!(:name => "John")
         job = Job.create!(:title => "Developer", :person_id => person.id)
         Person.commit_solr
-        Person.commit_solr
         Job.commit_solr
         Job.first.person.should == person
       end

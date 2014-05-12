@@ -15,6 +15,7 @@ module DatastaxRails
                 
         methods.each do |m|
           if self.instance_methods.include?(m)
+            alias_method "___#{m}", m
             original_method = self.instance_method(m)
             define_method(m) do |*args, &block|
               modifying do
@@ -28,9 +29,8 @@ module DatastaxRails
       def initialize(record, name, collection)
         @record   = record
         @name     = name.to_s
-
-        super(collection)
         
+        super(collection)
         organize_collection
       end
       
@@ -40,6 +40,14 @@ module DatastaxRails
         end
       end
       
+      def self.ignore_modifications
+        original = $dsr_ignore_modifications
+        $dsr_ignore_modifications = true
+        result = yield
+        $dsr_ignore_modifications = original
+        result
+      end
+      
       private
         def modifying
           # So there's a problem with overriding the map! method on Array.
@@ -47,26 +55,26 @@ module DatastaxRails
           # calls .map! on our Array.  This causes infinite recursion which
           # I find is generally not a desired behavior.  We use a variable
           # to tell if we've already hijacked the call.
-          if @hijacked
+          if $dsr_ignore_modifications
             yield
           else
-            @hijacked = true
-            unless record.changed_attributes.key?(name)
-              original = dup
+            DirtyCollection.ignore_modifications do
+              unless record.changed_attributes.key?(name)
+                original = dup
+              end
+    
+              result = yield
+              
+              organize_collection
+    
+              if !record.changed_attributes.key?(name) && original != self
+                record.changed_attributes[name] = original
+              end
+              
+              record.attributes[name] = self
+              
+              result
             end
-  
-            result = yield
-            
-            organize_collection
-  
-            if !record.changed_attributes.key?(name) && original != self
-              record.changed_attributes[name] = original
-            end
-            
-            record.attributes[name] = self
-            
-            @hijacked = false
-            result
           end
         end
         

@@ -65,6 +65,14 @@ describe DatastaxRails::Relation do
     end
   end
   
+  describe "#select" do
+    it "returns maps from solr automatically" do
+      Hobby.create!(:name => "legos", :components => {'squares' => 4, 'rectangles' => 6})
+      @relation.commit_solr
+      res = @relation.select(:components).with_solr.first.components.should have_key('squares')
+    end
+  end
+  
   describe "#slow_order" do
     it "should manually order items coming from Cassandra" do
       %w[john jason michael tony billy jim phil].each_with_index do |name,i|

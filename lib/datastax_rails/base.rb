@@ -366,11 +366,9 @@ module DatastaxRails #:nodoc:
     
     def initialize(attributes = {}, options = {})
       defaults = self.class.column_defaults.dup
-      defaults.each do |k, v|
-        defaults[k] = column_for_attribute(k).type_cast(v).deep_dup
-      end
+      defaults.each { |k, v| v.duplicable? ? v.dup : v }
       
-      @attributes = self.class.initialize_attributes(defaults)
+      @attributes = self.initialize_attributes(defaults)
       @column_types = self.class.columns_hash
 
       init_internals
@@ -394,17 +392,18 @@ module DatastaxRails #:nodoc:
     #   post.init_with('attributes' => { 'title' => 'hello world' })
     #   post.title # => 'hello world'
     def init_with(coder)
-      @attributes   = self.class.initialize_attributes(coder['attributes']).with_indifferent_access
-      @column_types_override = coder['column_types']
-      @column_types = self.class.columns_hash
-      
-      init_internals
-
-      @new_record = false
-
-      run_callbacks :find
-      run_callbacks :initialize
-
+      Types::DirtyCollection.ignore_modifications do
+        @attributes   = self.initialize_attributes(coder['attributes'])
+        @column_types_override = coder['column_types']
+        @column_types = self.class.columns_hash
+        
+        init_internals
+  
+        @new_record = false
+  
+        run_callbacks :find
+        run_callbacks :initialize
+      end
       self
     end
     

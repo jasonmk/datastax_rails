@@ -258,7 +258,7 @@ module DatastaxRails
         return :solr unless page_value == 1
         @where_values.each do |wv|
           wv.each do |k,v|
-            unless klass.attribute_definitions[k].options[:cql_index]
+            unless klass.column_for_attribute(k).options[:cql_index]
               return :solr
             end
           end

@@ -366,7 +366,9 @@ module DatastaxRails #:nodoc:
     
     def initialize(attributes = {}, options = {})
       defaults = self.class.column_defaults.dup
-      defaults.each { |k, v| defaults[k] = v.dup if v.duplicable? }
+      defaults.each do |k, v|
+        defaults[k] = column_for_attribute(k).type_cast(v).deep_dup
+      end
       
       @attributes = self.class.initialize_attributes(defaults)
       @column_types = self.class.columns_hash

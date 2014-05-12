@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
   s.add_dependency "simple_uuid"
   
   s.add_development_dependency "rspec-rails"
+  s.add_development_dependency "capybara"
   s.add_development_dependency "appraisal", "1.0.0.beta2"
   s.add_development_dependency "sqlite3"
 end

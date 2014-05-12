@@ -103,9 +103,9 @@ module DatastaxRails
       when :text, :string, :binary, :ascii then String
       when :boolean                        then Object
       when :uuid                           then ::Cql::TimeUuid
-      when :list                           then DatastaxRails::Types::DirtyList
-      when :set                            then DatastaxRails::Types::DirtySet
-      when :map                            then DatastaxRails::Types::DirtyMap
+      when :list                           then DatastaxRails::Types::DynamicList
+      when :set                            then DatastaxRails::Types::DynamicSet
+      when :map                            then DatastaxRails::Types::DynamicMap
       end
     end
 
@@ -195,7 +195,12 @@ module DatastaxRails
     end
 
     def extract_default(default)
-      type_cast(default)
+      case type
+      when :map      then {}#lambda {|rec| DatastaxRails::Types::DynamicMap.new(rec, self.name.to_s, {})}
+      when :list     then []#lambda {|rec| DatastaxRails::Types::DynamicList.new(rec, self.name.to_s, [])}
+      when :set      then Set.new#lambda {|set| DatastaxRails::Types::DynamicSet.new(rec, self.name.to_s, Set.new)}
+      else default
+      end
     end
 
     # Used to convert from Strings to BLOBs

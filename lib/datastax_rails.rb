@@ -79,9 +79,9 @@ module DatastaxRails
     
     eager_autoload do
       autoload :DirtyCollection
-      autoload :DirtyList
-      autoload :DirtySet
-      autoload :DirtyMap
+      autoload :DynamicList
+      autoload :DynamicSet
+      autoload :DynamicMap
     end
   end
 end

@@ -97,6 +97,33 @@ module DatastaxRails
         end
         attribute_definitions[name.to_sym] = column
       end
+      
+      # Returns the column object for the named attribute. Returns +nil+ if the
+      # named attribute not exists.
+      #
+      #   class Person < DatastaxRails::Base
+      #   end
+      #
+      #   person = Person.new
+      #   person.column_for_attribute(:name)
+      #   # => #<DatastaxRails::Base:0x007ff4ab083980 @name="name", @sql_type="varchar(255)", @null=true, ...>
+      #
+      # person.column_for_attribute(:nothing)
+      # # => nil
+      def column_for_attribute(name)
+        # FIXME: should this return a null object for columns that don't exist?
+        column = self.columns_hash[name.to_s]
+        unless column
+          # Check for a dynamic column
+          columns_hash.values.each do |col|
+            if col.type == :map && name.to_s.starts_with?("#{col.name}")
+              column = col
+              break
+            end
+          end
+        end
+        column
+      end
     end
     
     def attribute_exists?(name)
@@ -117,21 +144,8 @@ module DatastaxRails
       super
     end
     
-    # Returns the column object for the named attribute. Returns +nil+ if the
-    # named attribute not exists.
-    #
-    #   class Person < DatastaxRails::Base
-    #   end
-    #
-    #   person = Person.new
-    #   person.column_for_attribute(:name)
-    #   # => #<DatastaxRails::Base:0x007ff4ab083980 @name="name", @sql_type="varchar(255)", @null=true, ...>
-    #
-    # person.column_for_attribute(:nothing)
-    # # => nil
     def column_for_attribute(name)
-      # FIXME: should this return a null object for columns that don't exist?
-      self.class.columns_hash[name.to_s]
+      self.class.column_for_attribute(name)
     end
 
     protected

@@ -47,10 +47,14 @@
  </types>
  <fields>
     <% @columns.each do |field| %>
+      <% if field.type == :map %>
+        <dynamicField name="<%= field.name %>*" type="<%= field.solr_type %>" indexed="<%= field.options[:solr_index] %>" stored="<%= field.options[:solr_store] %>" multiValued="false"/>
+      <% else %>
     	<field name="<%= field.name %>" type="<%= field.solr_type %>" indexed="<%= field.options[:solr_index] %>" stored="<%= field.options[:solr_store] %>" multiValued="<%= field.options[:multi_valued] %>"/>
     	<% if field.solr_type == 'text' && field.options[:sortable] %>
     	    <field name="sort_<%= field.name %>" type="string" indexed="true" stored="fase" multiValued="false"/>
     	<% end %>
+      <% end %>
     <% end %>
     <field name="text"  type="text" indexed="true"  stored="false" multiValued="true"/>
  </fields>
@@ -60,7 +64,7 @@
  <uniqueKey><%= @primary_key %></uniqueKey>
  <% @columns.each do |field| %>
    <% if field.options[:fulltext] %>
-   <copyField source="<%= field.name %>" dest="text"/>
+   <copyField source="<%= field.name %><%= field.type == :map ? "*" : ''%>" dest="text"/>
    <% end %>
    <% if field.solr_type == 'text' && field.options[:sortable] %>
    <copyField source="<%= field.name %>" dest="sort_<%= field.name%>"/>

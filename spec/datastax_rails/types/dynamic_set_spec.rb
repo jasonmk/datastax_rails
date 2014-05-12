@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe DatastaxRails::Types::DirtySet do
+describe DatastaxRails::Types::DynamicSet do
   subject {described_class.new(double("record", :changed_attributes => {}, :attributes => {}), 'set', [])}
   
   before(:each) do

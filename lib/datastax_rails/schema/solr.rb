@@ -13,28 +13,6 @@ module DatastaxRails
         @primary_key = model.primary_key.gsub(/ *(asc|desc)/i, '')
         @custom_fields = ""
         @columns = model.attribute_definitions.values
-        # model.attribute_definitions.values.each do |column|
-          # if column.options[:solr_index] || column.options[:solr_store]
-            # @fields.push({ :name => column.name,
-                           # :type => column.solr_type,
-                           # :indexed => column.options[:solr_index].to_s,
-                           # :stored => column.options[:solr_store].to_s,
-                           # :multi_valued => column.options[:multi_valued].to_s })
-          # end
-          # if column.options[:sortable] && column.options[:tokenized]
-            # @fields.push({ :name => "sort_" + column.name,
-                           # :type => "string",
-                           # :indexed => true,
-                           # :stored => false,
-                           # :multi_valued => false })
-            # @copy_fields.push({ :source => column.name, :dest => "sort_" + column.name }) if (column.options[:indexed] || column.options[:stored])
-          # end
-          # if column.options[:fulltext]
-            # @fulltext_fields << column.name if (column.options[:indexed])
-          # end
-        # end
-        # Sort the fields so that no matter what order the attributes are arranged into the
-        # same schema file gets generated
         @fields.sort! {|a,b| a[:name] <=> b[:name]}
         @copy_fields.sort! {|a,b| a[:source] <=> b[:source]}
         @fulltext_fields.sort!

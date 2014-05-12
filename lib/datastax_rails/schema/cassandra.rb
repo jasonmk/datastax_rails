@@ -8,7 +8,7 @@ module DatastaxRails
           unless column_exists?(model.column_family.to_s, attribute.to_s)
             count += 1
             say "Adding column '#{attribute}'", :subitem
-            DatastaxRails::Cql::AlterColumnFamily.new(model.column_family).add(attribute => :text).execute
+            DatastaxRails::Cql::AlterColumnFamily.new(model.column_family).add(attribute => definition.cql_type).execute
           end
           if(definition.options[:cql_index] && !definition.options[:solr_index])
             unless index_exists?(model.column_family.to_s, attribute.to_s)

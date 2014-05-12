@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe DatastaxRails::Types::DirtyList do
+describe DatastaxRails::Types::DynamicList do
   subject {described_class.new(double("record", :changed_attributes => {}, :attributes => {}), 'list', [])}
   
   before(:each) do

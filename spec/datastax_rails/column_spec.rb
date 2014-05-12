@@ -196,18 +196,18 @@ describe DatastaxRails::Column do
     end
     
     describe "map" do
-      let(:c) {DatastaxRails::Column.new("field", nil, "map", :holds => :integer)}
+      let(:c) {DatastaxRails::Column.new("field_", nil, "map", :holds => :integer)}
       
       it "casts map keys to strings" do
-        expect(c.type_cast({:key => 7}, record)).to eq({"key" => 7})
+        expect(c.type_cast({:field_key => 7}, record)).to eq({"field_key" => 7})
       end
       
       it "casts map values to the type specified in the options" do
-        expect(c.type_cast({'key' => '7'}, record)).to eq({"key" => 7})
+        expect(c.type_cast({'field_key' => '7'}, record)).to eq({"field_key" => 7})
       end
       
-      it "wraps map values in a DirtyMap" do
-        expect(c.type_cast({'key' => '7'}, record)).to be_a(DatastaxRails::Types::DirtyMap)
+      it "wraps map values in a DynamicMap" do
+        expect(c.type_cast({'field_key' => '7'}, record)).to be_a(DatastaxRails::Types::DynamicMap)
       end
     end
     
@@ -218,8 +218,8 @@ describe DatastaxRails::Column do
         expect(c.type_cast([1,"2",6.minutes], record)).to eq([1,2,360])
       end
       
-      it "wraps list values in a DirtyList" do
-        expect(c.type_cast([1,"2",6.minutes], record)).to be_a(DatastaxRails::Types::DirtyList)
+      it "wraps list values in a DynamicList" do
+        expect(c.type_cast([1,"2",6.minutes], record)).to be_a(DatastaxRails::Types::DynamicList)
       end
     end
     
@@ -230,8 +230,8 @@ describe DatastaxRails::Column do
         expect(c.type_cast([1,"2",6.minutes, 2], record)).to eq(Set.new([1,2,360]))
       end
       
-      it "wraps list values in a DirtySet" do
-        expect(c.type_cast([1,"2",6.minutes, 2], record)).to be_a(DatastaxRails::Types::DirtySet)
+      it "wraps list values in a DynamicSet" do
+        expect(c.type_cast([1,"2",6.minutes, 2], record)).to be_a(DatastaxRails::Types::DynamicSet)
       end
     end
   end

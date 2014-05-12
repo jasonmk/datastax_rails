@@ -29,7 +29,7 @@ module DatastaxRails
     class_attribute :cluster_by
     
     def self.write(record, options = {})
-      attributes = encode_attributes(record.attributes, record.changed, options)
+      attributes = encode_attributes(record, options)
       level = (options[:consistency] || self.default_consistency).to_s.upcase
       if(valid_consistency?(level))
         options[:consistency] = level

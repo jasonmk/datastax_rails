@@ -10,6 +10,7 @@ class Person < DatastaxRails::Base
   date :birthdate
   string :nickname
   set :email_addresses
+  map :str_
   timestamps
   
   before_create :set_variable2

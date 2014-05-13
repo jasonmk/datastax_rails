@@ -604,20 +604,23 @@ module DatastaxRails
       rsolr.commit :commit_attributes => {}
     end
     
+    SOLR_DATE_REGEX = /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)/i
     # Everything that gets indexed into solr is downcased as part of the analysis phase.
     # Normally, this is done to the query as well, but if your query includes wildcards
     # then analysis isn't performed.  This means that the query does not get downcased.
     # We therefore need to perform the downcasing ourselves.  This does it while still
-    # leaving boolean operations (AND, OR, NOT) upcased.
+    # leaving boolean operations (AND, OR, NOT, TO) and dates upcased.
     def downcase_query(value)
       if(value.is_a?(String))
         value.split(/\bAND\b/).collect do |a|
           a.split(/\bOR\b/).collect do |o| 
-            o.split(/\bNOT\b/).collect do |n| 
-              n.downcase
+            o.split(/\bNOT\b/).collect do |n|
+              n.split(/\bTO\b/).collect do |t|
+                t.downcase
+              end.join("TO")
             end.join("NOT")
           end.join("OR")
-        end.join("AND")
+        end.join("AND").gsub(SOLR_DATE_REGEX) { $1.upcase }
       else
         value
       end

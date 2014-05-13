@@ -166,4 +166,11 @@ describe DatastaxRails::Relation do
       results = Person.group(:nickname).count.should eq(6)
     end
   end
+  
+  describe "#downcase_query" do
+    it "downcases a solr query while leaving operators untouched" do
+      solr_query = "This Query needs to be DOWNCASED AND it also searches DATES [2010-09-09T10:42:12Z TO 2011-08-08T09:23:34Z] OR maybe it just breaks"
+      expect(@relation.downcase_query(solr_query)).to eq("this query needs to be downcased AND it also searches dates [2010-09-09T10:42:12Z TO 2011-08-08T09:23:34Z] OR maybe it just breaks")
+    end
+  end
 end

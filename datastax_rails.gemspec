@@ -18,13 +18,10 @@ Gem::Specification.new do |s|
   s.test_files = Dir["spec/**/*"]
 
   s.add_dependency "rails", "~> 4.0.0"
-  s.add_dependency "cql-rb"
-  s.add_dependency "rsolr", "~> 1.0.9"
-  s.add_dependency "rsolr-client-cert"
-  s.add_dependency "simple_uuid"
+  s.add_dependency "cql-rb", "~> 1.2", ">= 1.2.1"
+  s.add_dependency "rsolr", "~> 1.0", ">= 1.0.9"
+  s.add_dependency "rsolr-client-cert", "~> 0.5", ">= 0.5.2"
   
   s.add_development_dependency "rspec-rails"
   s.add_development_dependency "capybara"
-  s.add_development_dependency "appraisal", "1.0.0.beta2"
-  s.add_development_dependency "sqlite3"
 end

@@ -8,6 +8,8 @@ module DatastaxRails
     
     SOLR_CHAR_RX = /([\+\!\(\)\[\]\^\"\~\:\'\=\/]+)/
     
+   DOWNCASED_DATE_REGEX = /\d{4}-\d{2}-\d{2}t\d{2}:\d{2}:\d{2}z/
+    
     Relation::MULTI_VALUE_METHODS.each do |m|
       attr_accessor :"#{m}_values"
     end
@@ -651,7 +653,7 @@ module DatastaxRails
     # leaving SOLR reserved/boolean words (AND, OR, NOT, TO) upcased.
     def downcase_query(value)
       if(value.is_a?(String))
-        value.split(/\bAND\b/).collect do |a|
+        downcased_query = value.split(/\bAND\b/).collect do |a|
           a.split(/\bOR\b/).collect do |o| 
             o.split(/\bNOT\b/).collect do |n| 
               n.split(/\bTO\b/).collect do |t|
@@ -660,6 +662,9 @@ module DatastaxRails
             end.join("NOT")
           end.join("OR")
         end.join("AND")
+        
+        # ensure the dates to not get downcased
+        downcased_query.gsub(DOWNCASED_DATE_REGEX){|match| match.upcase}
       else
         value
       end

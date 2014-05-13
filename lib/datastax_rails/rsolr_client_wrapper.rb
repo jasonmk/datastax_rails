@@ -15,7 +15,7 @@ module DatastaxRails
       end
       @rsolr.__send__(sym, *args, &block)
     rescue Errno::ECONNREFUSED
-      tries ||= DatastaxRails::Base.thrift_client.options[:retries] + 1
+      tries ||= 3
       tries -= 1
       if tries > 0
         # Force cassandra connection to roll

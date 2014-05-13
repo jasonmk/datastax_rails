@@ -10,7 +10,11 @@ module DatastaxRails
         @fields = []
         @copy_fields = []
         @fulltext_fields = []
-        @primary_key = model.primary_key.gsub(/ *(asc|desc)/i, '')
+        if model <= WideStorageModel
+          @primary_key = "(#{model.primary_key},#{model.cluster_by})"
+        else
+          @primary_key = model.primary_key
+        end
         @custom_fields = ""
         @columns = model.attribute_definitions.values
         @fields.sort! {|a,b| a[:name] <=> b[:name]}

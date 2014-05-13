@@ -11,8 +11,8 @@ module DatastaxRails
       SOLR_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ".force_encoding('utf-8').freeze
     end
 
-    attr_reader :name, :default, :type, :cql_type, :solr_type, :options
-    attr_accessor :primary, :coder
+    attr_reader :name, :type, :cql_type, :solr_type, :options
+    attr_accessor :primary, :coder, :default
 
     alias :encoded? :coder
 

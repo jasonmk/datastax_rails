@@ -17,6 +17,7 @@ module DatastaxRails
   autoload :Collection
   autoload :Connection
   autoload :Cql
+  autoload :DynamicModel
   autoload :GroupedCollection
   autoload :Index
   autoload :Inheritance

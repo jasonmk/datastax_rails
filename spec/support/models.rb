@@ -51,6 +51,7 @@ class CarPayload < DatastaxRails::PayloadModel
 end
 
 class AuditLog < DatastaxRails::WideStorageModel
+  include DatastaxRails::CassandraOnlyModel
   self.column_family = "audit_logs"
   self.primary_key = :uuid
   self.cluster_by  = :created_at
@@ -99,4 +100,12 @@ class Hobby < DatastaxRails::Base
   float :complexity
   map :components, :holds => :integer
   timestamps
+end
+
+class CoreMetadata < DatastaxRails::DynamicModel
+  self.group_by = 'core'
+end
+
+class TeamMetadata < DatastaxRails::DynamicModel
+  self.group_by = 'team'
 end

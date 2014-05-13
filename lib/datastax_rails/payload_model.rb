@@ -15,6 +15,7 @@ module DatastaxRails
   #     end
   #   end
   class PayloadModel < WideStorageModel
+    include CassandraOnlyModel
     self.abstract_class = true
     
     def self.inherited(child)

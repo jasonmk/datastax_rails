@@ -8,7 +8,6 @@ module DatastaxRails
   # You can also apply secondary indexes onto the other columns.
   #
   # CAVEATS: 
-  # * Wide Storage Models cannot be indexed into Solr (yet).
   # * Once the cluster is set, it cannot be changed as it becomes the column header in Cassandra
   #
   #   class AuditLog < DatastaxRails::WideStorageModel
@@ -23,7 +22,7 @@ module DatastaxRails
   #     string :user_id, :cql_index => true
   #     timestamps
   #   end
-  class WideStorageModel < CassandraOnlyModel
+  class WideStorageModel < DatastaxRails::Base
     self.abstract_class = true
     
     class_attribute :cluster_by

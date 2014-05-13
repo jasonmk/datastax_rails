@@ -5,7 +5,8 @@ class AttributeMethodsTester < DatastaxRails::Base
   string :non_search_string, :solr_index => false
 end 
 
-class CassandraOnlyTester < DatastaxRails::CassandraOnlyModel
+class CassandraOnlyTester < DatastaxRails::Base
+  include DatastaxRails::CassandraOnlyModel
   string :test_string
   string :test_string2, :cql_index => true
 end

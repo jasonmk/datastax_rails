@@ -31,14 +31,14 @@ module DatastaxRails
       child.cluster_by = 'group'
       child.uuid :id
       child.string :group
-      child.map :s,  :holds => :string
-      child.map :t,  :holds => :text
-      child.map :b,  :holds => :boolean
-      child.map :d,  :holds => :date
-      child.map :ts, :holds => :timestamp
-      child.map :i,  :holds => :integer
-      child.map :f,  :holds => :float
-      child.map :u,  :holds => :uuid
+      child.map :s_,  :holds => :string
+      child.map :t_,  :holds => :text
+      child.map :b_,  :holds => :boolean
+      child.map :d_,  :holds => :date
+      child.map :ts_, :holds => :timestamp
+      child.map :i_,  :holds => :integer
+      child.map :f_,  :holds => :float
+      child.map :u_,  :holds => :uuid
       
       child.map_columns.each do |col|
         child.instance_eval do

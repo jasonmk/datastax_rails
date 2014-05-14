@@ -5,7 +5,8 @@ module DatastaxRails #:nodoc:
   # DatastaxRails-based objects differ from Active Record objects in that they specify their
   # attributes directly on the model.  This is necessary because of the fact that Cassandra
   # column families do not have a set list of columns but rather can have different columns per
-  # row.  By specifying the attributes on the model, getters and setters are automatically
+  # row. (This is not strictly true any more, but it's still not as nailed down as SQL.)
+  # By specifying the attributes on the model, getters and setters are automatically
   # created, and the attribute is automatically indexed into SOLR.
   #
   #
@@ -18,24 +19,14 @@ module DatastaxRails #:nodoc:
   # your Datastax cluster.
   #
   #   class Person < DatastaxRails::Base
-  #     key :uuid
+  #     uuid :id
   #   end
   #
-  # If you want to use a natural key (i.e., one or more of the columns of your data),
-  # the following would work.
+  # You don't have to use a uuid. You can use a different column as your primary key.
   #
   #   class Person < DatastaxRails::Base
-  #     key :natural, :attributes => [:last_name, :first_name]
-  #   end
-  #
-  # Finally, you can create a custom key based on a method on your model.
-  #
-  #   class Person < DatastaxRails::Base
-  #     key :custom, :method => :my_key
-  #     
-  #     def my_key
-  #       # Some logic to generate a key
-  #     end
+  #     self.primary_key = 'userid'
+  #     string :userid
   #   end
   #
   # == Attributes
@@ -43,30 +34,35 @@ module DatastaxRails #:nodoc:
   # Attributes are specified near the top of the model. The following attribute types
   # are supported:
   #
-  # * array - an array of strings
   # * binary - a large object that will not be indexed into SOLR (e.g., BLOB)
   # * boolean - true/false values
   # * date - a date without a time component
   # * float - a number in floating point notation
   # * integer - a whole, round number of any size
+  # * list - an ordered list of values of a single type
+  # * map - a collection of key/value pairs of a single type (keys are always strings)
+  # * set - an un-ordered set of unique values of a single type
   # * string - a generic string type that is not tokenized by default
   # * text - like strings but will be tokenized for full-text searching by default
   # * time - a datetime object
   # * timestamps - a special type that instructs DSR to include created_at and updated_at
+  # * uuid - a UUID in standard UUID format
   #
   # The following options may be specified on the various types to control how they
   # are indexed into SOLR:
   #
-  # * indexed - If the attribute should the attribute be indexed into SOLR.
+  # * solr_index - If the attribute should the attribute be indexed into SOLR.
   #   Defaults to true for everything but binary.
-  # * stored - If the attribute should the attribute be stored in SOLR.
+  # * solr_store - If the attribute should the attribute be stored in SOLR.
   #   Defaults to true for everything but binary. (see note)
   # * sortable - If the attribute should be sortable by SOLR.
   #   Defaults to true for everything but binary and text. (see note)
   # * tokenized - If the attribute should be tokenized for full-text searching within the field.
-  #   Defaults to true for array and text. (see note)
+  #   Defaults to true for text.
   # * fulltext - If the attribute should be included in the default field for full-text searches.
   #   Defaults to true for text and string.
+  # * multi_valued - If the field will contain multiple values in Solr.
+  #   Defaults to true for list and set. This should never need to be set manually.
   #
   # NOTES:
   # * No fields are actually stored in SOLR. When a field is requested from SOLR, the field
@@ -79,14 +75,11 @@ module DatastaxRails #:nodoc:
   #   one that gets tokenized and one that is a single token for sorting. As this inflates the
   #   size of the index, you don't want to do this for large fields (which probably don't make
   #   sense to sort on anyways).
-  # * Arrays are tokenized specially. Each element of the array is treated as a single token.
-  #   This means that you can match against any single element, but you cannot search within
-  #   elements. This functionality may be added at a later time.
   #
   # EXAMPLE:
   # 
   #   class Person < DatastaxRails::Base
-  #     key     :uuid
+  #     uuid    :id
   #     string  :first_name
   #     string  :user_name
   #     text    :bio
@@ -97,13 +90,15 @@ module DatastaxRails #:nodoc:
   #
   # == Schemas
   #
-  # Cassandra itself is a 'schema-optional' database.  In general, DSR does not make use of
-  # Cassandra schemas.  SOLR on the other hand does use a schema to define the data and how
-  # it should be indexed.  There is a rake task to upload the latest SOLR schema based on
-  # the model files.  When this happens, if the column family does not exist yet, it will be
-  # created.  Therefore, migrations to create column families are unnecessary.  If the
-  # column family does exist, and the new schema differs, the columns that are changed will
-  # be automatically reindexed.
+  # DSR will automatically manage both the Cassandra and Solr schemas for you based on the
+  # attributes that you specify on the model. You can override the Solr schema if you
+  # want to have something custom. There is a rake task that manages all of the schema
+  # information. It will create column families and columns as needed and upload the
+  # Solr schema when necessary. If there are changes, it will automatically kick off a
+  # reindex in the background.
+  #
+  # As of Cassandra 1.2, there is no way to remove a column. Cassandra 2.0 supports it,
+  # but it hasn't been implemented in DSR yet.
   #
   # TODO: Need a way to remove ununsed column families.
   #
@@ -113,7 +108,7 @@ module DatastaxRails #:nodoc:
   # method is especially useful when you're receiving the data from somewhere else, like an
   # HTTP request. It works like this:
   #
-  #   user = User.new(:name => "David", :occupation => "Code Artist")
+  #   user = User.new(name: "David", occupation: "Code Artist")
   #   user.name # => "David"
   #
   # You can also use block initialization:
@@ -133,16 +128,16 @@ module DatastaxRails #:nodoc:
   #
   # Cassandra has a concept of consistency levels when it comes to saving records.  For a
   # detailed discussion on Cassandra data consistency, see:
-  # http://www.datastax.com/docs/1.0/dml/data_consistency
+  # http://www.datastax.com/documentation/cassandra/1.2/cassandra/dml/dml_config_consistency_c.html
   #
   # DatastaxRails allows you to specify the consistency when you save and retrieve objects.
   #
-  #   user = User.new(:name => 'David')
-  #   user.save(:consistency => 'ALL')
+  #   user = User.new(name: 'David')
+  #   user.save(consistency: 'ALL')
   #
-  #   User.create(params[:user], {:consistency => :local_quorum})
+  #   User.create(params[:user], {consistency: :local_quorum})
   #
-  #   User.consistency(:local_quorum).where(:name => 'David')
+  #   User.consistency(:local_quorum).where(name: 'David')
   #
   # The default consistency level in DatastaxRails is QUORUM for writes and for retrieval
   # by ID.  SOLR only supports a consistency level of ONE.  See the documentation for
@@ -169,33 +164,36 @@ module DatastaxRails #:nodoc:
   # A simple hash without a statement will generate conditions based on equality using boolean AND logic.
   # For instance:
   #
-  #   Student.where(:first_name => "Harvey", :status => 1)
+  #   Student.where(first_name: "Harvey", status: 1)
   #   Student.where(params[:student])
   #
   # A range may be used in the hash to use a SOLR range query:
   #
-  #   Student.where(:grade => 9..12)
+  #   Student.where(grade: 9..12)
   #
   # An array may be used in the hash to construct a SOLR OR query:
   #
-  #   Student.where(:grade => [9,11,12])
+  #   Student.where(grade: [9,11,12])
   #
   # Inequality can be tested for like so:
   #
-  #   Student.where_not(:grade => 9)
+  #   Student.where_not(grade: 9)
   #   Student.where(:grade).greater_than(9)
   #   Student.where(:grade).less_than(10)
   #
-  # Fulltext searching is natively supported.  All text fields are automatically indexed for fulltext
-  # searching.
+  # NOTE that Solr inequalities are inclusive so really, the second example above is retrieving records
+  # where grace is greater than or equal to 9. Be sure to keep this in mind when you do inequality queries.
+  #
+  # Fulltext searching is natively supported. All string and text fields are automatically indexed for
+  # fulltext searching.
   #
   #   Post.fulltext('Apple AND "iPhone 4s"')
   #
-  # See the documentation on DatastaxRails::SearchMethods for more information and examples.
+  # See the documentation on {DatastaxRails::SearchMethods} for more information and examples.
   #
   # == Overwriting default accessors
   #
-  # All column values are automatically available through basic accessors on the DatastaxRails,
+  # All column values are automatically available through basic accessors on the object,
   # but sometimes you want to specialize this behavior. This can be done by overwriting
   # the default accessors (using the same name as the attribute) and calling
   # <tt>read_attribute(attr_name)</tt> and <tt>write_attribute(attr_name, value)</tt> to actually
@@ -218,71 +216,38 @@ module DatastaxRails #:nodoc:
   #
   # == Dynamic attribute-based finders
   #
-  # Note: These are only available in Rails 3.x applications, and are not supported in Rails 4.x
+  # Dynamic finders have been removed from Rails. As a result, they have also been removed from DSR.
+  # In its place, the +find_by+ method can be used:
   #
-  # Dynamic attribute-based finders are a cleaner way of getting (and/or creating) objects
-  # by simple queries without using where chains. They work by appending the name of an attribute
-  # to <tt>find_by_</tt> or <tt>find_all_by_</tt> and thus produces finders
-  # like <tt>Person.find_by_user_name</tt>, <tt>Person.find_all_by_last_name</tt>, and
-  # <tt>Payment.find_by_transaction_id</tt>. Instead of writing
-  # <tt>Person.where(:user_name => user_name).first</tt>, you just do <tt>Person.find_by_user_name(user_name)</tt>.
-  # And instead of writing <tt>Person.where(:last_name => last_name).all</tt>, you just do
-  # <tt>Person.find_all_by_last_name(last_name)</tt>.
+  #   Student.find_by(name: 'Jason')
   #
-  # It's also possible to use multiple attributes in the same find by separating them with "_and_".
+  # NOTE: there is a subtle difference between the following that does not exist in ActiveRecord:
   #
-  #   Person.where(:user_name => user_name, :password => password).first
-  #   Person.find_by_user_name_and_password(user_name, password) # with dynamic finder
+  #   Student.find_by(name: 'Jason')
+  #   Student.where(name: 'Jason').first
   #
-  # It's even possible to call these dynamic finder methods on relations and named scopes.
+  # The difference is that the first is escaped so that special characters can be used. The
+  # second method requires you to do the escaping yourself if you need it done. As an example,
   #
-  #   Payment.order("created_on").find_all_by_amount(50)
-  #   Payment.pending.find_last_by_amount(100)
+  #   Company.find_by(name: 'All*') #=> finds only the company with the literal name 'All*'
+  #   Company.where(name: 'All*').first #=> finds the first company whose name begins with All
   #
-  # The same dynamic finder style can be used to create the object if it doesn't already exist.
-  # This dynamic finder is called with <tt>find_or_create_by_</tt> and will return the object if
-  # it already exists and otherwise creates it, then returns it. Protected attributes won't be set
-  # unless they are given in a block.
-  #
-  # NOTE: This functionality is currently unimplemented but will be in a release in the near future.
-  #
-  #   # No 'Summer' tag exists
-  #   Tag.find_or_create_by_name("Summer") # equal to Tag.create(:name => "Summer")
-  #
-  #   # Now the 'Summer' tag does exist
-  #   Tag.find_or_create_by_name("Summer") # equal to Tag.find_by_name("Summer")
-  #
-  #   # Now 'Bob' exist and is an 'admin'
-  #   User.find_or_create_by_name('Bob', :age => 40) { |u| u.admin = true }
-  #
-  # Use the <tt>find_or_initialize_by_</tt> finder if you want to return a new record without
-  # saving it first. Protected attributes won't be set unless they are given in a block.
-  #
-  #   # No 'Winter' tag exists
-  #   winter = Tag.find_or_initialize_by_name("Winter")
-  #   winter.persisted? # false
-  #
-  # Just like <tt>find_by_*</tt>, you can also use <tt>scoped_by_*</tt> to retrieve data. The good thing about
-  # using this feature is that the very first time result is returned using <tt>method_missing</tt> technique
-  # but after that the method is declared on the class. Henceforth <tt>method_missing</tt> will not be hit.
-  #
-  #   User.scoped_by_user_name('David')
-  #
+  # See DatastaxRails::FinderMethods for more information
+  # 
   # == Facets
   #
-  # DSR support both field and range facets.  For additional detail on facets, see the documentation
-  # available under the FacetMethods module.  The result is available through the facets accessor
+  # DSR support both field and range facets. For additional detail on facets, see the documentation
+  # available under the {DatastaxRails::FacetMethods} module. The result is available through the 
+  # facets accessor.
   #
-  # Facet examples:
+  #   results = Article.field_facet(:author)
+  #   results.facets #=> {"author"=>["vonnegut", 2. "asimov", 3]} 
   #
-  # results = Article.field_facet(:author)
-  # results.facets => {"author"=>["vonnegut", 2. "asimov", 3]} 
-  #
-  # Model.field_facet(:author)
-  # Model.field_facet(:author, :sort => 'count', :limit => 10, :mincount => 1)
-  # Model.range_facet(:price, 500, 1000, 10)
-  # Model.range_facet(:price, 500, 1000, 10, :include => 'all')
-  # Model.range_facet(:publication_date, "1968-01-01T00:00:00Z", "2000-01-01T00:00:00Z", "+1YEAR")
+  #   Model.field_facet(:author)
+  #   Model.field_facet(:author, sort: 'count', limit: 10, mincount: 1)
+  #   Model.range_facet(:price, 500, 1000, 10)
+  #   Model.range_facet(:price, 500, 1000, 10, include: 'all')
+  #   Model.range_facet(:publication_date, "1968-01-01T00:00:00Z", "2000-01-01T00:00:00Z", "+1YEAR")
   #
   # Range Gap syntax for dates: +1YEAR, +5YEAR, +5YEARS, +1MONTH, +1DAY
   #
@@ -294,6 +259,79 @@ module DatastaxRails #:nodoc:
   #
   # Model.range_facet(:publication_date, "1968-01-01T00:00:00Z", "2000-01-01T00:00:00Z", DatastaxRails::FacetMethods::BY_YEAR)
   #
+  # == Collections
+  #
+  # Cassandra supports the notion of collections on a row. The three types of supported
+  # collections are +set+, +list+, and +map+.
+  #
+  # By default collections hold strings. You can override this by passing a :holds option in the
+  # attribute definition. Sets can hold anything other than other collections, however, a given
+  # collection can only hold a single type of values.
+  #
+  # NOTE: There is a limitation in Cassandra where only the first 64k entries of a collection are
+  # ever returned with a query. Therefore, if you put more than 64k entries in a collection you
+  # will lose data.
+  #
+  # === Set
+  # 
+  # A set is an un-ordered collection of unique values. This collection is fully searchable in Solr.
+  #
+  #   class User < DatastaxRails::Base
+  #     uuid   :id
+  #     string :username
+  #     set    :emails
+  #   end
+  #
+  # The default set will hold strings. You can modify this behavior like so:
+  #
+  #   class Student < DatastaxRails::Base
+  #     uuid   :id
+  #     string :name
+  #     set    :grades, holds: :integers
+  #   end
+  #
+  #   User.where(emails: 'jim@example.com') #=> Returns all users where jim@example.com is in the set
+  #   user = User.new(name: 'Jim', emails: ['jim@example.com'])
+  #   user.emails << 'jim@example.com'
+  #   user.emails #=> ['jim@example.com']
+  #
+  # === List
+  # 
+  # An ordered collection of values. They do not necessarily have to be unique. The collection
+  # will be fully searchable in Solr.
+  #
+  #   class Student < DatastaxRails::Base
+  #     uuid :id
+  #     string :name
+  #     list :classrooms, holds: integers
+  #   end
+  #
+  #   Student.where(classrooms: 307) #=> Returns all students that have a class in room 307.
+  #   student = Student.new(name: 'Sally', classrooms: [307, 305, 301, 307])
+  #   student.classrooms << 304
+  #   student.classrooms #=> [307, 305, 301, 307, 304]
+  #
+  # === Map
+  #
+  # A collection of key/value pairs where the key is a string and the value is the
+  # specified type. The collection becomes available in Solr as dynamic fields.
+  #
+  #   class Student < DatastaxRails::Base
+  #     uuid :id
+  #     string :name
+  #     map :scores_, holds: :integers
+  #   end
+  #
+  #   student = Student.new(:name 'Sally')
+  #   student.scores['midterm'] = 98
+  #   student.scores['final'] = 97
+  #   student.scores #=> {'scores_midterm' => 98, 'scores_final' => 97}
+  #   Student.where(scores_final: 97) #=> Returns all students that scored 97 on their final
+  #
+  # Note that the map name gets prepended to the key. This is how Solr maps it's dynamic fields
+  # into the cassandra map. For this reason, it's usually a good idea to put an underscore (_)
+  # at the end of the map name to prevent collisions.
+  #
   # == Exceptions
   #
   # * DatastaxRailsError - Generic error class and superclass of all other errors raised by DatastaxRails.
@@ -304,15 +342,9 @@ module DatastaxRails #:nodoc:
   # * RecordNotFound - No record responded to the +find+ method. Either the row with the given ID doesn't exist
   #   or the row didn't meet the additional restrictions. Some +find+ calls do not raise this exception to signal
   #   nothing was found, please check its documentation for further details.
-  # * MultiparameterAssignmentErrors - Collection of errors that occurred during a mass assignment using the
-  #   <tt>attributes=</tt> method. The +errors+ property of this exception contains an array of
-  #   AttributeAssignmentError objects that should be inspected to determine which attributes triggered the errors.
-  # * AttributeAssignmentError - An error occurred while doing a mass assignment through the
-  #   <tt>attributes=</tt> method.
-  #   You can inspect the +attribute+ property of the exception object to determine which attribute
-  #   triggered the error.
+  # * UnknownAttributeError - The specified attribute isn't defined on your model.
   #
-  # See the documentation for SearchMethods for more examples of using the search API.
+  # See the documentation for {DatastaxRails::SearchMethods} for more examples of using the search API.
   class Base
     extend ActiveModel::Naming
     include ActiveModel::Conversion
@@ -338,19 +370,28 @@ module DatastaxRails #:nodoc:
     class_attribute :default_scopes, :instance_writer => false
     self.default_scopes = []
     
-    # Stores the configuration information
+    # Stores the connection configuration information
     class_attribute :config
     
     class_attribute :default_timezone, :instance_writer => false
     self.default_timezone = :utc
-    
+
+    # Stores the default consistency level (QUORUM by default)    
     class_attribute :default_consistency
     self.default_consistency = :quorum
 
+    # Stores the method of saving data (CQL by default)
     class_attribute :storage_method
     self.storage_method = :cql
     
+    # Stores any additional information that should be used when creating the column family
+    # See {DatastaxRails::WideStorageModel} or {DatastaxRails::Payload} model for an example
     class_attribute :create_options
+    
+    # Stores the attribute that wide models should cluster on. Basically, this is the
+    # attribute that CQL uses to "group" columns into logical records even though they
+    # are stored on the same row.
+    class_attribute :cluster_by
     
     attr_reader :attributes
     attr_reader :loaded_attributes

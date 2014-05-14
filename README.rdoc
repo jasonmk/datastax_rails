@@ -29,12 +29,13 @@ First add it to your Gemfile:
 Configure the config/datastax.yml file:
 
   development:
-    servers: ["localhost:9160"]
+    servers: ["127.0.0.1"]
+    port: 9042
     keyspace: "<my_app>_development"
     strategy_class: "org.apache.cassandra.locator.NetworkTopologyStrategy"
     strategy_options: {"DC1": "1"} 
     connection_options:
-      timeout: 2
+      timeout: 10
     solr:
       port: 8983
       path: /solr
@@ -45,12 +46,13 @@ NetworkTopologySnitch and set up the cassandra-topology.properties file.  See th
 For a more simple, single datacenter setup, something like this should probably work:
 
   development:
-    servers: ["localhost:9160"]
-    keyspace: "<my_app>_development"
+    servers: ["127.0.0.1"]
+    port: 9042
+    keyspace: "datastax_rails_development"
     strategy_class: "org.apache.cassandra.locator.SimpleStrategy"
     strategy_options: {"replication_factor": "1"}
     connection_options:
-      timeout: 2 
+      timeout: 10
     solr:
       port: 8983
       path: /solr
@@ -73,7 +75,7 @@ attributes on any model.  DSR will only upload schema files if they have changed
 Create a sample Model.  See Base documentation for more details:
 
   class Person < DatastaxRails::Base
-    key     :uuid
+    uuid    :id
     string  :first_name
     string  :user_name
     text    :bio
@@ -81,12 +83,22 @@ Create a sample Model.  See Base documentation for more details:
     boolean :active
     timestamps
   end
+  
+=== Different types of models
+
+In addition to the simple model above, there are several special case models that take advantage of special
+features of Cassandra.  For examples of using those, see the following classes:
+
+* {DatastaxRails::WideStorageModel}
+* {DatastaxRails::PayloadModel}
+* {DatastaxRails::DynamicModel}
 
 === Known issues
 
-When doing a grouped query, the total groups reported is only the total groups included in your query, not the total matching groups (if you're paginating).  This is due to the way solr sharding works with grouped queries.
+When doing a grouped query, the total groups reported is only the total groups included in your query, not the total matching groups (if you're paginating).  
+This is due to the way solr sharding works with grouped queries.
 
 === More information
 
-The documentation for DatastaxRails::Base and DatastaxRails::SearchMethods will give you quite a few examples
+The documentation for {DatastaxRails::Base} and {DatastaxRails::SearchMethods} will give you quite a few examples
 of things you can do.  You can find a copy of the latest documentation on line at http://rdoc.info/github/jasonmk/datastax_rails/master/frames.

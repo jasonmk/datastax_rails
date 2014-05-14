@@ -51,8 +51,7 @@ module DatastaxRails
       
       # Write a record to cassandra.  Can be either an insert or an update (they are exactly the same to cassandra)
       #
-      # @param [String] key the primary key for the record
-      # @param [Hash] attributes a hash containing the columns to set on the record
+      # @param [DatastaxRails::Base] record the record that we are writing
       # @param [Hash] options a hash containing various options
       # @option options [Symbol] :consistency the consistency to set for the Cassandra operation (e.g., ALL)
       def write(record, options = {})

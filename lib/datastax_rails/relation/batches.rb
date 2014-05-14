@@ -58,7 +58,7 @@ module DatastaxRails
     #   end
     #
     # @param options [Hash] finder options
-    # @yeild [records] a batch of DatastaxRails records
+    # @yield [records] a batch of DatastaxRails records
     def find_in_batches(options = {})
       relation = self
 

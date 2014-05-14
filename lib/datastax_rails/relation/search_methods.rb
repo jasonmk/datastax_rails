@@ -11,6 +11,8 @@ module DatastaxRails
     #
     #   Model.where(:name => 'johndoe', :active => true).allow_filtering
     #
+    # NOTE that this only applies when doing a search via a cassandra index.
+    #
     # @return [DatastaxRails::Relation] a new Relation object
     def allow_filtering
       clone.tap do |r|
@@ -24,14 +26,22 @@ module DatastaxRails
     # 
     #   Model.consistency(:local_quorum).find("12345")
     #
-    # Note that Solr searches (basically anything but find by id) don't allow you
-    # to specify the consistency level.  DSR sort of gets around this by taking the
-    # search results and then going to Cassandra to retrieve the objects by ID using
-    # the consistency you specified.  However, it is possible that you might not get
-    # all of the records you are expecting if the SOLR node you were talking to hasn't
-    # been updated yet with the results.  In practice, this should not happen for
-    # records that were created over your connection, but it is possible for other
-    # connections to create records that you can't see yet.
+    # Note that Solr searches don't allow you to specify the consistency level.
+    # DSR sort of gets around this by taking the search results and then going
+    # to Cassandra to retrieve the objects by ID using the consistency you specified.
+    # However, it is possible that you might not get all of the records you are 
+    # expecting if the SOLR node you were talking to hasn't been updated yet with 
+    # the results. In practice, this should not happen for records that were created 
+    # over your connection, but it is possible for other connections to create records
+    # that you can't see yet.
+    #
+    # Valid consistency levels are:
+    # * :any
+    # * :one
+    # * :quorum
+    # * :local_quorum (if using Network Topology)
+    # * :each_quorum (if using Network Topology)
+    # * :all
     #
     # @param level [Symbol, String] the level to set the consistency at
     # @return [DatastaxRails::Relation] a new Relation object
@@ -118,7 +128,8 @@ module DatastaxRails
     
     # WillPaginate compatible method for paginating
     #
-    #   Model.paginate(:page => 2, :per_page => 10)
+    #   Model.paginate(page: 2, per_page: 10)
+    #
     # @param options [Hash] the options to pass to paginate
     # @option options [String, Fixnum] :page the page number to retrieve
     # @option options [String, Fixnum] :per_page the number of records to include on a page
@@ -144,7 +155,7 @@ module DatastaxRails
     # after-the-fact as the groups are returned as hash of Collection objects.
     #
     # Because SOLR is doing the grouping work, we can only group on single-valued
-    # fields (i.e., not +text+ or +array+ attributes). In the future, SOLR may
+    # fields (i.e., not +text+ or collections). In the future, SOLR may
     # support grouping on multi-valued fields.
     #
     # NOTE: Group names will be lower-cased
@@ -172,11 +183,11 @@ module DatastaxRails
     # the value is :desc
     #
     #   Model.order(:name)
-    #   Model.order(:name => :desc)
+    #   Model.order(name: :desc)
     #
     # WARNING: If this call is combined with #with_cassandra, you can only
-    # order on the clustering column of the primary key.  If this doesn't
-    # mean anything to you, then you probably don't want to use these together.
+    # order on the cluster_by column.  If this doesn't mean anything to you, 
+    # then you probably don't want to use these together.
     #
     # @param attribute [Symbol, String, Hash] the attribute to sort by and optionally the direction to sort in
     # @return [DatastaxRails::Relation] a new Relation object
@@ -243,12 +254,13 @@ module DatastaxRails
     #
     # The exception to this rule is when an attribute is lazy-loaded (e.g., binary).
     # In that case, it is never retrieved until you call the getter method.
-    def select(value = Proc.new)
+    def select(*fields)
       if block_given?
-        to_a.select {|*block_args| value.call(*block_args) }
+        to_a.select {|*block_args| yield(*block_args) }
       else
+        railse ArgumentError, 'Call this with at least one field' if fields.empty?
         clone.tap do |r|
-          r.select_values += Array.wrap(value)
+          r.select_values += fields
         end
       end
     end
@@ -256,10 +268,10 @@ module DatastaxRails
     # Reverses the order of the results. The following are equivalent:
     # 
     #   Model.order(:name).reverse_order
-    #   Model.order(:name => :desc) 
+    #   Model.order(name: :desc) 
     #
     #   Model.order(:name).reverse_order.reverse_order
-    #   Model.order(:name => :asc)
+    #   Model.order(name: :asc)
     #
     # @return [DatastaxRails::Relation] a new Relation object
     def reverse_order
@@ -268,9 +280,8 @@ module DatastaxRails
       end
     end
     
-    # By default, DatastaxRails uses the LuceneQueryParser.  Note that this
-    # is a change from the underlying Sunspot gem.  Sunspot defaults to the
-    # +disMax+ query parser.  If you want to use that, then pass that in here.
+    # By default, DatastaxRails uses the LuceneQueryParser. disMax
+    # is also supported. eDisMax probably works as well.
     #
     # *This only applies to fulltext queries*
     #
@@ -287,12 +298,12 @@ module DatastaxRails
     end
     
     # Have SOLR compute stats for a given numeric field.  Status computed include:
-    #  * min
-    #  * max
-    #  * sum
-    #  * sum of squares
-    #  * mean
-    #  * standard deviation
+    # * min
+    # * max
+    # * sum
+    # * sum of squares
+    # * mean
+    # * standard deviation
     #
     #   Model.compute_stats(:price)
     #   Model.compute_stats(:price, :quantity)
@@ -340,14 +351,14 @@ module DatastaxRails
     end
     
     # Specifies restrictions (scoping) on the result set. Expects a hash
-    # in the form +attribute => value+ for equality comparisons.
+    # in the form +attribute: value+ for equality comparisons.
     #
-    #   Model.where(:group_id => '1234', :active => 'Y')
+    #   Model.where(group_id: '1234', active: true)
     #
     # The value of the comparison does not need to be a scalar.  For example:
     #
-    #   Model.where(:name => ["Bob", "Tom", "Sally"])
-    #   Model.where(:age => 18..65)
+    #   Model.where(name: ["Bob", "Tom", "Sally"]) # Finds where name is any of the three names
+    #   Model.where(age: 18..65) # Finds where age is anywhere in the range
     #
     # Inequality comparisons such as greater_than and less_than are
     # specified via chaining:
@@ -359,8 +370,8 @@ module DatastaxRails
     # that can be done with a single call.  This is useful for remote APIs and
     # such.
     #
-    #   Model.where(:created_at => {:greater_than => 1.day.ago})
-    #   Model.where(:age => {:less_than => 65})
+    #   Model.where(:created_at => {greater_than: 1.day.ago})
+    #   Model.where(:age => {less_than: 65})
     #
     # NOTE: Due to the way SOLR handles range queries, all greater/less than
     # queries are actually greater/less than or equal to queries.
@@ -397,14 +408,14 @@ module DatastaxRails
     end
     
     # Specifies restrictions (scoping) that should not match the result set.
-    # Expects a hash in the form +attribute => value+.
+    # Expects a hash in the form +attribute: value+.
     #
-    #   Model.where_not(:group_id => '1234', :active => 'N')
+    #   Model.where_not(group_id: '1234', active: false)
     #
     # Passing an array will search for records where none of the array entries
     # are present
     #
-    #   Model.where_not(:group_id => ['1234', '5678'])
+    #   Model.where_not(group_id: ['1234', '5678'])
     #
     # The above would find all models where group id is neither 1234 or 5678.
     #
@@ -446,9 +457,9 @@ module DatastaxRails
     #
     # You can also pass in an options hash with the following options:
     #
-    #  * :fields => list of fields to search instead of the default of all fields
+    # * :fields => list of fields to search instead of the default of all fields
     #
-    #   Model.fulltext("john smith", :fields => [:title])
+    #   Model.fulltext("john smith", fields: [:title])
     #
     # @param query [String] a fulltext query to pass to solr
     # @param opts [Hash] an optional options hash to modify the fulltext query
@@ -474,12 +485,12 @@ module DatastaxRails
     # In addition to the array of field names to highlight, you can pass in an
     # options hash with the following options:
     #
-    #  * :snippets => number of highlight snippets to return
-    #  * :fragsize => number of characters for each snippet length
-    #  * :pre_tag => text which appears before a highlighted term
-    #  * :post_tag => text which appears after a highlighted term
-    #  * :merge_contiguous => collapse contiguous fragments into a single fragment
-    #  * :use_fast_vector => enables the Solr FastVectorHighlighter
+    # * :snippets => number of highlight snippets to return
+    # * :fragsize => number of characters for each snippet length
+    # * :pre_tag => text which appears before a highlighted term
+    # * :post_tag => text which appears after a highlighted term
+    # * :merge_contiguous => collapse contiguous fragments into a single fragment
+    # * :use_fast_vector => enables the Solr FastVectorHighlighter
     # 
     # Note: When enabling +:use_fast_vector+, the highlighted fields must be also have
     # +:term_vectors+, +:term_positions+, and +:term_offsets+ enabled. 
@@ -549,6 +560,9 @@ module DatastaxRails
       end
     end
     
+    # WhereProxy objects act as a placeholder for queries in which #where does not include a value.
+    # In this case, #where must be chained with #greater_than, #less_than, or #equal_to to return
+    # a new relation.
     class WhereProxy #:nodoc:
       def initialize(relation, attribute, invert = false) #:nodoc:
         @relation, @attribute, @invert = relation, attribute, invert

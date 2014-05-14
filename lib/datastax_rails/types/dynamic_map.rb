@@ -1,5 +1,12 @@
 module DatastaxRails
   module Types
+    # A collection type that allows you to store key/value pairs in Cassandra.
+    # Changes are tracked by hooking into ActiveModel's built-in change
+    # tracking.
+    #
+    # Keys are converted to have the name of the collection prefixed
+    # to them as this is how the Solr/Cassandra integration converts
+    # between them and dynamic fields.
     class DynamicMap < ActiveSupport::HashWithIndifferentAccess
       include DirtyCollection
             

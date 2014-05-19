@@ -314,7 +314,7 @@ module DatastaxRails
       # Gets the source of the through reflection.  It checks both a singularized
       # and pluralized form for <tt>:belongs_to</tt> or <tt>:has_many</tt>.
       #
-      #   class Post < ActiveRecord::Base
+      #   class Post < DatastaxRails::Base
       #     has_many :taggings
       #     has_many :tags, :through => :taggings
       #   end

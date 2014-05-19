@@ -6,7 +6,7 @@ module DatastaxRails
     #
     # Example:
     #
-    #   Person.where("age > 21").find_each do |person|
+    #   Person.where(in_college: true).find_each do |person|
     #     person.party_all_night!
     #   end
     #
@@ -14,6 +14,9 @@ module DatastaxRails
     # large amounts of records that wouldn't fit in memory all at once. If
     # you just need to loop over less than 1000 records, it's probably
     # better just to use the regular find methods.
+    #
+    # You can also pass the +:start+ option to specify an offset to
+    # control the starting point.
     #
     # @param options [Hash] finder options
     # @yield [record] a single DatastaxRails record
@@ -23,6 +26,7 @@ module DatastaxRails
       end
     end
     
+    # Same as {find_each} but yields the index as a second parameter.
     def find_each_with_index(options = {})
       idx = 0
       find_in_batches(options) do |records|
@@ -44,15 +48,14 @@ module DatastaxRails
     # worker 2 handle from 10,000 and beyond (by setting the <tt>:start</tt>
     # option on that worker).
     #
-    # It's not possible to set the order. That is automatically set according
-    # Cassandra's key placement strategy. Records are retrieved and returned
-    # using only Cassandra and no SOLR interaction. This also mean that this
-    # method only works with any type of primary key (unlike ActiveRecord).
-    # You can't set the limit, however. That's used to control the batch sizes.
+    # It's not possible to set the order. For Cassandra based batching, the
+    # order is set according to Cassandra's key placement strategy. For Solr
+    # based batching, the order is ascending order of the primary key. 
+    # You can't set the limit either. That's used to control the batch sizes.
     #
     # Example:
     #
-    #   Person.where("age > 21").find_in_batches do |group|
+    #   Person.where(in_college: true).find_in_batches do |group|
     #     sleep(50) # Make sure it doesn't get too crowded in there!
     #     group.each { |person| person.party_all_night! }
     #   end

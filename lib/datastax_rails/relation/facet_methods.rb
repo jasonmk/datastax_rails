@@ -1,7 +1,7 @@
 module DatastaxRails
   module FacetMethods
     # Instructs SOLR to get facet counts on the passed in field.  Results are available in the facets accessor.
-    # Facets include Field and Range (Date is not supported as it is depricated in Solr).
+    # Facets include Field and Range (Date is not supported as it is depricated in Solr - use a range instead).
     #
     # results = Article.field_facet(:author)
     # results.facets => {"author"=>["vonnegut", 2. "asimov", 3]} 

@@ -140,7 +140,7 @@ describe DatastaxRails::Column do
           begin
             old = DatastaxRails::Base.default_timezone
             [:utc, :local].each do |zone|
-              ActiveRecord::Base.default_timezone = zone
+              DatastaxRails::Base.default_timezone = zone
               datetime_string = "Wed, 04 Sep 2013 03:00:00 EAT"
               expect(c.type_cast(val)).to eq(Time.utc(2013, 9, 4, 0, 0, 0))
             end

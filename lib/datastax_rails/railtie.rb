@@ -2,6 +2,7 @@ require 'rubygems'
 require 'datastax_rails'
 require 'rails'
 require 'action_controller/railtie'
+require 'yaml'
 
 module DatastaxRails
   class Railtie < Rails::Railtie

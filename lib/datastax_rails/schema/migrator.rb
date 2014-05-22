@@ -16,10 +16,11 @@ module DatastaxRails
 
       def migrate_all(force = false)
         say_with_time("Migrating all models") do
-          # Ensure all models are loaded (necessary for non-production mode)
-          Dir[Rails.root.join("app","models",'*.rb').to_s].each do |file|
-            require File.basename(file, File.extname(file))
+
+          FileList[rails_models].each do |model|
+            require File.basename(model, File.extname(model))
           end
+
           count = 0
           DatastaxRails::Base.models.each do |m|
             if !m.abstract_class?
@@ -52,6 +53,18 @@ module DatastaxRails
       end
 
       private
+
+        # Determine all models to be included within the migration
+        # using Rails config paths instead of absolute paths.
+        # This enables Rails Engines to monkey patch their own
+        # models in, to be automatically included within migrations.
+        #
+        # @see http://pivotallabs.com/leave-your-migrations-in-your-rails-engines/
+        #
+        # @return [Array] list of configured application models
+        def rails_models
+          Rails.configuration.paths['app/models'].expanded.map { |p| p + '/*.rb' }
+        end
       
         # Checks to ensure that the schema_migrations column family exists and creates it if not
         def check_schema_migrations

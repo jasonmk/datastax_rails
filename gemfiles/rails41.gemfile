@@ -4,7 +4,9 @@ source "http://rubygems.org/"
 
 gem "thin"
 gem "jquery-rails"
+gem "pry"
 gem "byebug"
-gem "rails", "~> 3.2"
+gem "guard-rspec", :require=>false
+gem "rails", "~> 4.1.0"
 
 gemspec :path=>".././"

@@ -18,7 +18,7 @@ module DatastaxRails
         say_with_time("Migrating all models") do
 
           FileList[rails_models].each do |model|
-            require File.basename(model, File.extname(model))
+            require model
           end
 
           count = 0

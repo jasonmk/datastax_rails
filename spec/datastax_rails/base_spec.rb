@@ -26,6 +26,7 @@ describe DatastaxRails::Base do
     end
     
     it "considers a new object to be unequal to a saved object" do
+      Person.commit_solr
       p1=Person.create!(:name => 'John')
       p2=Person.new(:name => 'John')
       expect(p1).not_to eq(p2)

@@ -399,7 +399,7 @@ module DatastaxRails
               end
               attributes.delete(k)
             else
-              attributes[k] = solr_format(v)
+              attributes[k] = solr_format(k,v)
             end
           end
           r.where_values << attributes unless attributes.empty?
@@ -443,7 +443,7 @@ module DatastaxRails
               end
               attributes.delete(k)
             else
-              attributes[k] = solr_format(v)
+              attributes[k] = solr_format(k,v)
             end
           end
           r.where_not_values << attributes unless attributes.empty?
@@ -536,27 +536,26 @@ module DatastaxRails
     end
     
     # Formats a value for solr (assuming this is a solr query).
-    def solr_format(value)
+    def solr_format(attribute, value)
       return value unless use_solr_value
+      column = attribute.is_a?(DatastaxRails::Column) ? attribute : klass.column_for_attribute(attribute)
+      # value = column.type_cast_for_solr(value)
       case
-        when value.is_a?(Time)
-          value.utc.strftime(DatastaxRails::Column::Format::SOLR_TIME_FORMAT)
-        when value.is_a?(DateTime)
-          value.to_time.utc.strftime(DatastaxRails::Column::Format::SOLR_TIME_FORMAT)
-        when value.is_a?(Date)
-          value.strftime(DatastaxRails::Column::Format::SOLR_TIME_FORMAT)
-        when value.is_a?(Array)
-          value.collect {|v| v.to_s.gsub(/ /,"\\ ") }.join(" OR ")
+        when value.is_a?(Time) || value.is_a?(DateTime) || value.is_a?(Date) 
+          column.type_cast_for_solr(value)
+        when value.is_a?(Array) || value.is_a?(Set)
+          column.type_cast_for_solr(value).collect {|v| v.to_s.gsub(/ /,"\\ ") }.join(" OR ")
         when value.is_a?(Fixnum)
           value < 0 ? "\\#{value}" : value
         when value.is_a?(Range)
-          "[#{solr_format(value.first)} TO #{solr_format(value.last)}]"
+          "[#{solr_format(attribute, value.first)} TO #{solr_format(attribute, value.last)}]"
         when value.is_a?(String)
           solr_escape(downcase_query(value.gsub(/ /,"\\ ")))
         when value.is_a?(FalseClass), value.is_a?(TrueClass)
           value.to_s
         else
           value
+          
       end
     end
     
@@ -571,9 +570,9 @@ module DatastaxRails
       def equal_to(value) #:nodoc:
         @relation.clone.tap do |r|
           if @invert
-            r.where_not_values << {@attribute => r.solr_format(value)}
+            r.where_not_values << {@attribute => r.solr_format(@attribute, value)}
           else
-            r.where_values << {@attribute => r.solr_format(value)}
+            r.where_values << {@attribute => r.solr_format(@attribute, value)}
           end
         end
       end
@@ -581,9 +580,9 @@ module DatastaxRails
       def greater_than(value) #:nodoc:
         @relation.clone.tap do |r|
           if @invert
-            r.less_than_values << {@attribute => r.solr_format(value)}
+            r.less_than_values << {@attribute => r.solr_format(@attribute, value)}
           else
-            r.greater_than_values << {@attribute => r.solr_format(value)}
+            r.greater_than_values << {@attribute => r.solr_format(@attribute, value)}
           end
         end
       end
@@ -591,9 +590,9 @@ module DatastaxRails
       def less_than(value) #:nodoc:
         @relation.clone.tap do |r|
           if @invert
-            r.greater_than_values << {@attribute => r.solr_format(value)}
+            r.greater_than_values << {@attribute => r.solr_format(@attribute, value)}
           else
-            r.less_than_values << {@attribute => r.solr_format(value)}
+            r.less_than_values << {@attribute => r.solr_format(@attribute, value)}
           end
         end
       end

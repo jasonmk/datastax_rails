@@ -146,10 +146,11 @@ module DatastaxRails
       return coder.dump(value) if encoded?
       
       case (dest_type || type)
-      when :uuid             then value.is_a?(::Cql::Uuid) ? value : self.class.value_to_uuid(value)
-      when :date             then value.to_time
-      when :list, :set       then list_to_cql3_value(value)
-      when :map              then map_to_cql3_value(value)
+      when :uuid                        then value.is_a?(::Cql::Uuid) ? value : self.class.value_to_uuid(value)
+      when :time, :datetime, :timestamp then value.to_time.utc
+      when :date                        then value.to_time.utc
+      when :list, :set                  then list_to_cql3_value(value)
+      when :map                         then map_to_cql3_value(value)
       else value
       end
     end
@@ -163,7 +164,7 @@ module DatastaxRails
       
       case (dest_type || type)
       when :boolean                            then value ? 'true' : 'false'
-      when :date, :time, :datetime, :timestamp then value.strftime(Format::SOLR_TIME_FORMAT)
+      when :date, :time, :datetime, :timestamp then value.to_time.utc.strftime(Format::SOLR_TIME_FORMAT)
       when :list, :set                         then self.list_to_solr_value(value)
       when :map                                then self.map_to_solr_value(value)
       else value
@@ -210,7 +211,7 @@ module DatastaxRails
     end
     
     def full_solr_range
-      if solr_type == 'date'
+      if %w[date uuid].include? solr_type
         '[* TO *]'
       else
         '[\"\" TO *]'

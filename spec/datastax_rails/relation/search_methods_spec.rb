@@ -228,20 +228,23 @@ describe DatastaxRails::Relation do
   describe '#solr_format' do
     context 'when formatting Time' do
       let(:time) { Time.new 2011, 10, 9, 8, 7, 6, "-05:00" }
+      let(:c) {DatastaxRails::Column.new("field", nil, "time")}
       
-      it { expect(@relation.solr_format(time)).to eq '2011-10-09T13:07:06Z' }
+      it { expect(@relation.solr_format(c,time)).to eq '2011-10-09T13:07:06Z' }
     end
     
     context 'when formatting Date' do
       let(:date) { Date.new 2001, 2, 3 }
+      let(:c) {DatastaxRails::Column.new("field", nil, "date")}
       
-      it { expect(@relation.solr_format(date)).to eq '2001-02-03T00:00:00Z' }
+      it { expect(@relation.solr_format(c,date)).to eq '2001-02-03T00:00:00Z' }
     end
     
     context 'when formatting DateTime' do
       let(:datetime) { DateTime.new 2001, 2, 3, 4, 5, 6, "-07:00" }
+      let(:c) {DatastaxRails::Column.new("field", nil, "timestamp")}
       
-      it { expect(@relation.solr_format(datetime)).to eq '2001-02-03T11:05:06Z' }
+      it { expect(@relation.solr_format(c,datetime)).to eq '2001-02-03T11:05:06Z' }
     end
   end
 end

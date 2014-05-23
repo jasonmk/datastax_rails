@@ -16,6 +16,7 @@ class Person < DatastaxRails::Base
   before_create :set_variable2
   before_save :set_nickname
   after_save :set_variable
+  after_create :set_variable3
   
   validates :name, :presence => true, :uniqueness => :true
   
@@ -29,6 +30,10 @@ class Person < DatastaxRails::Base
   
   def set_variable2
     @before_create_ran = "yup"
+  end
+  
+  def set_variable3
+    @after_create_ran = 'yup'
   end
 end
 

@@ -19,6 +19,7 @@ describe DatastaxRails::Base do
     p.instance_variable_get(:@after_create_ran).should == "yup"
   end
   
+  
   it "should raise RecordNotFound when finding a bogus ID" do
     lambda { Person.find("xyzzy") }.should raise_exception(DatastaxRails::RecordNotFound)
   end

@@ -286,11 +286,11 @@ module DatastaxRails
       run_callbacks(:save) { super }
     end
 
-    def _create(*) #:nodoc:
+    def _create_record(*) #:nodoc:
       run_callbacks(:create) { super }
     end
 
-    def _update(*) #:nodoc:
+    def _update_record(*) #:nodoc:
       run_callbacks(:update) { super }
     end
   end

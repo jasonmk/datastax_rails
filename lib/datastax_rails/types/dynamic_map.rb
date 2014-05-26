@@ -20,13 +20,12 @@ module DatastaxRails
         super(convert_key(key))
       end
       
-      protected
-        def convert_key(key)
-          unless key.to_s.starts_with?(name)
-            key = name + key.to_s
-          end
-          super(key)
+      def convert_key(key)
+        unless key.to_s.starts_with?(name)
+          key = name + key.to_s
         end
+        super(key)
+      end
     end
   end
 end

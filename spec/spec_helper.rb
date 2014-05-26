@@ -21,7 +21,7 @@ RSpec.configure do |config|
   # Filter slow specs. Add a :slow tag to the spec to keep it from
   # running unless the SLOW_SPECS environment variable is set.
   config.treat_symbols_as_metadata_keys_with_true_values = true
-  config.filter_run_excluding :slow unless ENV['SLOW_SPECS']
+  # config.filter_run_excluding :slow unless ENV['SLOW_SPECS']
   
   config.before(:each) do
     DatastaxRails::Base.recorded_classes = {}

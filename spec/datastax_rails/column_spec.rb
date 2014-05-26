@@ -197,6 +197,7 @@ describe DatastaxRails::Column do
     
     describe "map" do
       let(:c) {DatastaxRails::Column.new("field_", nil, "map", :holds => :integer)}
+      let(:dc) {DatastaxRails::Column.new("field_", nil, "map", :holds => :date)}
       
       it "casts map keys to strings" do
         expect(c.type_cast({:field_key => 7}, record)).to eq({"field_key" => 7})
@@ -208,6 +209,14 @@ describe DatastaxRails::Column do
       
       it "wraps map values in a DynamicMap" do
         expect(c.type_cast({'field_key' => '7'}, record)).to be_a(DatastaxRails::Types::DynamicMap)
+      end
+      
+      describe "to cql" do
+        it "casts map values to the appropriate type" do
+          date = Date.parse("1980-10-19")
+          time = Time.parse("1980-10-19 00:00:00 +0000")
+          expect(dc.type_cast_for_cql3({:field_key => date})).to eq(:field_key => time)
+        end
       end
     end
     

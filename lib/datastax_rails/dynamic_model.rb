@@ -33,17 +33,17 @@ module DatastaxRails
   # ts_ prefix to differentiate it from texts.
   #   
   #   class Item < DatastaxRails::DynamicModel
-  #     self.group_by = 'item'
+  #     self.grouping = 'item'
   #     timestamps
   #   end
   #
   #   class CoreMetadata < DatastaxRails::DynamicModel
-  #     self.group_by = 'core'
+  #     self.grouping = 'core'
   #     timestamps
   #   end
   #
   #   class TeamMetadata < DatastaxRails::DynamicModel
-  #     self.group_by = 'team'
+  #     self.grouping = 'team'
   #     timestamps
   #   end
   #
@@ -60,39 +60,79 @@ module DatastaxRails
   # the collection so:
   #
   #   Item.first.strings #=> {s_title: "Title"}
+  #
+  # If you would like to still define known attributes ahead of time, you can still do so:
+  #
+  #   class TeamMetadata < DatastaxRails::DynamicModel
+  #     self.grouping = 'team'
+  #     string :name
+  #     timestamps
+  #   end
+  #
+  #   TeamMetadata.new(name: 'John').name #=> 'John'
+  #   TeamMetadata.new(name: 'John').strings #=> {'s_name' => 'John'}
+  #
+  # Getters and setters are automatically created to map to the attribute stored in the hash.
+  # In addition, there is a helper method to map column names to the field name in solr to
+  # assist with search.
   class DynamicModel < WideStorageModel
     self.abstract_class = true
     
+    PREFIXES = {string: :s_, text: :t_, boolean: :b_, date: :d_,
+                timestamp: :ts_, integer: :i_, float: :f_, uuid: :u_}.with_indifferent_access
+    
     class_attribute :group_by_attribute
+    class_attribute :declared_attributes
     
-    def self.group_by=(group)
-      self.group_by_attribute = group
-      self.attribute_definitions['group'].default = group
-      default_scope -> {where('group' => group)}
-    end
-    
-    
-    def self.inherited(child)
-      super
-      child.column_family = 'dynamic_model'
-      child.primary_key = 'id'
-      child.cluster_by = 'group'
-      child.uuid :id
-      child.string :group
-      child.map :s_,  :holds => :string
-      child.map :t_,  :holds => :text
-      child.map :b_,  :holds => :boolean
-      child.map :d_,  :holds => :date
-      child.map :ts_, :holds => :timestamp
-      child.map :i_,  :holds => :integer
-      child.map :f_,  :holds => :float
-      child.map :u_,  :holds => :uuid
+    class << self
+      def grouping=(group)
+        self.group_by_attribute = group
+        self.attribute_definitions['group'].default = group
+        default_scope -> {where('group' => group)}
+      end
       
-      child.map_columns.each do |col|
-        child.instance_eval do
-          alias_attribute col.options[:holds].to_s.pluralize, col.name
+      alias_method :_attribute, :attribute
+      
+      def attribute(name, options)
+        options.symbolize_keys!
+        return super if [:map,:list,:set].include?(options[:type].to_sym)
+        # Only type supported for now
+        options.assert_valid_keys(:type)
+        raise ArgumentError, "Invalid type specified for dynamic attribute: '#{name}: #{options[:type]}'" unless PREFIXES.has_key?(options[:type])
+        self.declared_attributes[name] = PREFIXES[options[:type]].to_s + name.to_s
+        define_method(name) do
+          self.send(PREFIXES[options[:type]])[name]
+        end
+        define_method("#{name.to_s}=") do |val|
+          self.send(PREFIXES[options[:type]])[name] = val
         end
       end
+      
+      def inherited(child)
+        super
+        child.declared_attributes = child.declared_attributes.nil? ? {}.with_indifferent_access : child.declared_attributes.dup
+        child.column_family = 'dynamic_model'
+        child.primary_key = 'id'
+        child.cluster_by = 'group'
+        child._attribute :id, :type => :uuid
+        child._attribute :group, :type => :string
+        PREFIXES.each do |k,v| 
+          child._attribute v, holds: k.to_sym, type: :map
+          child.instance_eval { alias_attribute k.to_s.pluralize, v}
+        end
+      end
+      
+      def solr_field_name(attr, type = nil)
+        if type
+          PREFIXES[type].to_s + attr.to_s
+        else
+          declared_attributes[attr] || raise(UnknownAttributeError, "Unknown attribute: #{attr}. You must specify a type.")
+        end
+      end
+    end
+    
+    def solr_field_name(attr, type = nil)
+      self.class.solr_field_name(attr, type)
     end
   end
 end

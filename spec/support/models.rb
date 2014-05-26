@@ -108,9 +108,9 @@ class Hobby < DatastaxRails::Base
 end
 
 class CoreMetadata < DatastaxRails::DynamicModel
-  self.group_by = 'core'
+  self.grouping = 'core'
 end
 
 class TeamMetadata < DatastaxRails::DynamicModel
-  self.group_by = 'team'
+  self.grouping = 'team'
 end

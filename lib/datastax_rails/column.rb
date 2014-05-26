@@ -172,19 +172,19 @@ module DatastaxRails
     end
     
     def list_to_solr_value(value)
-      value.map {|v| type_cast_for_solr(v, @options[:holds])}
+      value.map {|v| type_cast_for_solr(v, @options[:holds].to_sym)}
     end
     
     def map_to_solr_value(value)
-      value.each {|k,v| value[k] = type_cast_for_solr(v, @options[:holds])}
+      value.each {|k,v| value[k] = type_cast_for_solr(v, @options[:holds].to_sym)}
     end
     
     def list_to_cql3_value(value)
-      value.map {|v| type_cast_for_cql3(v, @options[:holds])}
+      value.map {|v| type_cast_for_cql3(v, @options[:holds].to_sym)}
     end
     
     def map_to_cql3_value(value)
-      value.dup.each {|k,v| value[k] = type_cast_for_cql3(v, @options[:holds])}
+      value.dup.each {|k,v| value[k] = type_cast_for_cql3(v, @options[:holds].to_sym)}
       value
     end
 

@@ -24,6 +24,9 @@ module DatastaxRails
         if Rails.root.join('config','solr',"#{model.column_family}-schema.xml.erb").exist?
           say "Using custom schema for #{model.name}", :subitem
           ERB.new(Rails.root.join('config','solr',"#{model.column_family}-schema.xml.erb").read, 0, '>').result(binding)
+        elsif Rails.root.join('config','solr','application-schema.xml.erb').exist?
+          say 'Using application default schema', :subitem
+          ERB.new(Rails.root.join('config','solr','application-schema.xml.erb').read, 0, '>').result(binding)
         else
           ERB.new(File.read(File.join(File.dirname(__FILE__),"..","..","..","config","schema.xml.erb")), 0, '>').result(binding)
         end

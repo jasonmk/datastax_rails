@@ -147,6 +147,30 @@ module DatastaxRails
       @destroyed = true
       freeze
     end
+    
+    # TODO: Make this work
+    # def touch(name = nil)
+      # raise ActiveRecordError, "can not touch on a new record object" unless persisted?
+# 
+      # attributes = timestamp_attributes_for_update_in_model
+      # attributes << name if name
+# 
+      # unless attributes.empty?
+        # current_time = current_time_from_proper_timezone
+        # changes = {}
+# 
+        # attributes.each do |column|
+          # column = column.to_s
+          # changes[column] = write_attribute(column, current_time)
+        # end
+# 
+        # @changed_attributes.except!(*changes.keys)
+        # primary_key = self.class.primary_key
+        # self.class.unscoped.where(primary_key => self[primary_key]).update_all(changes) == 1
+      # else
+        # true
+      # end
+    # end
 
     # Updates a single attribute and saves the record.
     # This is especially useful for boolean flags on existing records. Also note that

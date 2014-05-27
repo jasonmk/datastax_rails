@@ -276,9 +276,9 @@ module DatastaxRails
       run_callbacks(:destroy) { super }
     end
 
-    def touch(*) #:nodoc:
-      run_callbacks(:touch) { super }
-    end
+    # def touch(*) #:nodoc:
+      # run_callbacks(:touch) { super }
+    # end
 
   private
 

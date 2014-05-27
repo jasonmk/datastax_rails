@@ -441,7 +441,6 @@ module DatastaxRails #:nodoc:
         init_internals
   
         @new_record = false
-  
         run_callbacks :find
         run_callbacks :initialize
       end

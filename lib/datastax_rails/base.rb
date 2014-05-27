@@ -357,8 +357,8 @@ module DatastaxRails #:nodoc:
     include Batches
     include AttributeAssignment
     include AttributeMethods
-    include Callbacks
     include Validations
+    include Callbacks
     include Reflection
     include Associations
     include Scoping
@@ -376,7 +376,7 @@ module DatastaxRails #:nodoc:
     class_attribute :default_timezone, :instance_writer => false
     self.default_timezone = :utc
 
-    # Stores the default consistency level (QUORUM by default)    
+    # Stores the default consistency level (QUORUM by default)
     class_attribute :default_consistency
     self.default_consistency = :quorum
 

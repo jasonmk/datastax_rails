@@ -190,7 +190,7 @@ module DatastaxRails
       end
   
       def find_some(ids)
-        keys = ids.collect {|id| @klass.attribute_definitions[@klass.primary_key].type_cast(id) || "Couldn't find #{@klass.name} with an invalid ID=#{id}"}
+        keys = ids.collect {|id| @klass.attribute_definitions[@klass.primary_key].type_cast(id) || raise(RecordNotFound,"Couldn't find #{@klass.name} with an invalid ID=#{id}")}
         result = with_cassandra.where(@klass.primary_key => keys).all
   
         expected_size =

@@ -52,11 +52,12 @@ module DatastaxRails#:nodoc:
         end
         
         @conditions.each do |k,v|
-          @values << v
           if v.kind_of?(Array)
-            conditions << "\"#{k.to_s}\" IN (?)"
+            conditions << "\"#{k.to_s}\" IN (#{('?'*v.size).split(//).join(',')})"
+            @values += v
           else
             conditions << "\"#{k.to_s}\" = ?"
+            @values << v
           end
         end
         

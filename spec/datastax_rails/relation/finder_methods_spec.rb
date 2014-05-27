@@ -6,6 +6,51 @@ describe DatastaxRails::Relation do
     Hobby.commit_solr
   end
   
+  describe "#find" do
+    let(:h) {Hobby.create}
+    let(:i) {Hobby.create}
+    
+    context "with a single id" do
+      context "as a scalar" do
+        it "finds the object and returns it as an object" do
+          expect(Hobby.find(h.id)).to eq(h)
+        end
+        
+        it "raises RecordNotFound for an invalid ID" do
+          expect{Hobby.find("asdf")}.to raise_exception(DatastaxRails::RecordNotFound)
+        end
+        
+        it "raises RecordNotFound for a nil ID" do
+          expect{Hobby.find(nil)}.to raise_exception(DatastaxRails::RecordNotFound)
+        end
+      end
+      
+      context "as an array" do
+        it "finds the object and returns it as a single-element array" do
+          expect(Hobby.find([h.id])).to eq([h])
+        end
+      end
+    end
+    
+    context "with multiple ids" do
+      it "raises RecordNotFound if any portion of the records could not be found" do
+        expect{Hobby.find(h.id, ::Cql::TimeUuid::Generator.new.next)}.to raise_exception(DatastaxRails::RecordNotFound)
+      end
+      
+      context "as an array" do
+        it "finds the objects and returns them as an array" do
+          expect(Hobby.find([h.id, i.id])).to eq([h,i])
+        end
+      end
+      
+      context "as discrete parameters" do
+        it "finds the objects and returns them as an array" do
+          expect(Hobby.find(h.id, i.id)).to eq([h,i])
+        end
+      end
+    end
+  end
+  
   describe "#first" do
     it "should return the first result if records are already loaded" do
       a_record = mock_model(Hobby)

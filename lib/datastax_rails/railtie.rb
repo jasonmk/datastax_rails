@@ -20,6 +20,13 @@ module DatastaxRails
         raise "ERROR: datastax.yml does not define a configuration for #{Rails.env} environment"
       end
       DatastaxRails::Base.establish_connection(config[Rails.env].with_indifferent_access)
+      if defined?(PhusionPassenger)
+        PhusionPassenger.on_event(:starting_worker_process) do |forked|
+          if forked
+             DatastaxRails::Base.establish_connection(config[Rails.env].with_indifferent_access)
+          end
+        end
+      end
     end
     
     rake_tasks do

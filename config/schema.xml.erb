@@ -52,7 +52,7 @@
       <% else %>
     	<field name="<%= field.name %>" type="<%= field.solr_type %>" indexed="<%= field.options[:solr_index] %>" stored="<%= field.options[:solr_store] %>" multiValued="<%= field.options[:multi_valued] %>"/>
     	<% if field.solr_type == 'text' && field.options[:sortable] %>
-    	    <field name="sort_<%= field.name %>" type="string" indexed="true" stored="fase" multiValued="false"/>
+    	    <field name="sort_<%= field.name %>" type="string" indexed="true" stored="false" multiValued="false"/>
     	<% end %>
       <% end %>
     <% end %>

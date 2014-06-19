@@ -13,6 +13,10 @@ describe DatastaxRails::Base do
     p.save!
     p.instance_variable_get(:@after_save_ran).should == "yup"
   end
+
+  it "should consider new object to not be equal to any other object" do
+    Person.new(:name => "Jason").should_not eq(Person.new(:name => "Jason"))
+  end
   
   it "should raise RecordNotFound when finding a bogus ID" do
     lambda { Person.find("xyzzy") }.should raise_exception(DatastaxRails::RecordNotFound)

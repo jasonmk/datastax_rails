@@ -11,6 +11,11 @@ module DatastaxRails
         key = self.id
         [key] if key
       end
+      
+      # Returns a primary key hash for updates. Wide models override this.
+      def id_for_update
+        {self.class.primary_key.to_s => self.id}
+      end
 
       # Returns the primary key value.
       def id

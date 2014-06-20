@@ -24,5 +24,10 @@ module DatastaxRails
   #   end
   class WideStorageModel < DatastaxRails::Base
     self.abstract_class = true
+    
+    # Returns a primary key hash for updates that includes the cluster key
+    def id_for_update
+      {self.class.primary_key.to_s => self.id, self.class.cluster_by.to_s => self.read_attribute(self.class.cluster_by.to_s)}
+    end
   end
 end

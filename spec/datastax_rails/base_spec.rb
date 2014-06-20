@@ -18,6 +18,15 @@ describe DatastaxRails::Base do
       expect(p1).not_to eq(p2)
     end
     
+    it "considers two new objects to be unequal" do
+      expect(Person.new).not_to eq(Person.new)
+    end
+    
+    it "considers the same object equal to itself" do
+      p=Person.new
+      expect(p).to eq(p)
+    end
+    
     it "considers two persisted objects to be equal if their primary keys are equal" do
       Person.commit_solr
       p1=Person.create!(:name => 'Jim')

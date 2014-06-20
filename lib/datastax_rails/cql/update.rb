@@ -51,9 +51,12 @@ module DatastaxRails
           
           stmt << updates.join(", ")
         end
-        
-        stmt << " WHERE #{@klass.primary_key} IN (?)"
-        @values << @key
+        conditions = []
+        @key.each do |k,v|
+          conditions << "\"#{k.to_s}\" = ?"
+          @values << v
+        end
+        stmt << " WHERE #{conditions.join(" AND ")}"
         stmt.force_encoding('UTF-8')
       end
     end

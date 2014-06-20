@@ -107,7 +107,7 @@ module DatastaxRails
           if options[:new_record]
             cql.insert.columns(encoded).using(options[:consistency]).execute
           else
-            cql.update(record.id).columns(encoded).using(options[:consistency]).execute
+            cql.update(record.id_for_update).columns(encoded).using(options[:consistency]).execute
           end
         end
         

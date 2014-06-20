@@ -82,7 +82,7 @@ module DatastaxRails
                 timestamp: :ts_, integer: :i_, float: :f_, uuid: :u_}.with_indifferent_access
     
     class_attribute :group_by_attribute
-    class_attribute :declared_attributes
+    class_attribute :virtual_attributes
     
     class << self
       def grouping=(group)
@@ -95,22 +95,18 @@ module DatastaxRails
       
       def attribute(name, options)
         options.symbolize_keys!
-        return super if [:map,:list,:set].include?(options[:type].to_sym)
-        # Only type supported for now
-        options.assert_valid_keys(:type)
-        raise ArgumentError, "Invalid type specified for dynamic attribute: '#{name}: #{options[:type]}'" unless PREFIXES.has_key?(options[:type])
-        self.declared_attributes[name] = PREFIXES[options[:type]].to_s + name.to_s
-        define_method(name) do
-          self.send(PREFIXES[options[:type]])[name]
+        unless [:map,:list,:set].include?(options[:type].to_sym)
+          # Only type supported for now
+          options.assert_valid_keys(:type)
+          raise ArgumentError, "Invalid type specified for dynamic attribute: '#{name}: #{options[:type]}'" unless PREFIXES.has_key?(options[:type])
+          self.virtual_attributes[name.to_s] = PREFIXES[options[:type]].to_s + name.to_s
         end
-        define_method("#{name.to_s}=") do |val|
-          self.send(PREFIXES[options[:type]])[name] = val
-        end
+        super
       end
       
       def inherited(child)
         super
-        child.declared_attributes = child.declared_attributes.nil? ? {}.with_indifferent_access : child.declared_attributes.dup
+        child.virtual_attributes = child.virtual_attributes.nil? ? {}.with_indifferent_access : child.virtual_attributes.dup
         child.column_family = 'dynamic_model'
         child.primary_key = 'id'
         child.cluster_by = 'group'
@@ -123,11 +119,28 @@ module DatastaxRails
       end
       
       def solr_field_name(attr, type = nil)
-        if type
-          PREFIXES[type].to_s + attr.to_s
-        else
-          declared_attributes[attr] || raise(UnknownAttributeError, "Unknown attribute: #{attr}. You must specify a type.")
-        end
+        type ||= self.attribute_definitions[attr].try(:type)
+        raise(UnknownAttributeError, "Collections cannot be mapped") if [:map,:list,:set].include?(type)
+        raise(UnknownAttributeError, "Unknown attribute: #{attr}. You must specify a type.") unless type
+        PREFIXES[type].to_s + attr.to_s
+      end
+    end
+    
+    def write_attribute(attr_name, val)
+      if virtual_attributes.include?(attr_name.to_s)
+        type = self.class.attribute_definitions[attr_name].type
+        self.send(PREFIXES[type])[attr_name] = val
+      else
+        super
+      end
+    end
+    
+    def read_attribute(attr_name)
+      if virtual_attributes.include?(attr_name.to_s)
+        type = self.class.attribute_definitions[attr_name].type
+        self.send(PREFIXES[type])[attr_name]
+      else
+        super
       end
     end
     

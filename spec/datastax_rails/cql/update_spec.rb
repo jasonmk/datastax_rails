@@ -6,9 +6,9 @@ describe DatastaxRails::Cql::Update do
   end
   
   it "should generate valid CQL" do
-    cql = DatastaxRails::Cql::Update.new(@model_class, "12345")
+    cql = DatastaxRails::Cql::Update.new(@model_class, 'id' => "12345")
     cql.using(DatastaxRails::Cql::Consistency::QUORUM).columns(:name => 'John', :age => '23')
-    cql.to_cql.should match(/update users SET ("name" = \?, "age" = \?|"age" = \?, "name" = \?) WHERE id IN \(\?\)/)
+    cql.to_cql.should match(/update users SET ("name" = \?, "age" = \?|"age" = \?, "name" = \?) WHERE "id" = \?/)
   end
   
   it_has_behavior "default_consistency"

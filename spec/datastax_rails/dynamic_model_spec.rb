@@ -29,6 +29,12 @@ describe DatastaxRails::DynamicModel do
     expect(one.name).to eq('John')
   end
   
+  it "updates an existing attribute" do
+    one.save
+    one.name = 'Jim'
+    expect(one.save).to be_true
+  end
+  
   describe "#solr_field_name" do
     it "maps a attribute name to the underlying storage key" do
       expect(one.solr_field_name(:name)).to eq('s_name')

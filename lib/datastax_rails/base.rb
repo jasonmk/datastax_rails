@@ -491,10 +491,10 @@ module DatastaxRails #:nodoc:
     end
 
     def ==(comparison_object)
-      comparison_object.equal?(self) ||
-        (comparison_object.instance_of?(self.class) &&
-          comparison_object.id == self.id &&
-          !comparison_object.new_record?)
+      super ||
+        comparison_object.instance_of?(self.class) &&
+        id.present? &&
+        comparison_object.id.eql?(id)
     end
 
     def eql?(comparison_object)

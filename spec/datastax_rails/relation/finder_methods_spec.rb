@@ -13,6 +13,7 @@ describe DatastaxRails::Relation do
     context "with a single id" do
       context "as a scalar" do
         it "finds the object and returns it as an object" do
+          
           expect(Hobby.find(h.id)).to eq(h)
         end
         

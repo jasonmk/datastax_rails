@@ -18,11 +18,35 @@ module DatastaxRails
     class CollectionAssociation < Association #:nodoc:
       attr_reader :proxy
       
-      delegate :count, :size, :empty?, :any?, :many?, :first, :last, :to => :scoped
+      delegate :first, :last, :to => :scoped
       
       def initialize(owner, reflection)
         super
         @proxy = CollectionProxy.new(self)
+      end
+      
+      def size
+        if !find_target? || loaded?
+          target.size
+        elsif !loaded? && target.is_a?(Array)
+          unsaved_records = target.select { |r| r.new_record? }
+          unsaved_records.size + scoped.count
+        else
+          scoped.count
+        end
+      end
+      alias_method :count, :size
+      
+      def empty?
+        size == 0
+      end
+      
+      def any?
+        size > 0
+      end
+      
+      def many?
+        size > 1
       end
       
       # Implements the reader method, e.g. foo.items for Foo.has_many :items

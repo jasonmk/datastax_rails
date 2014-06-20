@@ -106,7 +106,7 @@ module DatastaxRails
             end
             break
           end
-          DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:solrconfig => solrconfig_digest).execute
+          DatastaxRails::Cql::Update.new(SchemaMigration, :cf => model.column_family).columns(:solrconfig => solrconfig_digest).execute
         end
         if force || stopwords_digest != sm_digests['stopwords']
           count += 1
@@ -120,7 +120,7 @@ module DatastaxRails
             end
             break
           end
-          DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:stopwords => stopwords_digest).execute
+          DatastaxRails::Cql::Update.new(SchemaMigration, :cf => model.column_family).columns(:stopwords => stopwords_digest).execute
         end
         if force || schema_digest != sm_digests['digest']
           count += 1
@@ -134,7 +134,7 @@ module DatastaxRails
             end
             break
           end
-          DatastaxRails::Cql::Update.new(SchemaMigration, model.column_family).columns(:digest => schema_digest).execute
+          DatastaxRails::Cql::Update.new(SchemaMigration, :cf => model.column_family).columns(:digest => schema_digest).execute
           newcf ? create_solr_core(model) : reindex_solr(model)
         end
         count

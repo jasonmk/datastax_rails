@@ -10,6 +10,7 @@ module DatastaxRails
     extend ActiveSupport::Concern
     
     included do
+      include DatastaxRails::StatementCache
       class_attribute :connection
       class_attribute :solr
     end

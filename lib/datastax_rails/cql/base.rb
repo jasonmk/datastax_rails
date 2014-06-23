@@ -29,12 +29,9 @@ module DatastaxRails
         cql = self.to_cql
         puts cql if ENV['DEBUG_CQL'] == 'true'
         pp @values if ENV['DEBUG_CQL'] == 'true'
-        if(@values.present?)
-          stmt = DatastaxRails::Base.connection.prepare(cql)
-          stmt.execute(*@values, :consistency => @consistency)
-        else
-          DatastaxRails::Base.connection.execute(cql, :consistency => @consistency)
-        end
+        digest = Digest::MD5.digest cql
+        stmt = DatastaxRails::Base.statement_cache[digest] ||= DatastaxRails::Base.connection.prepare(cql)
+        stmt.execute(*@values, :consistency => @consistency)
       end
     end
   end

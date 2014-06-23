@@ -25,6 +25,7 @@ RSpec.configure do |config|
   
   config.before(:each) do
     DatastaxRails::Base.recorded_classes = {}
+    DatastaxRails::Base.statement_cache.clear
   end
   
   config.after(:each) do

@@ -16,6 +16,11 @@ module DatastaxRails
   autoload :Column
   autoload :Collection
   autoload :Connection
+  
+  autoload_under 'connection' do
+    autoload :StatementCache
+  end
+  
   autoload :Cql
   autoload :DynamicModel
   autoload :GroupedCollection

@@ -463,17 +463,19 @@ module DatastaxRails
     #
     # @param query [String] a fulltext query to pass to solr
     # @param opts [Hash] an optional options hash to modify the fulltext query
+    # @param downcase [boolean] an optional flag to disable downcasing the fulltext query
     # @option opts [Array] :fields list of fields to search instead of the default of all text fields (not-implemented)
     # @return [DatastaxRails::Relation] a new Relation object
-    def fulltext(query, opts = {})
+    def fulltext(query, opts = {}, downcase = true)
       return self if query.blank?
       
-      opts[:query] = downcase_query(query)
+      opts[:query] = downcase ? downcase_query(query) : query
       
       clone.tap do |r|
         r.fulltext_values << opts
       end
     end
+    
     
     # Enables highlighting on specific fields when used with full 
     # text searching. In order for highlighting to work, the highlighted 

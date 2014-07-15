@@ -55,7 +55,7 @@ module DatastaxRails
       # config/solr/column_family-stopwords.txt
       #
       # TODO: find a way to upload arbitrary files automatically (e.g., additional stopwords lists)
-      def upload_solr_configuration(model, force=false)
+      def upload_solr_configuration(model, force=false, reindex=true)
         count = 0
         if Rails.root.join('config','solr',"#{model.column_family}-solrconfig.xml").exist?
           say "Using custom solrconfig file", :subitem
@@ -135,7 +135,11 @@ module DatastaxRails
             break
           end
           DatastaxRails::Cql::Update.new(SchemaMigration, :cf => model.column_family).columns(:digest => schema_digest).execute
-          newcf ? create_solr_core(model) : reindex_solr(model)
+          if newcf
+            create_solr_core(model)
+          elsif reindex
+            reindex_solr(model)
+          end
         end
         count
       end

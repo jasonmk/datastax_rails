@@ -10,7 +10,7 @@ describe DatastaxRails::Types::DynamicSet do
     subject << nil
   end
   
-  it { should eq(Set.new(["Test String 1", "Another Test String", nil]))}
-  its('record.changed_attributes') { should include('set' => Set.new) }
-  its('record.attributes') { should include('set' => Set.new(["Test String 1", "Another Test String", nil]))}
+  it { is_expected.to eq(Set.new(["Test String 1", "Another Test String", nil]))}
+  its('record.changed_attributes') { is_expected.to include('set' => Set.new) }
+  its('record.attributes') { is_expected.to include('set' => Set.new(["Test String 1", "Another Test String", nil]))}
 end

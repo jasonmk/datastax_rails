@@ -3,6 +3,8 @@ ENV["RAILS_ENV"] = "test"
 require File.expand_path("../dummy/config/environment.rb",  __FILE__)
 
 require 'rspec/rails'
+require 'rspec/its'
+require 'factory_girl_rails'
 
 ENGINE_RAILS_ROOT=File.join(File.dirname(__FILE__), '../')
 
@@ -11,6 +13,8 @@ ENGINE_RAILS_ROOT=File.join(File.dirname(__FILE__), '../')
 Dir[File.expand_path(File.join(ENGINE_RAILS_ROOT, "spec/support/**/*.rb"))].each {|f| require f }
 
 RSpec.configure do |config|
+  config.include FactoryGirl::Syntax::Methods
+  
   config.alias_it_should_behave_like_to :it_has_behavior, 'has behavior:'
   
   # Use a focus tag to filter specific specs. This helps if you need to
@@ -20,7 +24,6 @@ RSpec.configure do |config|
   
   # Filter slow specs. Add a :slow tag to the spec to keep it from
   # running unless the SLOW_SPECS environment variable is set.
-  config.treat_symbols_as_metadata_keys_with_true_values = true
   # config.filter_run_excluding :slow unless ENV['SLOW_SPECS']
   
   config.before(:each) do

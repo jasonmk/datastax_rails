@@ -8,7 +8,7 @@ describe DatastaxRails::Base do
         job = Job.create(:title => "Developer")
         Person.commit_solr
         job.person = person
-        job.person_id.should == person.id
+        expect(job.person_id).to eq(person.id)
       end
       
       it "should look up the owning model by id" do
@@ -18,7 +18,7 @@ describe DatastaxRails::Base do
         job = Job.create!(:title => "Developer", :person_id => person.id)
         Person.commit_solr
         Job.commit_solr
-        Job.first.person.should == person
+        expect(Job.first.person).to eq(person)
       end
     end
   end

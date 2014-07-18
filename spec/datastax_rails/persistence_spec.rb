@@ -7,8 +7,8 @@ describe "DatastaxRails::Base" do
         person = Person.create(:name => 'Jason', :birthdate => Date.parse("Oct 19, 1981"), :nickname => 'Jas')
         person.birthdate = Date.parse("Oct 19, 1980")
         person.update_attributes(:nickname => 'Jace')
-        person.birthdate.should eql(Date.parse("Oct 19, 1980"))
-        person.nickname.should eql('Jace')
+        expect(person.birthdate).to eql(Date.parse("Oct 19, 1980"))
+        expect(person.nickname).to eql('Jace')
       end
     end
     
@@ -16,12 +16,12 @@ describe "DatastaxRails::Base" do
       before(:each) do
         Person.storage_method = :cql
         @statement = double("prepared statement")
-        DatastaxRails::Base.connection.stub(:prepare).and_return(@statement)
+        allow(DatastaxRails::Base.connection).to receive(:prepare).and_return(@statement)
       end
       
       describe "#create" do
         it "should persist at the given consistency level" do
-          @statement.should_receive(:execute) do |*args|
+          expect(@statement).to receive(:execute) do |*args|
             expect(args.last).to include(:consistency => :local_quorum)
           end
           Person.create({:name => 'Steven'},{:consistency => 'LOCAL_QUORUM'})
@@ -30,7 +30,7 @@ describe "DatastaxRails::Base" do
     
       describe "#save" do
         it "should persist at the given consistency level" do
-          @statement.should_receive(:execute) do |*args|
+          expect(@statement).to receive(:execute) do |*args|
             expect(args.last).to include(:consistency => :local_quorum)
           end
           p=Person.new(:name => 'Steven')
@@ -40,9 +40,9 @@ describe "DatastaxRails::Base" do
       
       describe "#remove" do
         it "should remove at the given consistency level" do
-          @statement.stub(:execute)
+          allow(@statement).to receive(:execute)
           p=Person.create(:name => 'Steven')
-          @statement.should_receive(:execute) do |*args|
+          expect(@statement).to receive(:execute) do |*args|
             expect(args.last).to include(:consistency => :local_quorum)
           end
           p.destroy(:consistency => :local_quorum)
@@ -59,28 +59,27 @@ describe "DatastaxRails::Base" do
       
       describe "#create" do
         it "should persist at the given consistency level" do
-          Person.solr_connection.should_receive(:update).with(hash_including(:params => hash_including({:cl => 'LOCAL_QUORUM'}))).and_return(true)
+          expect(Person.solr_connection).to receive(:update).with(hash_including(:params => hash_including({:cl => 'LOCAL_QUORUM'}))).and_return(true)
           Person.create({:name => 'Steven'},{:consistency => 'LOCAL_QUORUM'})
         end
       end
     
       describe "#save" do
         it "should persist at the given consistency level" do
-          Person.solr_connection.should_receive(:update).with(hash_including(:params => hash_including({:cl => 'LOCAL_QUORUM'}))).and_return(true)
+          expect(Person.solr_connection).to receive(:update).with(hash_including(:params => hash_including({:cl => 'LOCAL_QUORUM'}))).and_return(true)
           p=Person.new(:name => 'Steven')
           p.save(:consistency => 'LOCAL_QUORUM')
         end
         
         it "should successfully remove columns that are set to nil" do
-          pending do 
-            p = Person.create!(:name => 'Steven', :birthdate => Date.today)
-            Person.commit_solr
-            p = Person.find_by_name('Steven')
-            p.birthdate = nil
-            p.save
-            Person.commit_solr
-            Person.find by_name('Steven').birthdate.should be_nil
-          end
+          skip
+          p = Person.create!(:name => 'Steven', :birthdate => Date.today)
+          Person.commit_solr
+          p = Person.find_by_name('Steven')
+          p.birthdate = nil
+          p.save
+          Person.commit_solr
+          Person.find by_name('Steven').birthdate.should be_nil
         end
       end
     end
@@ -89,13 +88,13 @@ describe "DatastaxRails::Base" do
       it "should store a file", :slow => true do
         file = "abcd"*1.megabyte
         CarPayload.create(:digest => 'limo', :payload => file)
-        CarPayload.find('limo').payload.should == file
+        expect(CarPayload.find('limo').payload).to eq(file)
       end
       
       it "should store really large files", :slow => true do
         file = IO.read("/dev/zero", 25.megabyte)
         CarPayload.create(:digest => 'limo', :payload => file)
-        CarPayload.find('limo').payload.should == file
+        expect(CarPayload.find('limo').payload).to eq(file)
       end
       
       it "should successfully overwrite a larger file with a smaller one", :slow => true do
@@ -104,7 +103,7 @@ describe "DatastaxRails::Base" do
         smallfile = "e"*1.kilobyte
         car.payload = smallfile
         car.save
-        CarPayload.find('limo').payload.should == smallfile
+        expect(CarPayload.find('limo').payload).to eq(smallfile)
       end
     end
   end

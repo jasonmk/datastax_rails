@@ -9,7 +9,7 @@ describe DatastaxRails::Relation do
   
   describe "#==" do
     it "should count two relations with the same parameters as equal" do
-      @relation.where("name" => "jason").should == @relation.where("name" => "jason")
+      expect(@relation.where("name" => "jason")).to eq(@relation.where("name" => "jason"))
     end
   end
   
@@ -17,33 +17,33 @@ describe DatastaxRails::Relation do
     it "should return true if there are records" do
       Hobby.create(:name => "fishing")
       @relation.commit_solr
-      @relation.any?.should be_true
+      expect(@relation.any?).to be_truthy
     end
     
     it "should return false if there are no records" do
-      @relation.any?.should be_false
+      expect(@relation.any?).to be_falsey
     end
   end
   
   describe "#count" do
     it "should use the cached count if it is available" do
       @relation.instance_variable_set(:@count, 42)
-      @relation.count.should == 42
+      expect(@relation.count).to eq(42)
     end
     
     it "should cache the total count on any solr query" do
       @relation = @relation.with_solr
-      @relation.should_receive(:query_via_solr).and_return(double("ResultSet", :total_entries => 42))
+      expect(@relation).to receive(:query_via_solr).and_return(double("ResultSet", :total_entries => 42))
       @relation.all
-      @relation.count.should == 42
+      expect(@relation.count).to eq(42)
     end
     
     it "should execute a fast search to determine the count" do
       mock_relation = double(DatastaxRails::Relation)
       mock_relation.stub_chain(:select, :to_a, :total_entries).and_return(37)
       @relation = @relation.with_solr
-      @relation.should_receive(:limit).with(1).and_return(mock_relation)
-      @relation.count.should == 37
+      expect(@relation).to receive(:limit).with(1).and_return(mock_relation)
+      expect(@relation.count).to eq(37)
     end
     
     it "should return the count regardless of limit" do
@@ -52,9 +52,9 @@ describe DatastaxRails::Relation do
       Hobby.create(:name => "fishing")
       Hobby.create(:name => "running")
       @relation.commit_solr
-      @relation.count.should == 4
+      expect(@relation.count).to eq(4)
       
-      @relation.limit(2).count.should == 4
+      expect(@relation.limit(2).count).to eq(4)
     end
   end
   
@@ -63,25 +63,25 @@ describe DatastaxRails::Relation do
       Hobby.create(:name => "fishing")
       @relation.commit_solr
       relation = @relation.where("name" => "hiking")
-      relation.count.should == 0
-      relation.default_scope.count.should == 1
+      expect(relation.count).to eq(0)
+      expect(relation.default_scope.count).to eq(1)
     end
     
     it "should return a relation that has a default scope set" do
       relation = DatastaxRails::Relation.new(Boat, "boats")
       relation.default_scoped = true
-      relation.default_scope.order_values.should_not be_empty
+      expect(relation.default_scope.order_values).not_to be_empty
     end
   end
   
   describe "#empty?" do
     it "should use the loaded result set to determine emptiness" do
-      a_record = mock_model(Hobby)
-      @relation.stub(:loaded? => true)
+      a_record = build_stubbed(:hobby)
+      allow(@relation).to receive(:loaded?).and_return(true)
       @relation.instance_variable_set(:@results, [])
-      @relation.should be_empty
+      expect(@relation).to be_empty
       @relation.instance_variable_set(:@results, [a_record])
-      @relation.should_not be_empty
+      expect(@relation).not_to be_empty
     end
   end
   
@@ -90,31 +90,31 @@ describe DatastaxRails::Relation do
       Hobby.create(:name => "hiking")
       Hobby.create(:name => "swimming")
       @relation.commit_solr
-      @relation.should be_many
+      expect(@relation).to be_many
     end
     
     it "should return false if there are zero or one records matching" do
-      @relation.should_not be_many
+      expect(@relation).not_to be_many
       Hobby.create(:name => "hiking")
-      @relation.should_not be_many
+      expect(@relation).not_to be_many
     end
   end
   
   describe "#new" do
     it "should instantiate a new instance of the class" do
       hiking = @relation.new(:name => "hiking")
-      hiking.should be_a_kind_of(Hobby)
-      hiking.name.should == "hiking"
+      expect(hiking).to be_a_kind_of(Hobby)
+      expect(hiking.name).to eq("hiking")
     end
   end
   
   describe "#reload" do
     it "should reload the results" do
-      @relation.all.should be_empty
+      expect(@relation.all).to be_empty
       Hobby.create(:name => "hiking")
       @relation.commit_solr
-      @relation.all.should be_empty
-      @relation.reload.all.should_not be_empty
+      expect(@relation.all).to be_empty
+      expect(@relation.reload.all).not_to be_empty
     end
   end
   
@@ -125,16 +125,16 @@ describe DatastaxRails::Relation do
       Hobby.create(:name => "fishing")
       Hobby.create(:name => "running")
       @relation.commit_solr
-      @relation.size.should == 4
-      @relation.limit(2).size.should == 2
+      expect(@relation.size).to eq(4)
+      expect(@relation.limit(2).size).to eq(2)
     end
   end
   
   describe "#total_pages" do
     it "should calculate the total number of pages for will_paginate" do
       relation = @relation.per_page(30)
-      relation.stub(:count => 100)
-      relation.total_pages.should == 4
+      allow(relation).to receive(:count).and_return(100)
+      expect(relation.total_pages).to eq(4)
     end
   end
   
@@ -152,18 +152,18 @@ describe DatastaxRails::Relation do
     
     it "should return matching documents grouped by an attribute" do
       results = Person.group(:nickname).all
-      results['j'].should have(3).items
-      results['kat'].should have(2).items
-      results['steve'].should have(1).item
+      expect(results['j'].size).to eq(3)
+      expect(results['kat'].size).to eq(2)
+      expect(results['steve'].size).to eq(1)
     end
     
     it "should return total_entries as the highest value of any group" do
       results = Person.group(:nickname).all
-      results.total_entries.should eq(3)
+      expect(results.total_entries).to eq(3)
     end
     
     it "should still return a total count when using the count method" do
-      results = Person.group(:nickname).count.should eq(6)
+      results = expect(Person.group(:nickname).count).to eq(6)
     end
   end
   

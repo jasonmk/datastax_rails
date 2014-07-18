@@ -13,7 +13,6 @@ describe DatastaxRails::Relation do
     context "with a single id" do
       context "as a scalar" do
         it "finds the object and returns it as an object" do
-          
           expect(Hobby.find(h.id)).to eq(h)
         end
         
@@ -54,48 +53,48 @@ describe DatastaxRails::Relation do
   
   describe "#first" do
     it "should return the first result if records are already loaded" do
-      a_record = mock_model(Hobby)
-      @relation.stub(:loaded? => true)
-      @relation.instance_variable_set(:@results, [a_record, mock_model(Hobby)])
-      @relation.first.should == a_record
+      a_record = build_stubbed(:hobby)
+      allow(@relation).to receive(:loaded?).and_return(true)
+      @relation.instance_variable_set(:@results, [a_record, build_stubbed(:hobby)])
+      expect(@relation.first).to eq(a_record)
     end
     
     it "should look up the first result if records are not already loaded" do
-      a_record = mock_model(Hobby)
-      @relation.stub(:loaded? => false)
+      a_record = build_stubbed(:hobby)
+      allow(@relation).to receive(:loaded?).and_return(false)
       mock_relation = double(DatastaxRails::Relation, :to_a => [a_record])
-      @relation.should_receive(:limit).with(1).and_return(mock_relation)
-      @relation.first.should == a_record
+      expect(@relation).to receive(:limit).with(1).and_return(mock_relation)
+      expect(@relation.first).to eq(a_record)
     end
   end
   
   describe "#first!" do
     it "should raise RecordNotFound if no record is returned" do
-      lambda { @relation.first! }.should raise_exception(DatastaxRails::RecordNotFound)
+      expect { @relation.first! }.to raise_exception(DatastaxRails::RecordNotFound)
     end
   end
   
   describe "#last" do
     it "should return the last result if records are already loaded" do
-      a_record = mock_model(Hobby)
-      @relation.stub(:loaded? => true)
-      @relation.instance_variable_set(:@results, [mock_model(Hobby), a_record])
-      @relation.last.should == a_record
+      a_record = build_stubbed(:hobby)
+      allow(@relation).to receive(:loaded?).and_return(true)
+      @relation.instance_variable_set(:@results, [build_stubbed(:hobby), a_record])
+      expect(@relation.last).to eq(a_record)
     end
     
     it "should look up the last result if records are not already loaded" do
-      a_record = mock_model(Hobby)
-      @relation.stub(:loaded? => false)
+      a_record = build_stubbed(:hobby)
+      allow(@relation).to receive(:loaded?).and_return(false)
       mock_relation = double(DatastaxRails::Relation, :to_a => [a_record])
-      @relation.should_receive(:reverse_order).and_return(mock_relation)
-      mock_relation.should_receive(:limit).with(1).and_return(mock_relation)
-      @relation.last.should == a_record
+      expect(@relation).to receive(:reverse_order).and_return(mock_relation)
+      expect(mock_relation).to receive(:limit).with(1).and_return(mock_relation)
+      expect(@relation.last).to eq(a_record)
     end
   end
   
   describe "#last!" do
     it "should raise RecordNotFound if no record is returned" do
-      lambda { @relation.last! }.should raise_exception(DatastaxRails::RecordNotFound)
+      expect { @relation.last! }.to raise_exception(DatastaxRails::RecordNotFound)
     end
   end
 
@@ -103,19 +102,19 @@ describe DatastaxRails::Relation do
     it "finds a record by an attribute" do
       Boat.create(:name => 'Spooner')
       Boat.commit_solr
-      Boat.find_by(name: 'Spooner').should_not be_nil
+      expect(Boat.find_by(name: 'Spooner')).not_to be_nil
     end
 
     it "finds a record by an attribute with a space in it" do
       Boat.create(:name => 'Water Lily')
       Boat.commit_solr
-      Boat.find_by(name: 'Water Lily').should_not be_nil
+      expect(Boat.find_by(name: 'Water Lily')).not_to be_nil
     end
 
     it "finds a record by an attribute with a colon in it" do
       Boat.create(:name => 'Dumb: Name')
       Boat.commit_solr
-      Boat.find_by(name: 'Dumb: Name').should_not be_nil
+      expect(Boat.find_by(name: 'Dumb: Name')).not_to be_nil
     end
   end
 end

@@ -18,7 +18,7 @@ describe DatastaxRails::Relation do
         @relation.send('with_'+access_method).find_each(:batch_size => 5) do |hobby|
           missed_hobbies.delete_if {|h| h == hobby.name}
         end
-        missed_hobbies.should be_empty
+        expect(missed_hobbies).to be_empty
       end
     end
     
@@ -26,10 +26,10 @@ describe DatastaxRails::Relation do
       it "returns records in batches of the given size with #{access_method}" do
         count = 12
         @relation.send('with_'+access_method).find_in_batches(:batch_size => 5) do |batch|
-          batch.size.should <= 5
+          expect(batch.size).to be <= 5
           count -= batch.size
         end
-        count.should == 0
+        expect(count).to eq(0)
       end
     end
   end

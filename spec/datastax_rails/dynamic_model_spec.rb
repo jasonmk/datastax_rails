@@ -32,7 +32,7 @@ describe DatastaxRails::DynamicModel do
   it "updates an existing attribute" do
     one.save
     one.name = 'Jim'
-    expect(one.save).to be_true
+    expect(one.save).to be_truthy
   end
   
   describe "#solr_field_name" do

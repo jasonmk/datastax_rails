@@ -31,11 +31,11 @@ describe DatastaxRails::Column do
       
       describe "to cql3" do
         it "casts false to false" do
-          expect(c.type_cast_for_cql3(false)).to be_false
+          expect(c.type_cast_for_cql3(false)).to be_falsey
         end
         
         it "casts true to true" do
-          expect(c.type_cast_for_cql3(true)).to be_true
+          expect(c.type_cast_for_cql3(true)).to be_truthy
         end
       end
       

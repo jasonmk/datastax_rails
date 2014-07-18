@@ -10,7 +10,7 @@ describe DatastaxRails::Base do
         Boat.create(:name => 'Aquacadabra', :registration => 4)
         Boat.commit_solr
         
-        Boat.where(:registration => [1,2,3,4]).collect(&:name).should == ['Aquacadabra', 'Misty', 'Voyager', 'WindDancer']
+        expect(Boat.where(:registration => [1,2,3,4]).collect(&:name)).to eq(['Aquacadabra', 'Misty', 'Voyager', 'WindDancer'])
       end
     end
   end

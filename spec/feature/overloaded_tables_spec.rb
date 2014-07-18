@@ -18,7 +18,7 @@ feature "Table Overloads" do
     CoreMetadata.commit_solr
     
     
-    expect(CoreMetadata.fulltext('BBC')).to have(1).entry
-    expect(CoreMetadata.fulltext('TV')).to have(0).entries
+    expect(CoreMetadata.fulltext('BBC').entries.size).to eq(1)
+    expect(CoreMetadata.fulltext('TV').entries.size).to eq(0)
   end
 end

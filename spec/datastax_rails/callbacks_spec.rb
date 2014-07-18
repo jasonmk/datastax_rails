@@ -38,11 +38,11 @@ describe DatastaxRails::Base do
     it "runs after_find" do
       subject.save
       ct=CallbackTester.find(subject.id)
-      expect(ct.after_find_called).to be_true
+      expect(ct.after_find_called).to be_truthy
     end
     
     it "runs after_initialize" do
-      expect(subject.after_initialize_called).to be_true
+      expect(subject.after_initialize_called).to be_truthy
     end
   end
 end

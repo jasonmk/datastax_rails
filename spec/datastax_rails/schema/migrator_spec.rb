@@ -8,7 +8,7 @@ describe DatastaxRails::Schema::Migrator do
   describe 'payload models' do
     context 'when column family exists' do
       before(:each) do
-        subject.stub(:column_family_exists?).and_return(false)
+        allow(subject).to receive(:column_family_exists?).and_return(false)
       end
       
       it "calls #create_payload_column_family" do
@@ -19,7 +19,7 @@ describe DatastaxRails::Schema::Migrator do
     
     context 'when column family exists' do
       before(:each) do
-        subject.stub(:column_family_exists?).and_return(true)
+        allow(subject).to receive(:column_family_exists?).and_return(true)
       end
       
       it "does not call #create_payload_column_family" do
@@ -32,8 +32,8 @@ describe DatastaxRails::Schema::Migrator do
   describe 'wide storage models' do
     context 'when column family does not exist' do
       before(:each) do
-        subject.stub(:column_family_exists?).and_return(false)
-        subject.stub(:create_cql3_column_family)
+        allow(subject).to receive(:column_family_exists?).and_return(false)
+        allow(subject).to receive(:create_cql3_column_family)
       end
       
       it "calls #create_wide_storage_column_family" do
@@ -49,7 +49,7 @@ describe DatastaxRails::Schema::Migrator do
     
     context 'when column family exists' do
       before(:each) do
-        subject.stub(:column_family_exists?).and_return(true)
+        allow(subject).to receive(:column_family_exists?).and_return(true)
       end
       
       it "does not call #create_wide_storage_column_family" do

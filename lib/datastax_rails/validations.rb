@@ -9,7 +9,6 @@ module DatastaxRails
   
   module Validations
     extend ActiveSupport::Concern
-    include ActiveModel::Validations
     
     module ClassMethods
       def create!(attributes = {})

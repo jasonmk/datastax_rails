@@ -346,8 +346,7 @@ module DatastaxRails #:nodoc:
   #
   # See the documentation for {DatastaxRails::SearchMethods} for more examples of using the search API.
   class Base
-    extend ActiveModel::Naming
-    include ActiveModel::Conversion
+    include ActiveModel::Model
     extend ActiveSupport::DescendantsTracker
     
     include Persistence
@@ -453,8 +452,8 @@ module DatastaxRails #:nodoc:
 
       @association_cache = {}
       @attributes_cache = {}
-      @previously_changed = {}
-      @changed_attributes = {}
+      @previously_changed = {}.with_indifferent_access
+      @changed_attributes = {}.with_indifferent_access
       @loaded_attributes = Hash[@attributes.map{|k,v| [k,true]}].with_indifferent_access
       @readonly = false
       @destroyed = false

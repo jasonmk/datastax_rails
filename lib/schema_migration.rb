@@ -4,12 +4,12 @@ class SchemaMigration
   def self.default_consistency
     DatastaxRails::Base.default_consistency
   end
-  
+
   # Returns the name of the column family
   def self.column_family
     'schema_migrations'
   end
-  
+
   def self.primary_key
     'cf'
   end

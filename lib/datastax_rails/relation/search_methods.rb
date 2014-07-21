@@ -1,6 +1,5 @@
 module DatastaxRails
   module SearchMethods
-    
     # By default, Cassandra will throw an error if you try to set a where condition
     # on either a column with no index or on more than one column that isn't part
     # of the primary key. If you are confident that the number of records that need
@@ -19,19 +18,19 @@ module DatastaxRails
         r.allow_filtering_value = true
       end
     end
-    
+
     # The default consistency level for DSR is QUORUM when searching by ID.
     # For all searches using SOLR, the default consistency is ONE.  Use this
     # to override it in either case.
-    # 
+    #
     #   Model.consistency(:local_quorum).find("12345")
     #
     # Note that Solr searches don't allow you to specify the consistency level.
     # DSR sort of gets around this by taking the search results and then going
     # to Cassandra to retrieve the objects by ID using the consistency you specified.
-    # However, it is possible that you might not get all of the records you are 
-    # expecting if the SOLR node you were talking to hasn't been updated yet with 
-    # the results. In practice, this should not happen for records that were created 
+    # However, it is possible that you might not get all of the records you are
+    # expecting if the SOLR node you were talking to hasn't been updated yet with
+    # the results. In practice, this should not happen for records that were created
     # over your connection, but it is possible for other connections to create records
     # that you can't see yet.
     #
@@ -48,14 +47,14 @@ module DatastaxRails
     def consistency(level)
       level = level.to_s.upcase
       unless self.valid_consistency?(level)
-        raise ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
+        fail ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
       end
-      
+
       clone.tap do |r|
         r.consistency_value = level
       end
-    end 
-    
+    end
+
     # Normally special characters (other than wild cards) are escaped before the search
     # is submitted.  If you want to handle escaping yourself because you need to use
     # those special characters, then just include this in your chain.
@@ -71,8 +70,8 @@ module DatastaxRails
         r.escape_value = false
       end
     end
-    
-    # Used to extend a scope with additional methods, either through 
+
+    # Used to extend a scope with additional methods, either through
     # a module or a block provided
     #
     # The object returned is a relation which can be further extended
@@ -88,7 +87,7 @@ module DatastaxRails
         r.send(:apply_modules, modules.flatten)
       end
     end
-    
+
     # Limit a single page to +value+ records
     #
     #   Model.limit(1)
@@ -112,8 +111,8 @@ module DatastaxRails
         r.per_page_value = value.to_i
       end
     end
-    alias :per_page :limit
-    
+    alias_method :per_page, :limit
+
     # Sets the page number to retrieve
     #
     #   Model.page(2)
@@ -125,7 +124,7 @@ module DatastaxRails
         r.page_value = value.to_i
       end
     end
-    
+
     # WillPaginate compatible method for paginating
     #
     #   Model.paginate(page: 2, per_page: 10)
@@ -135,13 +134,13 @@ module DatastaxRails
     # @option options [String, Fixnum] :per_page the number of records to include on a page
     # @return [DatastaxRails::Relation] a new Relation object
     def paginate(options = {})
-      options = options.reverse_merge({:page => 1, :per_page => 30})
+      options = options.reverse_merge(page: 1, per_page: 30)
       clone.tap do |r|
         r.page_value = options[:page]
         r.per_page_value = options[:per_page]
       end
     end
-    
+
     # Group results by a given attribute only returning the top results
     # for each group. In Lucene, this is often referred to as Field Collapsing.
     #
@@ -168,16 +167,16 @@ module DatastaxRails
     # @return [DatastaxRails::Relation] a new Relation object
     def group(attribute)
       return self if attribute.blank?
-      
+
       clone.tap do |r|
         r.group_value = attribute
       end
     end
-    
+
     # Orders the result set by a particular attribute.  Note that text fields
     # may not be used for ordering as they are tokenized.  Valid candidates
     # are fields of type +string+, +integer+, +long+, +float+, +double+, and
-    # +time+.  In addition, the symbol +:score+ can be used to sort on the 
+    # +time+.  In addition, the symbol +:score+ can be used to sort on the
     # relevance rating returned by Solr.  The default direction is ascending
     # but may be reversed by passing a hash where the field is the key and
     # the value is :desc
@@ -186,7 +185,7 @@ module DatastaxRails
     #   Model.order(name: :desc)
     #
     # WARNING: If this call is combined with #with_cassandra, you can only
-    # order on the cluster_by column.  If this doesn't mean anything to you, 
+    # order on the cluster_by column.  If this doesn't mean anything to you,
     # then you probably don't want to use these together.
     #
     # @param attribute [Symbol, String, Hash] the attribute to sort by and optionally the direction to sort in
@@ -195,10 +194,10 @@ module DatastaxRails
       return self if attribute.blank?
 
       clone.tap do |r|
-        r.order_values << (attribute.is_a?(Hash) ? attribute : {attribute.to_sym => :asc})
+        r.order_values << (attribute.is_a?(Hash) ? attribute : { attribute.to_sym => :asc })
       end
     end
-    
+
     # Orders the result set in memory after all matching records have been
     # retrieved.
     #
@@ -219,10 +218,10 @@ module DatastaxRails
     def slow_order(attribute)
       return self if attribute.blank?
       clone.tap do |r|
-        r.slow_order_values << (attribute.is_a?(Hash) ? attribute : {attribute.to_sym => :asc}) 
+        r.slow_order_values << (attribute.is_a?(Hash) ? attribute : { attribute.to_sym => :asc })
       end
     end
-    
+
     # Works in two unique ways.
     #
     # _First_: takes a block so it can be used just like Array#select.
@@ -256,7 +255,7 @@ module DatastaxRails
     # In that case, it is never retrieved until you call the getter method.
     def select(*fields)
       if block_given?
-        to_a.select {|*block_args| yield(*block_args) }
+        to_a.select { |*block_args| yield(*block_args) }
       else
         railse ArgumentError, 'Call this with at least one field' if fields.empty?
         clone.tap do |r|
@@ -264,11 +263,11 @@ module DatastaxRails
         end
       end
     end
-    
+
     # Reverses the order of the results. The following are equivalent:
-    # 
+    #
     #   Model.order(:name).reverse_order
-    #   Model.order(name: :desc) 
+    #   Model.order(name: :desc)
     #
     #   Model.order(:name).reverse_order.reverse_order
     #   Model.order(name: :asc)
@@ -279,7 +278,7 @@ module DatastaxRails
         r.reverse_order_value == !r.reverse_order_value
       end
     end
-    
+
     # By default, DatastaxRails uses the LuceneQueryParser. disMax
     # is also supported. eDisMax probably works as well.
     #
@@ -287,16 +286,16 @@ module DatastaxRails
     #
     #   Model.query_parser('disMax').fulltext("john smith")
     #
-    # @param parser [String] the parser to use for the fulltext query 
+    # @param parser [String] the parser to use for the fulltext query
     # @return [DatastaxRails::Relation] a new Relation object
     def query_parser(parser)
       return self if parser.blank?
-      
+
       clone.tap do |r|
         r.query_parser_value = parser
       end
     end
-    
+
     # Have SOLR compute stats for a given numeric field.  Status computed include:
     # * min
     # * max
@@ -315,12 +314,12 @@ module DatastaxRails
     # @return [DatastaxRails::Relation] a new Relation object
     def compute_stats(*fields)
       return self if fields.empty?
-      
+
       clone.tap do |r|
         r.stats_values += Array.wrap(fields)
       end
     end
-    
+
     # By default, DatastaxRails will try to pick the right method of performing
     # a search.  You can use this method to force it to make the query via SOLR.
     #
@@ -335,7 +334,7 @@ module DatastaxRails
         r.use_solr_value = true
       end
     end
-    
+
     # By default, DatastaxRails will try to pick the right method of performing
     # a search.  You can use this method to force it to make the query via
     # cassandra.
@@ -349,7 +348,7 @@ module DatastaxRails
         r.use_solr_value = false
       end
     end
-    
+
     # Specifies restrictions (scoping) on the result set. Expects a hash
     # in the form +attribute: value+ for equality comparisons.
     #
@@ -387,26 +386,26 @@ module DatastaxRails
       else
         clone.tap do |r|
           attributes = attribute.dup
-          attributes.each do |k,v|
-            if(v.is_a?(Hash))
+          attributes.each do |k, v|
+            if v.is_a?(Hash)
               comp, value = v.first
-              if(comp.to_s == 'greater_than')
-                r.greater_than_values << {k => value}
-              elsif(comp.to_s == 'less_than')
-                r.less_than_values << {k => value}
+              if (comp.to_s == 'greater_than')
+                r.greater_than_values << { k => value }
+              elsif (comp.to_s == 'less_than')
+                r.less_than_values << { k => value }
               else
-                r.where_values << {k => value}
+                r.where_values << { k => value }
               end
               attributes.delete(k)
             else
-              attributes[k] = solr_format(k,v)
+              attributes[k] = solr_format(k, v)
             end
           end
           r.where_values << attributes unless attributes.empty?
         end
       end
     end
-    
+
     # Specifies restrictions (scoping) that should not match the result set.
     # Expects a hash in the form +attribute: value+.
     #
@@ -425,32 +424,32 @@ module DatastaxRails
     #   or a proxy object if just an attribute was passed
     def where_not(attribute)
       return self if attribute.blank?
-      
+
       if attribute.is_a?(Symbol)
         WhereProxy.new(self, attribute, true)
       else
         clone.tap do |r|
           attributes = attribute.dup
-          attributes.each do |k,v|
-            if(v.is_a?(Hash))
+          attributes.each do |k, v|
+            if v.is_a?(Hash)
               comp, value = v.first
-              if(comp.to_s == 'greater_than')
-                r.less_than_values << {k => value}
-              elsif(comp.to_s == 'less_than')
-                r.greater_than_values << {k => value}
+              if (comp.to_s == 'greater_than')
+                r.less_than_values << { k => value }
+              elsif (comp.to_s == 'less_than')
+                r.greater_than_values << { k => value }
               else
-                r.where_not_values << {k => value}
+                r.where_not_values << { k => value }
               end
               attributes.delete(k)
             else
-              attributes[k] = solr_format(k,v)
+              attributes[k] = solr_format(k, v)
             end
           end
           r.where_not_values << attributes unless attributes.empty?
         end
       end
     end
-    
+
     # Specifies a full text search string to be processed by SOLR
     #
     #   Model.fulltext("john smith")
@@ -467,21 +466,21 @@ module DatastaxRails
     # @return [DatastaxRails::Relation] a new Relation object
     def fulltext(query, opts = {})
       return self if query.blank?
-      
+
       opts[:query] = downcase_query(query)
-      
+
       clone.tap do |r|
         r.fulltext_values << opts
       end
     end
-    
-    # Enables highlighting on specific fields when used with full 
-    # text searching. In order for highlighting to work, the highlighted 
+
+    # Enables highlighting on specific fields when used with full
+    # text searching. In order for highlighting to work, the highlighted
     # field(s) *must* be +:stored+
-    # 
+    #
     #   Model.fulltext("ruby on rails").highlight(:tags, :body)
     #   Model.fulltext("pizza").highlight(:description, snippets: 3, fragsize: 150)
-    # 
+    #
     # In addition to the array of field names to highlight, you can pass in an
     # options hash with the following options:
     #
@@ -491,10 +490,10 @@ module DatastaxRails
     # * :post_tag => text which appears after a highlighted term
     # * :merge_contiguous => collapse contiguous fragments into a single fragment
     # * :use_fast_vector => enables the Solr FastVectorHighlighter
-    # 
+    #
     # Note: When enabling +:use_fast_vector+, the highlighted fields must be also have
-    # +:term_vectors+, +:term_positions+, and +:term_offsets+ enabled. 
-    # For more information about these options, refer to Solr's wiki 
+    # +:term_vectors+, +:term_positions+, and +:term_offsets+ enabled.
+    # For more information about these options, refer to Solr's wiki
     # on HighlightingParameters[http://http://wiki.apache.org/solr/HighlightingParameters].
     #
     # @overload highlight(*args, opts)
@@ -515,50 +514,51 @@ module DatastaxRails
     #   @return [DatastaxRails::Relation] a new Relation object
     def highlight(*args)
       return self if args.blank?
-      
+
       opts = args.last.is_a?(Hash) ? args.pop : {}
-      
+
       clone.tap do |r|
         opts[:fields] = r.highlight_options[:fields] || []
         opts[:fields] |= args # Union unique field names
         r.highlight_options.merge! opts
       end
     end
-    
+
     # @see where
-    def less_than(value)
-      raise ArgumentError, "#less_than can only be called after an appropriate where call. e.g. where(:created_at).less_than(1.day.ago)"
+    def less_than(_value)
+      fail(ArgumentError, '#less_than can only be called after an appropriate where call. ' \
+                          'e.g. where(:created_at).less_than(1.day.ago)')
     end
-    
+
     # @see where
-    def greater_than(value)
-      raise ArgumentError, "#greater_than can only be called after an appropriate where call. e.g. where(:created_at).greater_than(1.day.ago)"
+    def greater_than(_value)
+      fail(ArgumentError, '#greater_than can only be called after an appropriate where call. ' \
+                          'e.g. where(:created_at).greater_than(1.day.ago)')
     end
-    
+
     # Formats a value for solr (assuming this is a solr query).
-    def solr_format(attribute, value)
+    def solr_format(attribute, value) # rubocop:disable Style/CyclomaticComplexity
       return value unless use_solr_value
       column = attribute.is_a?(DatastaxRails::Column) ? attribute : klass.column_for_attribute(attribute)
       # value = column.type_cast_for_solr(value)
       case
-        when value.is_a?(Time) || value.is_a?(DateTime) || value.is_a?(Date) 
-          column.type_cast_for_solr(value)
-        when value.is_a?(Array) || value.is_a?(Set)
-          column.type_cast_for_solr(value).collect {|v| v.to_s.gsub(/ /,"\\ ") }.join(" OR ")
-        when value.is_a?(Fixnum)
-          value < 0 ? "\\#{value}" : value
-        when value.is_a?(Range)
-          "[#{solr_format(attribute, value.first)} TO #{solr_format(attribute, value.last)}]"
-        when value.is_a?(String)
-          solr_escape(downcase_query(value.gsub(/ /,"\\ ")))
-        when value.is_a?(FalseClass), value.is_a?(TrueClass)
-          value.to_s
-        else
-          value
-          
+      when value.is_a?(Time) || value.is_a?(DateTime) || value.is_a?(Date)
+        column.type_cast_for_solr(value)
+      when value.is_a?(Array) || value.is_a?(Set)
+        column.type_cast_for_solr(value).map { |v| v.to_s.gsub(/ /, '\\ ') }.join(' OR ')
+      when value.is_a?(Fixnum)
+        value < 0 ? "\\#{value}" : value
+      when value.is_a?(Range)
+        "[#{solr_format(attribute, value.first)} TO #{solr_format(attribute, value.last)}]"
+      when value.is_a?(String)
+        solr_escape(downcase_query(value.gsub(/ /, '\\ ')))
+      when value.is_a?(FalseClass), value.is_a?(TrueClass)
+        value.to_s
+      else
+        value
       end
     end
-    
+
     # WhereProxy objects act as a placeholder for queries in which #where does not include a value.
     # In this case, #where must be chained with #greater_than, #less_than, or #equal_to to return
     # a new relation.
@@ -566,33 +566,33 @@ module DatastaxRails
       def initialize(relation, attribute, invert = false) #:nodoc:
         @relation, @attribute, @invert = relation, attribute, invert
       end
-      
+
       def equal_to(value) #:nodoc:
         @relation.clone.tap do |r|
           if @invert
-            r.where_not_values << {@attribute => r.solr_format(@attribute, value)}
+            r.where_not_values << { @attribute => r.solr_format(@attribute, value) }
           else
-            r.where_values << {@attribute => r.solr_format(@attribute, value)}
+            r.where_values << { @attribute => r.solr_format(@attribute, value) }
           end
         end
       end
-      
+
       def greater_than(value) #:nodoc:
         @relation.clone.tap do |r|
           if @invert
-            r.less_than_values << {@attribute => r.solr_format(@attribute, value)}
+            r.less_than_values << { @attribute => r.solr_format(@attribute, value) }
           else
-            r.greater_than_values << {@attribute => r.solr_format(@attribute, value)}
+            r.greater_than_values << { @attribute => r.solr_format(@attribute, value) }
           end
         end
       end
-      
+
       def less_than(value) #:nodoc:
         @relation.clone.tap do |r|
           if @invert
-            r.greater_than_values << {@attribute => r.solr_format(@attribute, value)}
+            r.greater_than_values << { @attribute => r.solr_format(@attribute, value) }
           else
-            r.less_than_values << {@attribute => r.solr_format(@attribute, value)}
+            r.less_than_values << { @attribute => r.solr_format(@attribute, value) }
           end
         end
       end

@@ -1,3 +1,5 @@
+require 'date'
+
 module DatastaxRails
   # = Datastax Rails Callbacks
   #
@@ -202,7 +204,8 @@ module DatastaxRails
   # == Ordering callbacks
   #
   # Sometimes the code needs that the callbacks execute in a specific order. For example, a +before_destroy+
-  # callback (+log_children+ in this case) should be executed before the children get destroyed by the +dependent: destroy+ option.
+  # callback (+log_children+ in this case) should be executed before the children get destroyed by the
+  # +dependent: destroy+ option.
   #
   # Let's look at the code below:
   #
@@ -218,7 +221,8 @@ module DatastaxRails
   #   end
   #
   # In this case, the problem is that when the +before_destroy+ callback is executed, the children are not available
-  # because the +destroy+ callback gets executed first. You can use the +prepend+ option on the +before_destroy+ callback to avoid this.
+  # because the +destroy+ callback gets executed first. You can use the +prepend+ option on the +before_destroy+
+  # callback to avoid this.
   #
   #   class Topic < DatastaxRails::Base
   #     has_many :children, dependent: destroy
@@ -231,13 +235,14 @@ module DatastaxRails
   #       end
   #   end
   #
-  # This way, the +before_destroy+ gets executed before the <tt>dependent: destroy</tt> is called, and the data is still available.
+  # This way, the +before_destroy+ gets executed before the <tt>dependent: destroy</tt> is called, and the data is
+  # still available.
   #
   # == Debugging callbacks
   #
   # The callback chain is accessible via the <tt>_*_callbacks</tt> method on an object. ActiveModel Callbacks support
-  # <tt>:before</tt>, <tt>:after</tt> and <tt>:around</tt> as values for the <tt>kind</tt> property. The <tt>kind</tt> property
-  # defines what part of the chain the callback runs in.
+  # <tt>:before</tt>, <tt>:after</tt> and <tt>:around</tt> as values for the <tt>kind</tt> property. The <tt>kind</tt>
+  # property defines what part of the chain the callback runs in.
   #
   # To find all callbacks in the before_save callback chain:
   #
@@ -245,7 +250,8 @@ module DatastaxRails
   #
   # Returns an array of callback objects that form the before_save chain.
   #
-  # To further check if the before_save chain contains a proc defined as <tt>rest_when_dead</tt> use the <tt>filter</tt> property of the callback object:
+  # To further check if the before_save chain contains a proc defined as <tt>rest_when_dead</tt> use the
+  # <tt>filter</tt> property of the callback object:
   #
   #   Topic._save_callbacks.select { |cb| cb.kind.eql?(:before) }.collect(&:filter).include?(:rest_when_dead)
   #
@@ -268,7 +274,7 @@ module DatastaxRails
     included do
       include ActiveModel::Validations::Callbacks
 
-      define_model_callbacks :initialize, :find, :touch, :only => :after
+      define_model_callbacks :initialize, :find, :touch, only: :after
       define_model_callbacks :save, :create, :update, :destroy
     end
 
@@ -277,10 +283,10 @@ module DatastaxRails
     end
 
     # def touch(*) #:nodoc:
-      # run_callbacks(:touch) { super }
+    # run_callbacks(:touch) { super }
     # end
 
-  private
+    private
 
     def _create_or_update(*) #:nodoc:
       run_callbacks(:save) { super }

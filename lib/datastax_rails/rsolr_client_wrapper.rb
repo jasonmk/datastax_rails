@@ -3,11 +3,11 @@ module DatastaxRails
   # a new server tried (if one is available)
   class RSolrClientWrapper < BlankSlate
     # @param [RSolr::Client] rsolr the initial RSolr client object to wrap
-    def initialize(rsolr,model)
+    def initialize(rsolr, model)
       @rsolr = rsolr
       @model = model
     end
-    
+
     def method_missing(sym, *args, &block)
       if @rsolr.uri.host != DatastaxRails::Base.current_server
         @rsolr.uri.host = DatastaxRails::Base.current_server

@@ -17,15 +17,15 @@ module DatastaxRails
     extend ActiveSupport::Concern
 
     included do
-      default_scope -> {with_cassandra}
+      default_scope -> { with_cassandra }
       self.storage_method = :cql
     end
-    
+
     module ClassMethods
       def attribute(name, options)
-        opts = options.update(:solr_index => false,    :solr_store => false,
-                              :multi_valued => false,  :sortable => false,
-                              :tokenized => false,     :fulltext => false)
+        opts = options.update(solr_index: false,    solr_store: false,
+                              multi_valued: false,  sortable: false,
+                              tokenized: false,     fulltext: false)
         super(name, opts)
       end
     end

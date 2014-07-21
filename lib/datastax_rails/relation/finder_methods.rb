@@ -4,8 +4,8 @@ module DatastaxRails
     #
     # * Find by id - This can either be a specific id (1), a list of ids (1, 5, 6), or an array of ids ([5, 6, 10]).
     #   If no record can be found for all of the listed ids, then RecordNotFound will be raised.
-    # * Find first - This will return the first record matched by the options used. These options can either be specific
-    #   conditions or merely an order. If no record can be matched, +nil+ is returned. Use
+    # * Find first - This will return the first record matched by the options used. These options can either be
+    #   specific conditions or merely an order. If no record can be matched, +nil+ is returned. Use
     #   <tt>Model.find(:first, *args)</tt> or its shortcut <tt>Model.first(*args)</tt>.
     # * Find last - This will return the last record matched by the options used. These options can either be specific
     #   conditions or merely an order. If no record can be matched, +nil+ is returned. Use
@@ -20,7 +20,6 @@ module DatastaxRails
     #
     # * <tt>:conditions</tt> - See conditions in the intro.
     # * <tt>:order</tt> - An SQL fragment like "created_at DESC, name".
-    # * <tt>:group</tt> - An attribute name by which the result should be grouped. Uses the <tt>GROUP BY</tt> SQL-clause.
     # * <tt>:limit</tt> - An integer determining the limit on the number of rows that should be returned.
     # * <tt>:offset</tt> - An integer determining the offset from where the rows should be fetched. So at 5,
     #   it would skip rows 0 through 4.
@@ -71,7 +70,7 @@ module DatastaxRails
         end
       end
     end
-    
+
     # Finds the first record matching the specified conditions. There
     # is no implied ordering so if order matters, you should specify it
     # yourself.
@@ -96,7 +95,7 @@ module DatastaxRails
     # same arguments to this method as you can to <tt>find(:first)</tt>.
     def first(*args)
       if args.any?
-        if args.first.kind_of?(Integer) || (loaded? && !args.first.kind_of?(Hash))
+        if args.first.is_a?(Integer) || (loaded? && !args.first.is_a?(Hash))
           limit(*args).to_a
         else
           apply_finder_options(args.first).first
@@ -105,20 +104,20 @@ module DatastaxRails
         find_first
       end
     end
-    
+
     # Same as +first+ but raises <tt>DatastaxRails::RecordNotFound</tt> if no record
     # is found. Note that <tt>first!</tt> accepts no arguments.
     def first!
-      first or raise RecordNotFound
+      first || fail(RecordNotFound)
     end
-    
+
     # A convenience wrapper for <tt>find(:last, *args)</tt>. You can pass in all the
     # same arguments to this method as you can to <tt>find(:last)</tt>.
     def last(*args)
       if args.any?
-        if args.first.kind_of?(Integer) || (loaded? && !args.first.kind_of?(Hash))
+        if args.first.is_a?(Integer) || (loaded? && !args.first.is_a?(Hash))
           if order_values.empty? && reorder_value.nil?
-            order(:id => :desc).limit(*args).reverse
+            order(id: :desc).limit(*args).reverse
           else
             to_a.last(*args)
           end
@@ -133,101 +132,106 @@ module DatastaxRails
     # Same as +last+ but raises <tt>DatastaxRails::RecordNotFound</tt> if no record
     # is found. Note that <tt>last!</tt> accepts no arguments.
     def last!
-      last or raise RecordNotFound
+      last || fail(RecordNotFound)
     end
-    
-    protected
-      def find_by_attributes(match, attributes, *args) #:nodoc:
-       
-        conditions =  Hash[attributes.map {|a| [a, args[attributes.index(a)]]}]
-        result = self.send(match.finder, conditions)
 
-        if match.blank? && result.blank?
-          raise RecordNotFound, "Couldn't find #{klass.name} with #{conditions.to_a.collect {|p| p.join('=')}.join(', ')}"
-        else
-          yield(result) if block_given?
-          result
-        end
+    protected
+
+    def find_by_attributes(match, attributes, *args) #:nodoc:
+      conditions =  Hash[attributes.map { |a| [a, args[attributes.index(a)]] }]
+      result = send(match.finder, conditions)
+
+      if match.blank? && result.blank?
+        fail RecordNotFound, "Couldn't find #{klass.name} with #{conditions.to_a.map { |p| p.join('=') }.join(', ')}"
+      else
+        yield(result) if block_given?
+        result
       end
-    
+    end
+
     private
 
-      def escape_attributes(conditions)
-        escaped = {}
-        conditions.each do |k,v|
-          if(v.is_a?(String))
-            escaped[k] = v.gsub(/(\W)/, '\\\\\1')
-          else
-            escaped[k] = v
-          end
-        end
-        escaped
-      end
-       
-      def find_with_ids(*ids)
-        return to_a.find { |*block_args| yield(*block_args) } if block_given?
-  
-        expects_array = ids.first.kind_of?(Array)
-        return ids.first if expects_array && ids.first.empty?
-  
-        ids = ids.flatten.compact.uniq
-  
-        case ids.size
-        when 0
-          raise RecordNotFound, "Couldn't find #{@klass.name} without an ID"
-        when 1
-          result = find_one(ids.first)
-          expects_array ? [ result ] : result
+    def escape_attributes(conditions)
+      escaped = {}
+      conditions.each do |k, v|
+        if v.is_a?(String)
+          escaped[k] = v.gsub(/(\W)/, '\\\\\1')
         else
-          find_some(ids)
+          escaped[k] = v
         end
       end
-      
-      def find_one(id)
-        key = @klass.attribute_definitions[@klass.primary_key].type_cast(id) || raise(RecordNotFound, "Couldn't find #{@klass.name} with an invalid ID=#{id}")
-        
-        with_cassandra.where(@klass.primary_key => key).first || raise(RecordNotFound, "Couldn't find #{@klass.name} with ID=#{id}")
+      escaped
+    end
+
+    def find_with_ids(*ids)
+      return to_a.find { |*block_args| yield(*block_args) } if block_given?
+
+      expects_array = ids.first.is_a?(Array)
+      return ids.first if expects_array && ids.first.empty?
+
+      ids = ids.flatten.compact.uniq
+
+      case ids.size
+      when 0
+        fail RecordNotFound, "Couldn't find #{@klass.name} without an ID"
+      when 1
+        result = find_one(ids.first)
+        expects_array ? [result] : result
+      else
+        find_some(ids)
       end
-  
-      def find_some(ids)
-        keys = ids.collect {|id| @klass.attribute_definitions[@klass.primary_key].type_cast(id) || raise(RecordNotFound,"Couldn't find #{@klass.name} with an invalid ID=#{id}")}
-        result = with_cassandra.where(@klass.primary_key => keys).all
-  
-        expected_size =
-          if @limit_value && ids.size > @limit_value
-            @limit_value
-          else
-            ids.size
-          end
-  
-        # 11 ids with limit 3, offset 9 should give 2 results.
-        if @offset_value && (ids.size - @offset_value < expected_size)
-          expected_size = ids.size - @offset_value
-        end
-  
-        if result.size == expected_size
-          result
+    end
+
+    def find_one(id)
+      key = @klass.attribute_definitions[@klass.primary_key].type_cast(id)
+      key || fail(RecordNotFound, "Couldn't find #{@klass.name} with an invalid ID=#{id}")
+
+      with_cassandra.where(@klass.primary_key => key).first ||
+        fail(RecordNotFound, "Couldn't find #{@klass.name} with ID=#{id}")
+    end
+
+    def find_some(ids)
+      keys = ids.map do |id|
+        @klass.attribute_definitions[@klass.primary_key].type_cast(id) ||
+          fail(RecordNotFound, "Couldn't find #{@klass.name} with an invalid ID=#{id}")
+      end
+      result = with_cassandra.where(@klass.primary_key => keys).all
+
+      expected_size =
+        if @limit_value && ids.size > @limit_value
+          @limit_value
         else
-          error = "Couldn't find all #{@klass.name.pluralize} with IDs "
-          error << "(#{ids.join(", ")}) (found #{result.size} results, but was looking for #{expected_size})"
-          raise RecordNotFound, error
+          ids.size
         end
+
+      # 11 ids with limit 3, offset 9 should give 2 results.
+      if @offset_value && (ids.size - @offset_value < expected_size)
+        expected_size = ids.size - @offset_value
       end
-    
-      def find_first
-        if loaded?
-          @results.first
-        else
-          @first ||= limit(1).to_a[0]
-        end
+
+      if result.size == expected_size
+        result
+      else
+        error = "Couldn't find all #{@klass.name.pluralize} with IDs "
+        error << "(#{ids.join(', ')}) (found #{result.size} results, but was looking for #{expected_size})"
+        fail RecordNotFound, error
       end
-      
-      def find_last
-        if loaded?
-          @results.last
-        else
-          @last ||= reverse_order.limit(1).to_a[0]
-        end
+    end
+
+    def find_first
+      if loaded?
+        @results.first
+      else
+        @first ||= limit(1).to_a[0]
       end
+    end
+
+    def find_last
+      if loaded?
+        @results.last
+      else
+        @last ||= reverse_order.limit(1).to_a[0]
+      end
+    end
   end
 end

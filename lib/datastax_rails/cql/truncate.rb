@@ -5,7 +5,7 @@ module DatastaxRails
         @klass = klass
         super
       end
-      
+
       def to_cql
         "TRUNCATE #{@klass.column_family}"
       end

@@ -1,0 +1,45 @@
+AllCops:
+  Exclude:
+    - 'spec/dummy/**/*'
+  RunRailsCops: false
+
+Style/AlignHash:
+  EnforcedHashRocketStyle: table
+  EnforcedColonStyle: table
+
+Style/LineLength:
+  Max: 120
+  Exclude:
+    - 'spec/**/*'
+
+Style/Encoding:
+  EnforcedStyle: when_needed
+
+Style/MethodLength:
+  Max: 35
+
+Style/NumericLiterals:
+  MinDigits: 7
+
+Style/ParameterLists:
+  CountKeywordArgs: false
+
+Style/BlockNesting:
+  Max: 4
+  
+Style/ClassLength:
+  Max: 250
+  
+Style/CyclomaticComplexity:
+  Max: 12
+
+Style/Documentation:
+  Exclude:
+    - 'spec/**/*'
+    
+Style/GuardClause:
+  MinBodyLength: 2
+
+# Maybe this can go away eventually? It seems somewhat limiting though.
+Style/RaiseArgs:
+  Enabled: false

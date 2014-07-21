@@ -6,10 +6,10 @@ module DatastaxRails
       super("Invalid record: #{@record.errors.full_messages.to_sentence}")
     end
   end
-  
+
   module Validations
     extend ActiveSupport::Concern
-    
+
     module ClassMethods
       def create!(attributes = {})
         new(attributes).tap do |object|
@@ -18,7 +18,6 @@ module DatastaxRails
         end
       end
     end
-
 
     # Runs all the validations within the specified context. Returns true if no errors are found,
     # false otherwise.
@@ -34,18 +33,19 @@ module DatastaxRails
       errors.empty? && output
     end
 
-    def save(options={})
+    def save(options = {})
       perform_validations(options) ?  super : false
     end
-    
+
     def save!
-      save || raise(RecordInvalid.new(self))
+      save || fail(RecordInvalid.new(self))
     end
 
     protected
-      def perform_validations(options={})
-        options[:validate] == false || valid?(options[:context])
-      end
+
+    def perform_validations(options = {})
+      options[:validate] == false || valid?(options[:context])
+    end
   end
 end
 

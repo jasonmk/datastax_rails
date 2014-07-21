@@ -67,7 +67,7 @@ module DatastaxRails
 
         def cacheable_column?(column)
           if attribute_types_cached_by_default == ATTRIBUTE_TYPES_CACHED_BY_DEFAULT
-            ! serialized_attributes.include? column.name
+            !serialized_attributes.include? column.name
           else
             attribute_types_cached_by_default.include?(column.type)
           end
@@ -79,35 +79,33 @@ module DatastaxRails
       # to a date object, like Date.new(2004, 12, 12)).
       def read_attribute(attr_name)
         name = attr_name.to_s
-        
+
         # If it's a lazily loaded attribute and hasn't been loaded yet, we need to do that now.
-        if(!loaded_attributes[name] && persisted? && !key.blank?)
-          @attributes[name.to_s] = self.class.select(name).with_cassandra.find(self.id).read_attribute(name)
+        if !loaded_attributes[name] && persisted? && !key.blank?
+          @attributes[name.to_s] = self.class.select(name).with_cassandra.find(id).read_attribute(name)
           loaded_attributes[name] = true
         end
-        
+
         # If it's cached, just return it
         # We use #[] first as a perf optimization for non-nil values. See https://gist.github.com/jonleighton/3552829.
-        @attributes_cache[name] || @attributes_cache.fetch(name) {
+        @attributes_cache[name] || @attributes_cache.fetch(name) do
           column = @column_types_override[name] if @column_types_override
           column ||= self.class.attribute_definitions[name]
 
-          return @attributes.fetch(name) {
+          return @attributes.fetch(name) do
             if name == 'id' && self.class.primary_key != name
               read_attribute(self.class.primary_key)
             end
-          } unless column
+          end unless column
 
-         value = @attributes.fetch(name) {
-            nil
-          }
+          value = @attributes.fetch(name) { nil }
 
           if self.class.cache_attribute?(name)
             @attributes_cache[name] = column.type_cast(value, self)
           else
             column.type_cast value, self
           end
-        }
+        end
       end
 
       private

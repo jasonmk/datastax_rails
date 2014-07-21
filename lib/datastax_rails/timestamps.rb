@@ -20,14 +20,14 @@ module DatastaxRails
       super
     end
 
-  private
+    private
 
     def _create_record(*args)
-      if self.record_timestamps
+      if record_timestamps
         current_time = current_time_from_proper_timezone
 
         all_timestamp_attributes.each do |column|
-          if respond_to?(column) && respond_to?("#{column}=") && self.send(column).nil?
+          if respond_to?(column) && respond_to?("#{column}=") && send(column).nil?
             write_attribute(column.to_s, current_time)
           end
         end
@@ -50,7 +50,7 @@ module DatastaxRails
     end
 
     def should_record_timestamps?
-      self.record_timestamps && (changed? || (attributes.keys & self.class.serialized_attributes.keys).present?)
+      record_timestamps && (changed? || (attributes.keys & self.class.serialized_attributes.keys).present?)
     end
 
     def timestamp_attributes_for_create_in_model

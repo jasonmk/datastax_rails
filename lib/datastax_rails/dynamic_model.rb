@@ -31,7 +31,7 @@ module DatastaxRails
   # exception of timestamps, it is simply the first letter of the type
   # followed by an underscore (_). So s_ for strings. Timestamp has a
   # ts_ prefix to differentiate it from texts.
-  #   
+  #
   #   class Item < DatastaxRails::DynamicModel
   #     self.grouping = 'item'
   #     timestamps
@@ -77,73 +77,76 @@ module DatastaxRails
   # assist with search.
   class DynamicModel < WideStorageModel
     self.abstract_class = true
-    
-    PREFIXES = {string: :s_, text: :t_, boolean: :b_, date: :d_,
-                timestamp: :ts_, integer: :i_, float: :f_, uuid: :u_}.with_indifferent_access
-    
+
+    PREFIXES = { string: :s_, text: :t_, boolean: :b_, date: :d_,
+                 timestamp: :ts_, integer: :i_, float: :f_, uuid: :u_ }.with_indifferent_access
+
     class_attribute :group_by_attribute
     class_attribute :virtual_attributes
-    
+
     class << self
       def grouping=(group)
         self.group_by_attribute = group
-        self.attribute_definitions['group'].default = group
-        default_scope -> {where('group' => group)}
+        attribute_definitions['group'].default = group
+        default_scope -> { where('group' => group) }
       end
-      
+
       alias_method :_attribute, :attribute
-      
+
       def attribute(name, options)
         options.symbolize_keys!
-        unless [:map,:list,:set].include?(options[:type].to_sym)
+        unless [:map, :list, :set].include?(options[:type].to_sym)
           # Only type supported for now
           options.assert_valid_keys(:type)
-          raise ArgumentError, "Invalid type specified for dynamic attribute: '#{name}: #{options[:type]}'" unless PREFIXES.has_key?(options[:type])
-          self.virtual_attributes[name.to_s] = PREFIXES[options[:type]].to_s + name.to_s
+          unless PREFIXES.key?(options[:type])
+            fail(ArgumentError, "Invalid type specified for dynamic attribute: '#{name}: #{options[:type]}'")
+          end
+          virtual_attributes[name.to_s] = PREFIXES[options[:type]].to_s + name.to_s
         end
         super
       end
-      
+
       def inherited(child)
         super
-        child.virtual_attributes = child.virtual_attributes.nil? ? {}.with_indifferent_access : child.virtual_attributes.dup
+        child.virtual_attributes =
+          child.virtual_attributes.nil? ? {}.with_indifferent_access : child.virtual_attributes.dup
         child.column_family = 'dynamic_model'
         child.primary_key = 'id'
         child.cluster_by = 'group'
-        child._attribute :id, :type => :uuid
-        child._attribute :group, :type => :string
-        PREFIXES.each do |k,v| 
+        child._attribute :id, type: :uuid
+        child._attribute :group, type: :string
+        PREFIXES.each do |k, v|
           child._attribute v, holds: k.to_sym, type: :map
-          child.instance_eval { alias_attribute k.to_s.pluralize, v}
+          child.instance_eval { alias_attribute k.to_s.pluralize, v }
         end
       end
-      
+
       def solr_field_name(attr, type = nil)
-        type ||= self.attribute_definitions[attr].try(:type)
-        raise(UnknownAttributeError, "Collections cannot be mapped") if [:map,:list,:set].include?(type)
-        raise(UnknownAttributeError, "Unknown attribute: #{attr}. You must specify a type.") unless type
+        type ||= attribute_definitions[attr].try(:type)
+        fail(UnknownAttributeError, 'Collections cannot be mapped') if [:map, :list, :set].include?(type)
+        fail(UnknownAttributeError, "Unknown attribute: #{attr}. You must specify a type.") unless type
         PREFIXES[type].to_s + attr.to_s
       end
     end
-    
+
     def write_attribute(attr_name, val)
       if virtual_attributes.include?(attr_name.to_s)
         type = self.class.attribute_definitions[attr_name].type
-        self.send(PREFIXES[type])[attr_name] = val
+        send(PREFIXES[type])[attr_name] = val
       else
         super
       end
     end
-    
+
     def read_attribute(attr_name)
       if virtual_attributes.include?(attr_name.to_s)
         type = self.class.attribute_definitions[attr_name].type
-        self.send(PREFIXES[type])[attr_name]
+        send(PREFIXES[type])[attr_name]
       else
         super
       end
     end
-    
+
     def solr_field_name(attr, type = nil)
       self.class.solr_field_name(attr, type)
     end

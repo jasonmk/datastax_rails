@@ -2,18 +2,18 @@ module DatastaxRails
   module Associations
     class AssociationScope #:nodoc:
       attr_reader :association
-      
-      delegate :klass, :owner, :reflection, :to => :association
-      delegate :chain, :options, :datastax_rails, :to => :reflection
-      
+
+      delegate :klass, :owner, :reflection, to: :association
+      delegate :chain, :options, :datastax_rails, to: :reflection
+
       def initialize(association)
         @association = association
       end
-      
+
       def scope
         scope = klass.unscoped
         scope = scope.extending(*Array.wrap(options[:extend]))
-        
+
         if reflection.source_macro == :belongs_to
           scope.where('id' => owner.send(reflection.foreign_key))
         else

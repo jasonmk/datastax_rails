@@ -21,7 +21,7 @@ module DatastaxRails
       def create_reflection(macro, name, options, datastax_rails)
         klass = options[:through] ? ThroughReflection : AssociationReflection
         reflection = klass.new(macro, name, options, datastax_rails)
-        self.reflections = self.reflections.merge(name => reflection)
+        self.reflections = reflections.merge(name => reflection)
         reflection
       end
 
@@ -55,7 +55,6 @@ module DatastaxRails
       end
     end
 
-
     # Abstract base class for AggregateReflection and AssociationReflection. Objects of
     # AggregateReflection and AssociationReflection are returned by the Reflection::ClassMethods.
     class MacroReflection
@@ -78,7 +77,7 @@ module DatastaxRails
       attr_reader :options
 
       attr_reader :datastax_rails
-      
+
       # Returns a hash of all the denormalizations for this relationship (if any)
       attr_reader :denorms
 
@@ -110,12 +109,12 @@ module DatastaxRails
 
       # Returns +true+ if +self+ and +other_aggregation+ have the same +name+ attribute, +datastax_rails+ attribute,
       # and +other_aggregation+ has an options hash assigned to it.
-      def ==(other_aggregation)
+      def ==(other)
         super ||
-          other_aggregation.kind_of?(self.class) &&
-          name == other_aggregation.name &&
-          other_aggregation.options &&
-          datastax_rails == other_aggregation.datastax_rails
+          other.is_a?(self.class) &&
+          name == other.name &&
+          other.options &&
+          datastax_rails == other.datastax_rails
       end
 
       # XXX: Do we need to sanitize our query?
@@ -124,14 +123,20 @@ module DatastaxRails
       end
 
       private
-        def derive_class_name
-          name.to_s.camelize
-        end
+
+      def derive_class_name
+        name.to_s.camelize
+      end
     end
 
     # Holds all the meta-data about an association as it was specified in the
     # DatastaxRails class.
     class AssociationReflection < MacroReflection
+      # Returns whether or not this association reflection is for a collection
+      # association. Returns +true+ if the +macro+ is either +has_many+ or
+      # +has_and_belongs_to_many+, +false+ otherwise.
+      attr_reader :collection
+      alias_method :collection?, :collection
       # Returns the target association's class.
       #
       #   class Author < DatastaxRails::Base
@@ -147,7 +152,7 @@ module DatastaxRails
       def klass
         @klass ||= datastax_rails.send(:compute_type, class_name)
       end
-      
+
       def initialize(macro, name, options, datastax_rails)
         super
         @collection = macro.in?([:has_many, :has_and_belongs_to_many])
@@ -185,11 +190,11 @@ module DatastaxRails
 
       # klass option is necessary to support loading polymorphic associations
       # def association_primary_key(klass = nil)
-        # options[:primary_key] || primary_key(klass || self.klass)
+      # options[:primary_key] || primary_key(klass || self.klass)
       # end
-# 
+      #
       # def datastax_rails_primary_key
-        # @datastax_rails_primary_key ||= options[:primary_key] || primary_key(solandra_object)
+      # @datastax_rails_primary_key ||= options[:primary_key] || primary_key(solandra_object)
       # end
 
       def check_validity!
@@ -197,10 +202,9 @@ module DatastaxRails
       end
 
       def check_validity_of_inverse!
-        unless options[:polymorphic]
-          if has_inverse? && inverse_of.nil?
-            raise InverseOfAssociationNotFoundError.new(self)
-          end
+        return if options[:polymorphic]
+        if inverse? && inverse_of.nil?
+          fail InverseOfAssociationNotFoundError.new(self)
         end
       end
 
@@ -225,23 +229,16 @@ module DatastaxRails
         [[options[:conditions]].compact]
       end
 
-      alias :source_macro :macro
+      alias_method :source_macro, :macro
 
-      def has_inverse?
+      def inverse?
         @options[:inverse_of]
       end
 
       def inverse_of
-        if has_inverse?
+        if inverse?
           @inverse_of ||= klass.reflect_on_association(options[:inverse_of])
         end
-      end
-
-      # Returns whether or not this association reflection is for a collection
-      # association. Returns +true+ if the +macro+ is either +has_many+ or
-      # +has_and_belongs_to_many+, +false+ otherwise.
-      def collection?
-        @collection
       end
 
       # Returns whether or not the association should be validated as part of
@@ -284,32 +281,33 @@ module DatastaxRails
       end
 
       private
-        def derive_class_name
-          class_name = name.to_s.camelize
-          class_name = class_name.singularize if collection?
-          class_name
-        end
 
-        def derive_foreign_key
-          if belongs_to?
-            "#{name}_id"
-          elsif options[:as]
-            "#{options[:as]}_id"
-          else
-            datastax_rails.name.foreign_key
-          end
-        end
+      def derive_class_name
+        class_name = name.to_s.camelize
+        class_name = class_name.singularize if collection?
+        class_name
+      end
 
-        # def primary_key(klass)
-          # klass.key || raise(UnknownPrimaryKey.new(klass))
-        # end
+      def derive_foreign_key
+        if belongs_to?
+          "#{name}_id"
+        elsif options[:as]
+          "#{options[:as]}_id"
+        else
+          datastax_rails.name.foreign_key
+        end
+      end
+
+      # def primary_key(klass)
+      # klass.key || raise(UnknownPrimaryKey.new(klass))
+      # end
     end
-    
+
     # Holds all the meta-data about a :through association as it was specified
     # in the DatastaxRails class.
     class ThroughReflection < AssociationReflection #:nodoc:
       delegate :foreign_key, :foreign_type, :association_foreign_key,
-               :datastax_rails_primary_key, :type, :to => :source_reflection
+               :datastax_rails_primary_key, :type, to: :source_reflection
 
       # Gets the source of the through reflection.  It checks both a singularized
       # and pluralized form for <tt>:belongs_to</tt> or <tt>:has_many</tt>.
@@ -320,7 +318,9 @@ module DatastaxRails
       #   end
       #
       def source_reflection
-        @source_reflection ||= source_reflection_names.collect { |name| through_reflection.klass.reflect_on_association(name) }.compact.first
+        @source_reflection ||= source_reflection_names.map do |name|
+          through_reflection.klass.reflect_on_association(name)
+        end.compact.first
       end
 
       # Returns the AssociationReflection object specified in the <tt>:through</tt> option
@@ -423,7 +423,8 @@ module DatastaxRails
       #   [:singularized, :pluralized]
       #
       def source_reflection_names
-        @source_reflection_names ||= (options[:source] ? [options[:source]] : [name.to_s.singularize, name]).collect { |n| n.to_sym }
+        @source_reflection_names ||=
+          (options[:source] ? [options[:source]] : [name.to_s.singularize, name]).map { |n| n.to_sym }
       end
 
       def source_options
@@ -436,37 +437,38 @@ module DatastaxRails
 
       def check_validity!
         if through_reflection.nil?
-          raise HasManyThroughAssociationNotFoundError.new(datastax_rails.name, self)
+          fail HasManyThroughAssociationNotFoundError.new(datastax_rails.name, self)
         end
 
         if through_reflection.options[:polymorphic]
-          raise HasManyThroughAssociationPolymorphicThroughError.new(datastax_rails.name, self)
+          fail HasManyThroughAssociationPolymorphicThroughError.new(datastax_rails.name, self)
         end
 
         if source_reflection.nil?
-          raise HasManyThroughSourceAssociationNotFoundError.new(self)
+          fail HasManyThroughSourceAssociationNotFoundError.new(self)
         end
 
         if options[:source_type] && source_reflection.options[:polymorphic].nil?
-          raise HasManyThroughAssociationPointlessSourceTypeError.new(datastax_rails.name, self, source_reflection)
+          fail HasManyThroughAssociationPointlessSourceTypeError.new(datastax_rails.name, self, source_reflection)
         end
 
         if source_reflection.options[:polymorphic] && options[:source_type].nil?
-          raise HasManyThroughAssociationPolymorphicSourceError.new(datastax_rails.name, self, source_reflection)
+          fail HasManyThroughAssociationPolymorphicSourceError.new(datastax_rails.name, self, source_reflection)
         end
 
         if macro == :has_one && through_reflection.collection?
-          raise HasOneThroughCantAssociateThroughCollection.new(datastax_rails.name, self, through_reflection)
+          fail HasOneThroughCantAssociateThroughCollection.new(datastax_rails.name, self, through_reflection)
         end
 
         check_validity_of_inverse!
       end
 
       private
-        def derive_class_name
-          # get the class_name of the belongs_to association of the through reflection
-          options[:source_type] || source_reflection.class_name
-        end
+
+      def derive_class_name
+        # get the class_name of the belongs_to association of the through reflection
+        options[:source_type] || source_reflection.class_name
+      end
     end
   end
 end

@@ -8,3 +8,8 @@ guard :rspec do
   watch('spec/spec_helper.rb')  { "spec" }
 end
 
+
+guard :rubocop, all_on_start: false, cli: '-D' do
+  watch(%r{.+\.rb$})
+  watch(%r{(?:.+/)?\.rubocop_todo\.yml$}) { |m| File.dirname(m[0]) }
+end

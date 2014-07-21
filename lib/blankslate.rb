@@ -15,17 +15,14 @@
 # depend upon <tt>method_missing</tt> (e.g. dynamic proxies).
 class BlankSlate
   class << self
-    
     # Hide the method named +name+ in the BlankSlate class. Don't
     # hide +instance_eval+ or any method beginning with "__".
     def hide(name)
       methods = instance_methods.map(&:to_sym)
-      if methods.include?(name.to_sym) and
-        name !~ /^(__|instance_eval|object_id)/
-        @hidden_methods ||= {}
-        @hidden_methods[name.to_sym] = instance_method(name)
-        undef_method name
-      end
+      return unless  methods.include?(name.to_sym) && name !~ /^(__|instance_eval|object_id)/
+      @hidden_methods ||= {}
+      @hidden_methods[name.to_sym] = instance_method(name)
+      undef_method name
     end
 
     def find_hidden_method(name)
@@ -41,7 +38,7 @@ class BlankSlate
       define_method(name, hidden_method)
     end
   end
-  
+
   instance_methods.each { |m| hide(m) }
 end
 
@@ -81,7 +78,7 @@ class Object
       result
     end
 
-    def find_hidden_method(name)
+    def find_hidden_method(_name)
       nil
     end
   end
@@ -94,7 +91,7 @@ end
 # "feature" of Ruby prevents late includes into modules from being
 # exposed in the first place.
 class Module
-  alias blankslate_original_append_features append_features
+  alias_method :blankslate_original_append_features, :append_features
   def append_features(mod)
     result = blankslate_original_append_features(mod)
     return result if mod != Object

@@ -5,7 +5,7 @@ require 'schema_migration'
 # Welcome to DatastaxRails.  DatastaxRails::Base is probably a good place to start.
 module DatastaxRails
   extend ActiveSupport::Autoload
-  
+
   autoload :Associations
   autoload :AttributeAssignment
   autoload :AttributeMethods
@@ -16,11 +16,11 @@ module DatastaxRails
   autoload :Column
   autoload :Collection
   autoload :Connection
-  
+
   autoload_under 'connection' do
     autoload :StatementCache
   end
-  
+
   autoload :Cql
   autoload :DynamicModel
   autoload :GroupedCollection
@@ -30,7 +30,7 @@ module DatastaxRails
   autoload :Persistence
   autoload :Reflection
   autoload :Relation
-  
+
   autoload_under 'relation' do
     autoload :FinderMethods
     autoload :ModificationMethods
@@ -40,7 +40,7 @@ module DatastaxRails
     autoload :Batches
     autoload :FacetMethods
   end
-  
+
   autoload :RSolrClientWrapper, 'datastax_rails/rsolr_client_wrapper'
   autoload :Schema
   autoload :Scoping
@@ -52,7 +52,8 @@ module DatastaxRails
   autoload :Validations
   autoload :Version
   autoload :WideStorageModel
-  
+
+  # Module to hold attribute method related functionality
   module AttributeMethods
     extend ActiveSupport::Autoload
 
@@ -64,7 +65,8 @@ module DatastaxRails
       autoload :Write
     end
   end
-  
+
+  # Module to hold scoping related functionality
   module Scoping
     extend ActiveSupport::Autoload
 
@@ -74,15 +76,17 @@ module DatastaxRails
     end
   end
 
+  # Module to hold Rake task related functionality
   module Tasks
     extend ActiveSupport::Autoload
     autoload :Keyspace
     autoload :ColumnFamily
   end
-  
+
+  # Module to hold type related functionality
   module Types
     extend ActiveSupport::Autoload
-    
+
     eager_autoload do
       autoload :DirtyCollection
       autoload :DynamicList

@@ -4,7 +4,7 @@ module DatastaxRails
       def initialize(cf_name)
         @cf_name = cf_name
       end
-      
+
       def to_cql
         "DROP COLUMNFAMILY #{@cf_name}"
       end

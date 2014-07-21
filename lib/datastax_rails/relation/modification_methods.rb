@@ -32,14 +32,14 @@ module DatastaxRails
       if conditions
         ret = where(conditions).destroy_all
       else
-        ret = to_a.each {|object| object.destroy }
+        ret = to_a.each { |object| object.destroy }
       end
       reset
       ret
     end
     # TODO: Find a way to delete from both without instantiating
-    alias :delete_all :destroy_all
-    
+    alias_method :delete_all, :destroy_all
+
     # Destroy an object (or multiple objects) that has the given id, the object is instantiated first,
     # therefore all callbacks and filters are fired off before the object is deleted. This method is
     # in-efficient since it actually has to instantiate the object just to delte it but allows cleanup
@@ -75,6 +75,6 @@ module DatastaxRails
       reset
       ret
     end
-    alias :delete :destroy
+    alias_method :delete, :destroy
   end
 end

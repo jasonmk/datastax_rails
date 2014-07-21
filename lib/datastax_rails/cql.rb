@@ -7,7 +7,7 @@ module DatastaxRails
         @cql[klass] ||= DatastaxRails::Cql::ColumnFamily.new(klass)
       end
     end
-    
+
     autoload :AlterColumnFamily
     autoload :Base
     autoload :ColumnFamily

@@ -57,11 +57,10 @@ module DatastaxRails
       #   end
       #
       # *Note*: the +:find+ scope also has effect on update and deletion methods, like +update_all+ and +delete_all+.
-      def with_scope(scope = {}, action = :merge, &block)
+      def with_scope(scope = {}, action = :merge, &_block) # rubocop:disable Style/CyclomaticComplexity
         # If another DatastaxRails class has been passed in, get its current scope
         scope = scope.current_scope if !scope.is_a?(Relation) && scope.respond_to?(:current_scope)
-
-        previous_scope = self.current_scope
+        previous_scope = current_scope
 
         if scope.is_a?(Hash)
           # Dup first and second level of hash (method and params).
@@ -70,16 +69,16 @@ module DatastaxRails
             scope[method] = params.dup unless params == true
           end
 
-          scope.assert_valid_keys([ :find, :create ])
+          scope.assert_valid_keys([:find, :create])
           relation = construct_finder_arel(scope[:find] || {})
           relation.default_scoped = true unless action == :overwrite
 
           if previous_scope && previous_scope.create_with_value && scope[:create]
             scope_for_create = if action == :merge
-              previous_scope.create_with_value.merge(scope[:create])
-            else
-              scope[:create]
-            end
+                                 previous_scope.create_with_value.merge(scope[:create])
+                               else
+                                 scope[:create]
+                               end
 
             relation = relation.create_with(scope_for_create)
           else
@@ -106,8 +105,9 @@ module DatastaxRails
       # Works like with_scope, but discards any nested properties.
       def with_exclusive_scope(method_scoping = {}, &block)
         if method_scoping.values.any? { |e| e.is_a?(DatastaxRails::Relation) }
-          raise ArgumentError, <<-MSG
-  New finder API can not be used with_exclusive_scope. You can either call unscoped to get an anonymous scope not bound to the default_scope:
+          fail ArgumentError, <<-MSG
+  New finder API can not be used with_exclusive_scope. You can either call unscoped to get
+  an anonymous scope not bound to the default_scope:
 
   User.unscoped.where(:active => true)
 
@@ -137,13 +137,12 @@ module DatastaxRails
         relation = scope.merge(relation) if scope
         relation
       end
-
     end
 
     def populate_with_current_scope_attributes
       return unless self.class.scope_attributes?
 
-      self.class.scope_attributes.each do |att,value|
+      self.class.scope_attributes.each do |att, value|
         send("#{att}=", value) if respond_to?("#{att}=")
       end
     end

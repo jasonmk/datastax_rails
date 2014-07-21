@@ -25,12 +25,12 @@ module DatastaxRails
         records.each { |record| yield record }
       end
     end
-    
+
     # Same as {find_each} but yields the index as a second parameter.
     def find_each_with_index(options = {})
       idx = 0
       find_in_batches(options) do |records|
-        records.each do |record| 
+        records.each do |record|
           yield record, idx
           idx += 1
         end
@@ -50,7 +50,7 @@ module DatastaxRails
     #
     # It's not possible to set the order. For Cassandra based batching, the
     # order is set according to Cassandra's key placement strategy. For Solr
-    # based batching, the order is ascending order of the primary key. 
+    # based batching, the order is ascending order of the primary key.
     # You can't set the limit either. That's used to control the batch sizes.
     #
     # Example:
@@ -65,20 +65,21 @@ module DatastaxRails
     def find_in_batches(options = {})
       relation = self
 
-      unless (@order_values.empty?)
-        DatastaxRails::Base.logger.warn("Scoped order and limit are ignored, it's forced to be batch order and batch size")
+      unless @order_values.empty?
+        DatastaxRails::Base.logger.warn('Scoped order and limit are ignored, ' \
+                                        "it's forced to be batch order and batch size")
       end
 
       if (finder_options = options.except(:start, :batch_size)).present?
-        raise "You can't specify an order, it's forced to be #{@klass.primary_key}" if options[:order].present?
-        raise "You can't specify a limit, it's forced to be the batch_size" if options[:limit].present?
+        fail "You can't specify an order, it's forced to be #{@klass.primary_key}" if options[:order].present?
+        fail "You can't specify a limit, it's forced to be the batch_size" if options[:limit].present?
 
         relation = apply_finder_options(finder_options)
       end
 
       start = options.delete(:start)
       batch_size = options.delete(:batch_size) || 1000
-      
+
       relation = relation.limit(batch_size)
       relation = relation.order(@klass.primary_key) if relation.use_solr_value
       records = start ? relation.where(@klass.primary_key).greater_than(start).to_a : relation.to_a
@@ -89,12 +90,10 @@ module DatastaxRails
 
         break if records_size < batch_size
         if offset
-          if relation.use_solr_value
-            offset = ::Cql::Uuid.new(offset.value+1)
-          end
+          offset = ::Cql::Uuid.new(offset.value + 1) if relation.use_solr_value
           records = relation.where(@klass.primary_key).greater_than(offset).to_a
         else
-          raise "Batch order not included in the custom select clause"
+          fail 'Batch order not included in the custom select clause'
         end
       end
     end

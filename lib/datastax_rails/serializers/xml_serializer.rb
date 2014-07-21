@@ -196,14 +196,14 @@ module DatastaxRails
       options[:procs] = procs
     end
 
-    # TODO This can likely be cleaned up to simple use ActiveSupport::XmlMini.to_tag as well.
+    # TODO: This can likely be cleaned up to simple use ActiveSupport::XmlMini.to_tag as well.
     def add_associations(association, records, opts)
       association_name = association.to_s.singularize
-      merged_options   = options.merge(opts).merge!(:root => association_name, :skip_instruct => true)
+      merged_options   = options.merge(opts).merge!(root: association_name, skip_instruct: true)
 
       if records.is_a?(Enumerable)
         tag  = ActiveSupport::XmlMini.rename_key(association.to_s, options)
-        type = options[:skip_types] ? { } : {:type => "array"}
+        type = options[:skip_types] ? {} : { type: 'array' }
 
         if records.empty?
           @builder.tag!(tag, type)
@@ -214,14 +214,14 @@ module DatastaxRails
                 record_type = {}
               else
                 record_class = (record.class.to_s.underscore == association_name) ? nil : record.class.name
-                record_type = {:type => record_class}
+                record_type = { type: record_class }
               end
 
               record.to_xml merged_options.merge(record_type)
             end
           end
         end
-      elsif record = @serializable.send(association)
+      elsif (record = @serializable.send(association))
         record.to_xml(merged_options)
       end
     end
@@ -237,8 +237,8 @@ module DatastaxRails
                  NilClass
                end
 
-        { :text => :string,
-          :time => :datetime }[type] || type
+        { text: :string,
+          time: :datetime }[type] || type
       end
       protected :compute_type
     end

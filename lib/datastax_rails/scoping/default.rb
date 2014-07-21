@@ -7,7 +7,7 @@ module DatastaxRails
 
       included do
         # Stores the default scope for the class
-        class_attribute :default_scopes, :instance_writer => false
+        class_attribute :default_scopes, instance_writer: false
         self.default_scopes = []
       end
 
@@ -102,7 +102,7 @@ module DatastaxRails
             evaluate_default_scope { default_scope }
           elsif default_scopes.any?
             evaluate_default_scope do
-              default_scopes.inject(relation) do |default_scope, scope|
+              default_scopes.reduce(relation) do |default_scope, scope|
                 if scope.is_a?(Hash)
                   default_scope.apply_finder_options(scope)
                 elsif !scope.is_a?(Relation) && scope.respond_to?(:call)
@@ -135,7 +135,6 @@ module DatastaxRails
             self.ignore_default_scope = false
           end
         end
-
       end
     end
   end

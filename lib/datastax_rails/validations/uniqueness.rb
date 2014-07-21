@@ -6,29 +6,29 @@ module DatastaxRails
       def initialize(options)
         super
       end
-      
+
       def validate_each(record, attribute, value)
         return true if options[:allow_blank] && value.blank?
         # XXX: The following will break if/when abstract base classes
         #      are implemented in datastax_rails (such as STI)
         finder_class = record.class
-        
+
         scope = finder_class.where(attribute => value)
-        scope = scope.where_not(:id => record.id) if record.persisted?
-        
+        scope = scope.where_not(id: record.id) if record.persisted?
+
         Array.wrap(options[:scope]).each do |scope_item|
           scope_value = record.send(scope_item)
           scope_value = nil if scope_value.blank?
           scope = scope.where(scope_item => scope_value)
         end
 
-        if scope.exists?
+        if scope.exists? # rubocop:disable Style/GuardClause
           message = options[:message] || 'has already been taken'
-          record.errors.add(attribute, message, options.except(:case_sensitive, :scope).merge(:value => value))
+          record.errors.add(attribute, message, options.except(:case_sensitive, :scope).merge(value: value))
         end
       end
     end
-    
+
     module ClassMethods
       # Validates whether the value of the specified attributes are unique across the system.
       # Useful for making sure that only one user can be named "davidhh".

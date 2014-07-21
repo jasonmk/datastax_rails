@@ -1,3 +1,5 @@
+# rubocop:disable Style/FileName
+
 # By default, cql-rb grabs a random connection for each request. This is great for
 # keeping load distributed across the cluster. Unfortunately, it plays havoc with
 # the Solr integration where we often need to ensure that we're talking to the
@@ -8,9 +10,9 @@ require 'cql/client/connection_manager'
 
 Cql::Client::ConnectionManager.class_eval do
   attr_reader :current_connection
-  
+
   def random_connection
-    raise NotConnectedError unless connected?
+    fail NotConnectedError unless connected?
     @lock.synchronize do
       @count ||= 0
       @count += 1

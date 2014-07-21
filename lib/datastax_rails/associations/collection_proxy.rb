@@ -34,32 +34,32 @@ module DatastaxRails
     # is computed directly through Solr and does not trigger by itself the
     # instantiation of the actual post records.
     class CollectionProxy #:nodoc:
-      alias :proxy_extend :extend
-      
-      instance_methods.each { |m| undef_method m unless m.to_s =~ /^(?:nil\?|send|object_id|to_a)$|^__|^respond_to|proxy_/ }
-      
-      delegate :order, :limit, :where, :to => :scoped
-      delegate :target, :load_target, :loaded?, :scoped, :to => :@association
+      attr_reader :association
+      alias_method :proxy_association, :association
+      alias_method :proxy_extend, :extend
+
+      instance_methods.each do |m|
+        undef_method m unless m.to_s =~ /^(?:nil\?|send|object_id|to_a)$|^__|^respond_to|proxy_/
+      end
+
+      delegate :order, :limit, :where, to: :scoped
+      delegate :target, :load_target, :loaded?, :scoped, to: :@association
       delegate :select, :find, :first, :last, :build, :create, :create!, :destroy_all, :destroy,
-               :delete, :delete_all, :count, :size, :length, :empty?, :any?, :many?, :to => :@association
-               
+               :delete, :delete_all, :count, :size, :length, :empty?, :any?, :many?, to: :@association
+
       def initialize(association)
         @association = association
         Array.wrap(association.options[:extend]).each { |ext| proxy_extend(ext) }
       end
-      
+
       alias_method :new, :build
-      
-      def proxy_association
-        @association
-      end
-      
+
       def respond_to?(name, include_private = false)
         super ||
         (load_target && target.respond_to?(name, include_private)) ||
         proxy_association.klass.respond_to?(name, include_private)
       end
-      
+
       def method_missing(method, *args, &block)
         if target.respond_to?(method) || (!proxy_association.klass.respond_to?(method) && Class.respond_to?(method))
           if load_target
@@ -78,28 +78,28 @@ module DatastaxRails
           scoped.send(method, *args, &block)
         end
       end
-      
+
       # Forwards <tt>===</tt> explicitly to the \target because the instance method
       # removal above doesn't catch it. Loads the \target if needed.
       def ===(other)
-        other === load_target
+        other === load_target # rubocop:disable Style/CaseEquality
       end
-      
+
       def to_ary
         load_target.dup
       end
       alias_method :to_a, :to_ary
-      
+
       def <<(*records)
         proxy_association.concat(records) && self
       end
       alias_method :push, :<<
-      
+
       def clear
         destroy_all
         self
       end
-      
+
       def reload
         proxy_association.reload
         self

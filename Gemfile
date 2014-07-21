@@ -20,3 +20,4 @@ gem 'pry'
 #gem 'ruby-debug'
 gem 'byebug'
 gem 'guard-rspec', require: false
+gem 'guard-rubocop', require: false

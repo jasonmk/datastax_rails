@@ -21,7 +21,7 @@ module DatastaxRails
 
       attributes.each do |k, v|
         if v.is_a?(Hash)
-          nested_parameter_attributes << [ k, v ]
+          nested_parameter_attributes << [k, v]
         else
           _assign_attribute(k, v)
         end
@@ -29,23 +29,23 @@ module DatastaxRails
 
       assign_nested_parameter_attributes(nested_parameter_attributes) unless nested_parameter_attributes.empty?
     end
-    alias attributes= assign_attributes
-    
+    alias_method :attributes=, :assign_attributes
+
     private
-    
-      def _assign_attribute(k, v)
-        public_send("#{k}=", v)
-      rescue NoMethodError
-        if respond_to?("#{k}=")
-          raise
-        else
-          raise UnknownAttributeError, "unknown attribute: #{k}"
-        end
+
+    def _assign_attribute(k, v)
+      public_send("#{k}=", v)
+    rescue NoMethodError
+      if respond_to?("#{k}=")
+        raise
+      else
+        raise UnknownAttributeError, "unknown attribute: #{k}"
       end
-  
-      # Assign any deferred nested attributes after the base attributes have been set.
-      def assign_nested_parameter_attributes(pairs)
-        pairs.each { |k, v| _assign_attribute(k, v) }
-      end
+    end
+
+    # Assign any deferred nested attributes after the base attributes have been set.
+    def assign_nested_parameter_attributes(pairs)
+      pairs.each { |k, v| _assign_attribute(k, v) }
+    end
   end
 end

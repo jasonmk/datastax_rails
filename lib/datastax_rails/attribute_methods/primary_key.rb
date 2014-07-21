@@ -8,13 +8,13 @@ module DatastaxRails
       # Returns this record's primary key value wrapped in an Array if one is
       # available.
       def to_key
-        key = self.id
+        key = id
         [key] if key
       end
-      
+
       # Returns a primary key hash for updates. Wide models override this.
       def id_for_update
-        {self.class.primary_key.to_s => self.id}
+        { self.class.primary_key.to_s => id }
       end
 
       # Returns the primary key value.
@@ -30,11 +30,6 @@ module DatastaxRails
       # Queries the primary key value.
       def id?
         query_attribute(self.class.primary_key)
-      end
-
-      # Returns the primary key value before type cast.
-      def id_before_type_cast
-        read_attribute_before_type_cast(self.class.primary_key)
       end
 
       protected

@@ -186,13 +186,11 @@ module DatastaxRails
           singleton_class.send(:redefine_method, name, &scope_proc)
         end
 
-      protected
+        protected
 
         def valid_scope_name?(name)
-          if logger && respond_to?(name, true)
-            logger.warn "Creating scope :#{name}. " \
-                        "Overwriting existing method #{self.name}.#{name}."
-          end
+          logger && respond_to?(name, true) &&
+            logger.warn("Creating scope :#{name}. Overwriting existing method #{self.name}.#{name}.")
         end
       end
     end

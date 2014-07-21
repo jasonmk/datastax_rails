@@ -4,7 +4,7 @@ module DatastaxRails
       extend ActiveSupport::Concern
 
       included do
-        attribute_method_suffix "="
+        attribute_method_suffix '='
       end
 
       module ClassMethods
@@ -37,19 +37,18 @@ module DatastaxRails
 
         # If we're dealing with a binary column, write the data to the cache
         # so we don't attempt to typecast multiple times.
-        if column && column.binary?
-          @attributes_cache[attr_name] = value
-        end
+        @attributes_cache[attr_name] = value if column && column.binary?
 
-        if column || @attributes.has_key?(attr_name)
+        if column || @attributes.key?(attr_name)
           @attributes[attr_name] = value
         else
-          raise ActiveModel::MissingAttributeError, "can't write unknown attribute `#{attr_name}'"
+          fail ActiveModel::MissingAttributeError, "can't write unknown attribute `#{attr_name}'"
         end
       end
       alias_method :raw_write_attribute, :write_attribute
 
       private
+
       # Handle *= for method_missing.
       def attribute=(attribute_name, value)
         write_attribute(attribute_name, value)

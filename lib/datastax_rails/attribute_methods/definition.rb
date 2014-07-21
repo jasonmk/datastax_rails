@@ -12,16 +12,16 @@ module DatastaxRails
       def instantiate(record, value)
         value = coder.default if value.nil?
         return if value.nil?
-      
+
         value = coder.decode(value)
         coder.wrap(record, name, value)
       end
-      
+
       # Returns :solr, :cassandra, :both, or +false+
       def indexed
         coder.options[:indexed]
       end
-      
+
       def type
         coder.type
       end

@@ -9,7 +9,7 @@ guard :rspec do
 end
 
 
-guard :rubocop, all_on_start: false, cli: '-D' do
+guard :rubocop, all_on_start: false, cli: '-D --auto-correct' do
   watch(%r{.+\.rb$})
   watch(%r{(?:.+/)?\.rubocop_todo\.yml$}) { |m| File.dirname(m[0]) }
 end

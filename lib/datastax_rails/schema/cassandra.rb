@@ -61,7 +61,7 @@ module DatastaxRails
 
       # Creates the named keyspace
       def create_keyspace(keyspace, options = {})
-        opts = { name: keyspace.to_s,
+        opts = { name:           keyspace.to_s,
                  strategy_class: 'org.apache.cassandra.locator.NetworkTopologyStrategy' }.with_indifferent_access.merge(options)
 
         if keyspace_exists?(keyspace.to_s)

@@ -138,7 +138,9 @@ module DatastaxRails
     end
 
     def wrap_collection(collection, record)
-      klass.new(record, name, collection)
+      Types::DirtyCollection.ignore_modifications do
+        klass.new(record, name, collection)
+      end
     end
 
     # Cql-rb does a really good job of typecasting, so for the most part we

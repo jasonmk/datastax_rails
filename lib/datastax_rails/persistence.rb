@@ -66,8 +66,8 @@ module DatastaxRails
         end
         record.id.tap do |key|
           ActiveSupport::Notifications.instrument('insert.datastax_rails', column_family: column_family,
-                                                                           key: key.to_s,
-                                                                           attributes: record.attributes) do
+                                                                           key:           key.to_s,
+                                                                           attributes:    record.attributes) do
             if (storage_method == :solr)
               write_with_solr(record, options)
             else

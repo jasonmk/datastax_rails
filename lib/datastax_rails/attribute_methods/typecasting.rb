@@ -1,5 +1,7 @@
 module DatastaxRails
   module AttributeMethods
+    # Handles the mapping of attributes to their appropriate DatastaxRails::Column so that they can
+    # be typecasted.
     module Typecasting
       extend ActiveSupport::Concern
 
@@ -17,21 +19,19 @@ module DatastaxRails
       # serialization)
       def initialize_attributes(attributes) #:nodoc:
         attrs = {}
-        Types::DirtyCollection.ignore_modifications do
-          attributes.each do |k, v|
-            if (col = column_for_attribute(k))
-              if col.type == :map && k.to_s != col.name.to_s
-                # See if we have a matching dynamic attribute column
-                self.class.map_columns.each do |mcol|
-                  if k.to_s.starts_with?(mcol.name.to_s)
-                    attrs[mcol.name.to_s] ||= mcol.wrap_collection({}, self)
-                    attrs[mcol.name.to_s][k.to_s] = v
-                  end
-                end
-              else
-                attrs[k.to_s] = col.collection? ? col.wrap_collection(v, self) : v
+        attributes.each do |k, v|
+          col = column_for_attribute(k)
+          next unless col
+          if col.type == :map && k.to_s != col.name.to_s
+            # See if we have a matching dynamic attribute column
+            self.class.map_columns.each do |mcol|
+              if k.to_s.starts_with?(mcol.name.to_s)
+                attrs[mcol.name.to_s] ||= mcol.wrap_collection({}, self)
+                attrs[mcol.name.to_s][k.to_s] = v
               end
             end
+          else
+            attrs[k.to_s] = col.collection? ? col.wrap_collection(v, self) : v
           end
         end
         attrs

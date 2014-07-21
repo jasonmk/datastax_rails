@@ -100,8 +100,8 @@ module DatastaxRails
       def establish_connection(spec)
         DatastaxRails::Base.config = spec.with_indifferent_access
         spec.reverse_merge!(DEFAULT_OPTIONS)
-        self.connection = ::Cql::Client.connect(hosts: spec[:servers],
-                                                keyspace: spec[:keyspace],
+        self.connection = ::Cql::Client.connect(hosts:              spec[:servers],
+                                                keyspace:           spec[:keyspace],
                                                 connection_timeout: spec[:connection_options][:timeout])
       end
 

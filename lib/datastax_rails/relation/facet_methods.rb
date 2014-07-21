@@ -67,11 +67,11 @@ module DatastaxRails
     def range_facet(field, start_range, end_range, gap, options = {})
       return self if field.blank?
       clone.tap do |r|
-        r.range_facet_values << { field: field.to_s,
-                                  options: options.merge({ start: start_range.to_s,
-                                                           end: end_range.to_s,
-                                                           gap: gap.to_s 
-                                                         })
+        r.range_facet_values << { field:   field.to_s,
+                                  options: options.merge(start: start_range.to_s,
+                                                         end:   end_range.to_s,
+                                                         gap:   gap.to_s
+                                                         )
                                 }
       end
     end

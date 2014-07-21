@@ -1,7 +1,7 @@
-# An extension to normal arrays and hashes that allow for tracking of dirty values.  This is
-# used by ActiveModel's change tracking framework.
 module DatastaxRails
   module Types
+    # An extension to normal arrays and hashes that allow for tracking of dirty values.  This is
+    # used by ActiveModel's change tracking framework.
     module DirtyCollection
       extend ActiveSupport::Concern
       cattr_accessor :dsr_ignore_modifications
@@ -15,13 +15,12 @@ module DatastaxRails
              Set.instance_methods(true).select { |m| m.to_s.ends_with?('!') }
 
         ms.each do |m|
-          if instance_methods.include?(m)
-            alias_method "___#{m}", m
-            original_method = instance_method(m)
-            define_method(m) do |*args, &block|
-              modifying do
-                original_method.bind(self).call(*args, &block)
-              end
+          next unless instance_methods.include?(m)
+          alias_method "___#{m}", m
+          original_method = instance_method(m)
+          define_method(m) do |*args, &block|
+            modifying do
+              original_method.bind(self).call(*args, &block)
             end
           end
         end

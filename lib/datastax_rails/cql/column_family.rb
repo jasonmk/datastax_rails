@@ -1,5 +1,6 @@
 module DatastaxRails
   module Cql
+    # Helper class to create CQL-building objects
     class ColumnFamily
       def initialize(klass)
         @klass = klass
@@ -9,8 +10,8 @@ module DatastaxRails
         DatastaxRails::Cql::CreateColumnFamily.new(@klass.column_family)
       end
 
-      def delete(*keys)
-        DatastaxRails::Cql::Delete.new(@klass, keys.flatten)
+      def delete(key)
+        DatastaxRails::Cql::Delete.new(@klass, key)
       end
 
       def insert

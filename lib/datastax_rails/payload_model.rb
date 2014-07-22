@@ -66,7 +66,7 @@ module DatastaxRails
 
       if count && count > i
         i.upto(count) do |j|
-          c = cql.delete(record.id).key_name('digest').conditions(chunk: j)
+          c = cql.delete(digest: record.id, chunk: j)
           c.using(options[:consistency]) if options[:consistency]
           c.execute
         end

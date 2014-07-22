@@ -1,4 +1,5 @@
 module DatastaxRails
+  # Handles persisting data into Datastax
   module Persistence
     extend ActiveSupport::Concern
 
@@ -8,11 +9,13 @@ module DatastaxRails
       alias_method :new_record?, :new_record
     end
 
+    # rubocop:disable Style/Documentation
     module ClassMethods
-      # Removes one or more records with corresponding keys.  Last parameter can be a hash
-      # specifying the consistency level.
+      # Removes one or more records with corresponding keys. Last parameter can be a hash
+      # specifying the consistency level. The keys should be in the form returned by
+      # +#id_for_update+
       #
-      #   Model.remove('12345','67890', :consistency => 'LOCAL_QUORUM)
+      #   Model.remove({id: '12345'},{id: '67890'}, :consistency => 'LOCAL_QUORUM)
       #
       # @overload remove(*keys, options)
       #   Removes one or more keys with the given options
@@ -21,20 +24,26 @@ module DatastaxRails
       # @overload remove(*keys)
       #   Removes one or more keys with the default options
       #   @param [String] keys one or more keys to delete
+      # TODO: Submit multiple deletes as a batch
       def remove(*keys)
         options = keys.last.is_a?(Hash) ? keys.pop : {}
-        keys = keys.flatten.map { |k| attribute_definitions[primary_key].type_cast(k) }
-        ActiveSupport::Notifications.instrument('remove.datastax_rails', column_family: column_family, key: keys) do
-          c = cql.delete(keys)
-          if options[:consistency]
-            level = options[:consistency].to_s.upcase
-            if valid_consistency?(level)
-              c.using(level)
-            else
-              fail ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
+        # keys = keys.flat_map { |k| attribute_definitions[primary_key].type_cast(k) }
+        keys.each do |key|
+          typecast_key = {}
+          key.each { |k, v| typecast_key[k] = attribute_definitions[k].type_cast(v) }
+
+          ActiveSupport::Notifications.instrument('remove.datastax_rails', column_family: column_family, key: key) do
+            c = cql.delete(typecast_key)
+            if options[:consistency]
+              level = options[:consistency].to_s.upcase
+              if valid_consistency?(level)
+                c.using(level)
+              else
+                fail ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
+              end
             end
+            c.execute
           end
-          c.execute
         end
       end
 
@@ -139,7 +148,7 @@ module DatastaxRails
     end
 
     def destroy(options = {})
-      self.class.remove(id, options)
+      self.class.remove(id_for_update, options)
       @destroyed = true
       freeze
     end

@@ -1,5 +1,6 @@
 module DatastaxRails
   module Cql
+    # Base class for CQL generation
     class Base
       # Base initialize that sets the default consistency.
       def initialize(klass, *_args)
@@ -11,10 +12,6 @@ module DatastaxRails
       def using(consistency)
         @consistency = consistency.to_s.downcase.to_sym
         self
-      end
-
-      def key_name
-        @klass.key_factory.key_columns
       end
 
       # Abstract. Should be overridden by subclasses

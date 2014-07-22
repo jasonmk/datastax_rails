@@ -8,6 +8,7 @@ end
 
 class DynamicTestModel2 < DatastaxRails::DynamicModel
   self.grouping = 'test2'
+  integer :age
 end
 
 describe DatastaxRails::DynamicModel do
@@ -25,12 +26,16 @@ describe DatastaxRails::DynamicModel do
   end
 
   it 'deletes a dynamic record' do
-    ENV['DEBUG_CQL'] = 'true'
     one.name = 'John'
     one.save
+    two.age = 27
+    two.id = one.id # Make sure they're in the same C* row
+    two.save
     one.destroy
+    DynamicTestModel1.commit_solr
     expect(DynamicTestModel1.count).to be(0)
-    ENV['DEBUG_CQL'] = 'false'
+    DynamicTestModel2.commit_solr
+    expect(DynamicTestModel2.count).to be(1)
   end
 
   it 'retrieves the attribute from the dynamic collection' do

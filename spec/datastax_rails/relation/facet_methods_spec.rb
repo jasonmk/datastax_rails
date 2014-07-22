@@ -35,7 +35,11 @@ describe DatastaxRails::Relation do
       Hobby.create(complexity: 9.0)
       Hobby.create(complexity: 10.0)
       Hobby.commit_solr
-      expect(@relation.range_facet(:complexity, 1.0, 10.0, 2.0).all.facets['complexity']).to eq('counts' => ['1.0', 1, '3.0', 0, '5.0', 1, '7.0', 1, '9.0', 2], 'gap' => 2.0, 'start' => 1.0, 'end' => 11.0)
+      expect(@relation.range_facet(:complexity, 1.0, 10.0, 2.0).all.facets['complexity'])
+        .to eq('counts' => ['1.0', 1, '3.0', 0, '5.0', 1, '7.0', 1, '9.0', 2],
+               'gap'    => 2.0,
+               'start'  => 1.0,
+               'end'    => 11.0)
     end
 
     it 'should allow options to be specified' do
@@ -45,7 +49,11 @@ describe DatastaxRails::Relation do
       Hobby.create(complexity: 9.0)
       Hobby.create(complexity: 10.0)
       Hobby.commit_solr
-      expect(@relation.range_facet(:complexity, 1.0, 10.0, 2.0, include: 'upper').all.facets['complexity']).to eq('counts' => ['1.0', 0, '3.0', 1, '5.0', 0, '7.0', 2, '9.0', 1], 'gap' => 2.0, 'start' => 1.0, 'end' => 11.0)
+      expect(@relation.range_facet(:complexity, 1.0, 10.0, 2.0, include: 'upper').all.facets['complexity'])
+        .to eq('counts' => ['1.0', 0, '3.0', 1, '5.0', 0, '7.0', 2, '9.0', 1],
+               'gap'    => 2.0,
+               'start'  => 1.0,
+               'end'    => 11.0)
     end
 
   end

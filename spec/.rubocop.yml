@@ -6,3 +6,6 @@ Style/Blocks:
 
 Style/Documentation:
   Enabled: false
+
+Style/LineLength:
+  Max: 150

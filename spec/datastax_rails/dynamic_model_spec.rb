@@ -24,6 +24,15 @@ describe DatastaxRails::DynamicModel do
     expect(one.s_).to eq('s_name' => 'John')
   end
 
+  it 'deletes a dynamic record' do
+    ENV['DEBUG_CQL'] = 'true'
+    one.name = 'John'
+    one.save
+    one.destroy
+    expect(DynamicTestModel1.count).to be(0)
+    ENV['DEBUG_CQL'] = 'false'
+  end
+
   it 'retrieves the attribute from the dynamic collection' do
     one.strings[:name] = 'John'
     expect(one.name).to eq('John')

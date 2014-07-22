@@ -4,7 +4,7 @@ module DatastaxRails
     # used by ActiveModel's change tracking framework.
     module DirtyCollection
       extend ActiveSupport::Concern
-      cattr_accessor :dsr_ignore_modifications
+      mattr_accessor :dsr_ignore_modifications
 
       included do
         attr_accessor :record, :name

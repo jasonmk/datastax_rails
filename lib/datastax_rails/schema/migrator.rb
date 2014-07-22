@@ -1,5 +1,7 @@
 module DatastaxRails
   module Schema
+    # DatastaxRails reads the attributes from the individual models. This class migrates both Cassandra
+    # and Solr to the point where they reflect what is specified in the models.
     class Migrator
       include DatastaxRails::Schema::Solr
       include DatastaxRails::Schema::Cassandra
@@ -23,7 +25,7 @@ module DatastaxRails
 
           count = 0
           DatastaxRails::Base.models.each do |m|
-            count += migrate_one(m, force) unless m.abstract_clas?
+            count += migrate_one(m, force) unless m.abstract_class?
           end
           count
         end

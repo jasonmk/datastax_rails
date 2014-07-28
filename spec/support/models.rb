@@ -86,6 +86,16 @@ class Hobby < DatastaxRails::Base
   timestamps
 end
 
+class Default < DatastaxRails::Base
+  self.column_family = 'defaults'
+
+  uuid :id
+  string :str, default: 'string'
+  boolean :bool, default: true
+  boolean :bool2, default: false
+  boolean :bool3
+end
+
 class CoreMetadata < DatastaxRails::DynamicModel
   self.grouping = 'core'
 end

@@ -43,3 +43,6 @@ Style/GuardClause:
 # Maybe this can go away eventually? It seems somewhat limiting though.
 Style/RaiseArgs:
   Enabled: false
+
+Style/Next:
+  Enabled: false

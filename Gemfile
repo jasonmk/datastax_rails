@@ -21,3 +21,4 @@ gem 'pry'
 gem 'byebug'
 gem 'guard-rspec', require: false
 gem 'guard-rubocop', require: false
+gem 'simplecov', require: false, group: :test

@@ -1,4 +1,5 @@
 module DatastaxRails
+  # Methods for computing statistics (sum, maximum, minimum, average, and stddev)
   module StatsMethods
     STATS_FIELDS = { 'sum' => 'sum', 'maximum' => 'max', 'minimum' => 'min', 'average' => 'mean', 'stddev' => 'stddev' }
 
@@ -63,7 +64,7 @@ module DatastaxRails
 
     def calculate_stats(field)
       unless @stats[field]
-        @stats[field] = limit(1).compute_stats(field).stats[field]
+        @stats[field] = with_solr.limit(1).compute_stats(field).stats[field]
       end
     end
   end

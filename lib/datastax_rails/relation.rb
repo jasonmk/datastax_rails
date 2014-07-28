@@ -2,6 +2,7 @@ require 'rsolr'
 require 'pp' if ENV['DEBUG_SOLR'] == 'true'
 # TODO: Move functionality into modules
 module DatastaxRails
+  # = DatastaxRails Relation
   class Relation # rubocop:disable Style/ClassLength
     MULTI_VALUE_METHODS = %i(order where where_not fulltext greater_than less_than select stats field_facet
                              range_facet slow_order)
@@ -493,7 +494,7 @@ module DatastaxRails
         @stats_values.flatten.each do |sv|
           params['stats.field'] = sv
         end
-        @params['stats.facet'] = @group_value
+        params['stats.facet'] = @group_value
       end
       solr_response = nil
       if @group_value

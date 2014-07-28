@@ -216,7 +216,7 @@ module DatastaxRails
     end
 
     def full_solr_range
-      if %w(date uuid).include? solr_type
+      if %w(date uuid integer int double long float).include? solr_type
         '[* TO *]'
       else
         '[\"\" TO *]'

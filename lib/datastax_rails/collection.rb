@@ -1,4 +1,5 @@
 module DatastaxRails
+  # Holds a collection of DatastaxRails::Base objects.
   class Collection < Array
     # @!attribute [r] total_entries
     #   @return [Fixnum] the total number of entries that match the search
@@ -11,7 +12,7 @@ module DatastaxRails
     attr_accessor :total_entries, :per_page, :current_page, :facets, :highlights
 
     def inspect
-      "<DatastaxRails::Collection##{object_id} contents: #{super} last_column_name: #{last_column_name.inspect}>"
+      "<DatastaxRails::Collection##{object_id} contents: #{super}>"
     end
 
     def total_pages

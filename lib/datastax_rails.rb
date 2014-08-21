@@ -101,3 +101,7 @@ require 'datastax_rails/errors'
 require 'cql-rb_extensions'
 
 ActiveSupport.run_load_hooks(:datastax_rails, DatastaxRails::Base)
+
+ActiveSupport.on_load(:i18n) do
+  I18n.load_path << File.dirname(__FILE__) + '/datastax_rails/locale/en.yml'
+end

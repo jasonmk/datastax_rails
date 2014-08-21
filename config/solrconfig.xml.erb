@@ -219,8 +219,7 @@
                    triggering a new commit. 
       -->
        <autoSoftCommit> 
-         <maxTime>1000</maxTime> 
-         <maxDocs>1</maxDocs>
+         <maxTime><%= @solr_commit_time %></maxTime> 
        </autoSoftCommit>
 
     <!-- Update Related Event Listeners

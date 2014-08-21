@@ -387,6 +387,10 @@ module DatastaxRails #:nodoc:
     # See {DatastaxRails::WideStorageModel} or {DatastaxRails::Payload} model for an example
     class_attribute :create_options
 
+    # Allows the setting of how frequently to commit data to solr. Default is 10s.
+    class_attribute :solr_commit_time
+    self.solr_commit_time = 10_000
+
     # Stores the attribute that wide models should cluster on. Basically, this is the
     # attribute that CQL uses to "group" columns into logical records even though they
     # are stored on the same row.
@@ -400,9 +404,6 @@ module DatastaxRails #:nodoc:
     # keys and their class restriction as values.
     class_attribute :serialized_attributes
     self.serialized_attributes = {}
-
-    # Whether or not we are using solr legacy mappings
-    class_attribute :legacy_mapping
 
     def initialize(attributes = {}, _options = {})
       defaults = self.class.column_defaults.dup
@@ -554,10 +555,6 @@ module DatastaxRails #:nodoc:
 
       def wide_storage_model?
         ancestors.include?(DatastaxRails::WideStorageModel)
-      end
-
-      def legacy_mapping?
-        legacy_mapping
       end
 
       def base_class

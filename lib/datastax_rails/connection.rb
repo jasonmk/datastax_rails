@@ -15,7 +15,7 @@ module DatastaxRails
       class_attribute :solr
     end
 
-    module ClassMethods
+    module ClassMethods # rubocop:disable Style/Documentation
       DEFAULT_OPTIONS = {
         servers:     '127.0.0.1:9160',
         thrift:      {},

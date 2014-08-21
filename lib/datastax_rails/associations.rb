@@ -62,7 +62,7 @@ module DatastaxRails
       @association_cache[name] = association
     end
 
-    module ClassMethods
+    module ClassMethods # rubocop:disable Style/Documentation
       def belongs_to(name, options = {})
         Builder::BelongsTo.build(self, name, options)
       end

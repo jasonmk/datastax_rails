@@ -360,6 +360,7 @@ module DatastaxRails #:nodoc:
     include Callbacks
     include Reflection
     include Associations
+    include AutosaveAssociation
     include Scoping
     include Timestamps
     include Serialization

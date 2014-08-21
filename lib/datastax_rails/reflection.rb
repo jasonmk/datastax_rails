@@ -17,6 +17,7 @@ module DatastaxRails
       self.reflections = {}
     end
 
+    # rubocop:disable Style/Documentation
     module ClassMethods
       def create_reflection(macro, name, options, datastax_rails)
         klass = options[:through] ? ThroughReflection : AssociationReflection
@@ -280,6 +281,10 @@ module DatastaxRails
         end
       end
 
+      def nested?
+        false
+      end
+
       private
 
       def derive_class_name
@@ -350,6 +355,11 @@ module DatastaxRails
           chain[0] = self # Use self so we don't lose the information from :source_type
           chain
         end
+      end
+
+      # A through association is nested if there would be more than one join table
+      def nested?
+        chain.length > 2 || through_reflection.macro == :has_and_belongs_to_many
       end
 
       # Consider the following example:

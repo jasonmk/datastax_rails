@@ -1,6 +1,17 @@
 module DatastaxRails
   module Associations
-    class BelongsToAssociation < SingularAssociation #:nodoc:
+    # belongs_to associations are the child side of a parent/child relationship
+    #
+    #   class Car < DatastaxRails::Base
+    #     uuid :id
+    #     uuid :owner_id
+    #     belongs_to :owner, class_name: 'Person'
+    #   end
+    #
+    # Valid options:
+    # * class_name - The class on the other side (if different than what +classify+ returns)
+    # * foreign_key - The name of the foreign_key column if not just _id at the end of the association name
+    class BelongsToAssociation < SingularAssociation
       attr_reader :updated
       alias_method :updated?, :updated
       def replace(record)

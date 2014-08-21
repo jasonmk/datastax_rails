@@ -1,6 +1,7 @@
 module DatastaxRails
   module Associations
-    class AssociationScope #:nodoc:
+    # Creates the scope (relation) for the assocation
+    class AssociationScope
       attr_reader :association
 
       delegate :klass, :owner, :reflection, to: :association

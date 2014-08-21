@@ -1,6 +1,7 @@
 module DatastaxRails
   module Associations
-    class HasOneAssociation < SingularAssociation #:nodoc:
+    # A has_one association is the parent of a one-to-one parent/child relation
+    class HasOneAssociation < SingularAssociation
       def replace(record, save = true)
         raise_on_type_mismatch(record) if record
         load_target

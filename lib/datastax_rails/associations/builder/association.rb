@@ -16,11 +16,14 @@ module DatastaxRails::Associations::Builder # rubocop:disable Style/ClassAndModu
       @model, @name, @options = model, name, options
     end
 
+    include Module.new { def build; end }
+
     def build
       validate_options
-      reflection = model.create_reflection(self.class.macro, name, options, model)
+      @reflection = model.create_reflection(self.class.macro, name, options, model)
       define_accessors
-      reflection
+      super # provides an extension point
+      @reflection
     end
 
     def mixin

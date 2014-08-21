@@ -1,6 +1,7 @@
 module DatastaxRails
   module Associations
-    class SingularAssociation < Association #:nodoc:
+    # Encapsulates the common functionality between belongs_to and has_one relationships
+    class SingularAssociation < Association
       # Implements the reader method, e.g. foo.bar for Foo.has_one :bar
       def reader(force_reload = false)
         reload if force_reload || !loaded? || stale_target?

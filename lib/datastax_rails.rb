@@ -9,6 +9,7 @@ module DatastaxRails
   autoload :Associations
   autoload :AttributeAssignment
   autoload :AttributeMethods
+  autoload :AutosaveAssociation
   autoload :Base
   autoload :Batches
   autoload :Callbacks

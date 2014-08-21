@@ -9,8 +9,7 @@ module DatastaxRails
       alias_method :new_record?, :new_record
     end
 
-    # rubocop:disable Style/Documentation
-    module ClassMethods
+    module ClassMethods # rubocop:disable Style/Documentation
       # Removes one or more records with corresponding keys. Last parameter can be a hash
       # specifying the consistency level. The keys should be in the form returned by
       # +#id_for_update+

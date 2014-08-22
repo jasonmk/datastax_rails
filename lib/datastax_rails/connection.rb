@@ -105,6 +105,12 @@ module DatastaxRails
                                                 connection_timeout: spec[:connection_options][:timeout])
       end
 
+      def reconnect
+        connection.close rescue true
+        self.connection = nil
+        establish_connection(DatastaxRails::Base.config)
+      end
+
       # Returns the base portion of the URL for connecting to SOLR based on the current Cassandra server.
       #
       # @return [String] in the form of 'http://localhost:8983/solr'

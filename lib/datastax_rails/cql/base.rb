@@ -27,11 +27,23 @@ module DatastaxRails
         puts cql if ENV['DEBUG_CQL'] == 'true'
         pp @values if ENV['DEBUG_CQL'] == 'true'
         digest = Digest::MD5.digest cql
-        stmt = DatastaxRails::Base.statement_cache[digest] ||= DatastaxRails::Base.connection.prepare(cql)
-        if @consistency
-          stmt.execute(*@values, consistency: @consistency)
-        else
-          stmt.execute(*@values)
+        try_again = true
+        begin
+          stmt = DatastaxRails::Base.statement_cache[digest] ||= DatastaxRails::Base.connection.prepare(cql)
+          if @consistency
+            stmt.execute(*@values, consistency: @consistency)
+          else
+            stmt.execute(*@values)
+          end
+        rescue Cql::NotConnectedError
+          if try_again
+            Rails.logger.warn('Lost connection to Cassandra. Attempting to reconnect...')
+            try_again = false
+            DatastaxRails::Base.reconnect
+            retry
+          else
+            raise
+          end
         end
       end
     end

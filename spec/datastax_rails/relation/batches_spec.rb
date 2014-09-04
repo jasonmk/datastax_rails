@@ -3,9 +3,8 @@ require 'spec_helper'
 describe DatastaxRails::Relation do
   before(:each) do
     @relation = DatastaxRails::Relation.new(Hobby, 'hobbies')
-    ('a'..'l').each_with_index do |letter, idx|
+    ('a'..'l').each_with_index do |letter, _idx|
       Hobby.create(name: letter)
-      sleep(1) if idx % 5 == 4 # Performance hack
     end
     Hobby.commit_solr
   end
@@ -13,7 +12,6 @@ describe DatastaxRails::Relation do
   %w(cassandra solr).each do |access_method|
     describe '#find_each' do
       it "returns each record one at a time with #{access_method}" do
-        sleep(1)
         missed_hobbies = ('a'..'l').to_a
         @relation.send('with_' + access_method).find_each(batch_size: 5) do |hobby|
           missed_hobbies.delete_if { |h| h == hobby.name }

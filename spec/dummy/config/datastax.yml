@@ -14,6 +14,10 @@ productiont:
 development:
   servers: ["127.0.0.1"]
   port: 9042
+  ssl:
+    cert: config/datastax_rails.crt
+    key: config/datastax_rails.key
+    ca_cert: config/ca.crt
   keyspace: "datastax_rails_development"
   strategy_class: "org.apache.cassandra.locator.SimpleStrategy"
   strategy_options: {"replication_factor": "1"}
@@ -26,6 +30,10 @@ development:
 test:
   servers: ["127.0.0.1"]
   port: 9042
+  ssl:
+    cert: config/datastax_rails.crt
+    #key: config/datastax_rails.key
+    ca_cert: config/ca.crt
   keyspace: "datastax_rails_test"
   strategy_class: "org.apache.cassandra.locator.SimpleStrategy"
   strategy_options: {"replication_factor": "1"}

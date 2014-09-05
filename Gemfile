@@ -22,3 +22,5 @@ gem 'byebug'
 gem 'guard-rspec', require: false
 gem 'guard-rubocop', require: false
 gem 'simplecov', require: false, group: :test
+gem 'ione', github: 'iconara/ione', branch: 'ssl_support_on_1.2'
+gem 'cql-rb', path: '../cql-rb'

@@ -17,9 +17,10 @@ module DatastaxRails
 
     module ClassMethods # rubocop:disable Style/Documentation
       DEFAULT_OPTIONS = {
-        servers:     '127.0.0.1:9160',
-        thrift:      {},
-        cql_version: '3.0.0'
+        servers:            '127.0.0.1',
+        port:               9160,
+        connection_options: { timeout: 10 },
+        ssl:                false
       }
 
       # Returns the current server that we are talking to.  This is useful when you are talking to a
@@ -40,6 +41,11 @@ module DatastaxRails
       #
       #   servers: ["10.1.2.5"]
       #   port: 9042
+      #   ssl:
+      #     cert: config/datastax_rails.crt
+      #     key: config/datastax_rails.key
+      #     ca_cert: config/ca.crt
+      #     keypass: changeme
       #   keyspace: "datastax_rails_production"
       #   strategy_class: "org.apache.cassandra.locator.NetworkTopologyStrategy"
       #   strategy_options: {"DS1": "3", "DS2": "3", "DS3": "3"}
@@ -48,18 +54,13 @@ module DatastaxRails
       #   solr:
       #     port: 8983
       #     path: /solr
-      #     ssl:
-      #       use_ssl: true
-      #       cert: config/datastax_rails.crt
-      #       key: config/datastax_rails.key
-      #       keypass: changeme
       #
       # The +servers+ entry should be a list of all seed nodes for servers you wish to connect to.  DSR
       # will automatically connect to all nodes in the cluster or in the datacenter if you are using multiple
       # datacenters.  You can safely just list all nodes in a particular datacenter if you would like.
       #
-      # The port to connect to, this port will be used for all nodes. Because the `system.peers` table does not contain
-      # the port that the nodes are listening on, the port must be the same for all nodes.
+      # The port to connect to, this port will be used for all nodes. Because the `system.peers` table does
+      # not contain the port that the nodes are listening on, the port must be the same for all nodes.
       #
       # Since we're using the NetworkTopologyStrategy for our locator, it is important that you configure
       # cassandra-topology.properties.  See the DSE documentation at http://www.datastax.com for more
@@ -73,36 +74,53 @@ module DatastaxRails
       # * *retries* - Number of times a request will be retried. Should likely be the number of servers - 1.
       #   Defaults to 0.
       # * *server_retry_period* - Amount of time to wait before retrying a down server. Defaults to 1.
-      # * *server_max_requests* - Number of requests to make to a server before moving to the next one (helps keep load
-      #   balanced). Default to nil which means cycling does not take place.
+      # * *server_max_requests* - Number of requests to make to a server before moving to the next one (helps
+      #   keep load balanced). Default to nil which means cycling does not take place.
       # * *retry_overrides* - Overrides retries option for individual exceptions.
       # * *connect_timeout* - The connection timeout on the Thrift socket. Defaults to 0.1.
       # * *timeout* - The timeout for the transport layer. Defaults to 1.
-      # * *timeout_overrides* - Overrides the timeout value for specific methods (advanced).
-      # * *exception_classes* - List of exceptions for which Thrift will automatically retry a new server in the cluster
-      #   (up to retry limit).
-      #   Defaults to [IOError, Thrift::Exception, Thrift::ApplicationException, Thrift::TransportException].
-      # * *exception_class_overrides* - List of exceptions which will never cause a retry.
-      #   Defaults to [CassandraCQL::Thrift::InvalidRequestException].
-      # * *wrapped_exception_options* - List of exceptions that will be automatically wrapped in an exception provided
-      #   by client class with the same name (advanced).
-      #   Defaults to [Thrift::ApplicationException, Thrift::TransportException].
-      # * *raise* - Whether to raise exceptions or default calls that cause an error (advanced). Defaults to true
-      #   (raise exceptions).
-      # * *defaults* - When raise is false and an error is encountered, these methods are called to default the return
-      #   value (advanced). Should be a hash of method names to values.
-      # * *protocol* - The thrift protocol to use (advanced). Defaults to Thrift::BinaryProtocol.
-      # * *protocol_extra_params* - Any extra parameters to send to the protocol (advanced).
-      # * *transport* - The thrift transport to use (advanced). Defaults to Thrift::Socket.
-      # * *transport_wrapper* - The thrift transport wrapper to use (advanced). Defaults to Thrift::FramedTransport.
       #
       # See +solr_connection+ for a description of the solr options in datastax.yml
       def establish_connection(spec)
         DatastaxRails::Base.config = spec.with_indifferent_access
         spec.reverse_merge!(DEFAULT_OPTIONS)
-        self.connection = ::Cql::Client.connect(hosts:              spec[:servers],
-                                                keyspace:           spec[:keyspace],
-                                                connection_timeout: spec[:connection_options][:timeout])
+        cql_options = { hosts:              spec[:servers],
+                        keyspace:           spec[:keyspace],
+                        connection_timeout: spec[:connection_options][:timeout] }
+        if ssl_type
+          ca_cert = Pathname.new(DatastaxRails::Base.config[:ssl][:ca_cert])
+          ca_cert = Rails.root.join(ca_cert) unless ca_cert.absolute?
+          ssl_context = OpenSSL::SSL::SSLContext.new
+          ssl_context.verify_mode = OpenSSL::SSL::VERIFY_PEER
+          ssl_context.ca_file = ca_cert.to_s
+          if ssl_type == :two_way_ssl
+            cert = Pathname.new(DatastaxRails::Base.config[:ssl][:cert])
+            key = Pathname.new(DatastaxRails::Base.config[:ssl][:key])
+            pass = DatastaxRails::Base.config[:ssl][:keypass]
+            cert = Rails.root.join(cert) unless cert.absolute?
+            key = Rails.root.join(key) unless key.absolute?
+            if pass
+              ssl_context.key = OpenSSL::PKey::RSA.new(key.read, pass)
+            else
+              ssl_context.key = OpenSSL::PKey::RSA.new(key.read)
+            end
+            ssl_context.cert = OpenSSL::X509::Certificate.new(cert.read)
+          end
+          cql_options[:ssl] = ssl_context
+        end
+        self.connection = ::Cql::Client.connect(cql_options)
+      end
+      
+      def ssl_type
+        return false unless DatastaxRails::Base.config && DatastaxRails::Base.config[:ssl]
+        config = DatastaxRails::Base.config
+        if config[:ssl][:key] && config[:ssl][:cert]
+          :two_way_ssl
+        elsif config[:ssl][:ca_cert]
+          :one_way_ssl
+        else
+          false
+        end
       end
 
       def reconnect
@@ -118,7 +136,7 @@ module DatastaxRails
         DatastaxRails::Base.establish_connection unless connection
         port = DatastaxRails::Base.config[:solr][:port]
         path = DatastaxRails::Base.config[:solr][:path]
-        protocol = DatastaxRails::Base.config[:solr].key?(:ssl) && DatastaxRails::Base.config[:solr][:ssl][:use_ssl] ? 'https' : 'http' # rubocop:disable LineLength
+        protocol = ssl_type ? 'https' : 'http'
         "#{protocol}://#{current_server}:#{port}#{path}"
       end
 
@@ -141,12 +159,10 @@ module DatastaxRails
       # @return [RSolr::Client] RSolr client object
       def establish_solr_connection
         opts = { url: "#{solr_base_url}/#{DatastaxRails::Base.connection.keyspace}.#{column_family}" }
-        if DatastaxRails::Base.config[:solr].key?(:ssl) &&
-            DatastaxRails::Base.config[:solr][:ssl].key?(:cert) &&
-            DatastaxRails::Base.config[:solr][:ssl][:use_ssl]
-          cert = Pathname.new(DatastaxRails::Base.config[:solr][:ssl][:cert])
-          key = Pathname.new(DatastaxRails::Base.config[:solr][:ssl][:key])
-          pass = DatastaxRails::Base.config[:solr][:ssl][:keypass]
+        if ssl_type == :two_way_ssl
+          cert = Pathname.new(DatastaxRails::Base.config[:ssl][:cert])
+          key = Pathname.new(DatastaxRails::Base.config[:ssl][:key])
+          pass = DatastaxRails::Base.config[:ssl][:keypass]
           cert = Rails.root.join(cert) unless cert.absolute?
           key = Rails.root.join(key) unless key.absolute?
           opts[:ssl_cert_file] = cert.to_s

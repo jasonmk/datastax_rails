@@ -29,7 +29,6 @@ module DatastaxRails
         digest = Digest::MD5.digest cql
         try_again = true
         begin
-          byebug
           stmt = DatastaxRails::Base.statement_cache[digest] ||= DatastaxRails::Base.connection.prepare(cql)
           if @consistency
             stmt.execute(*@values, consistency: @consistency)

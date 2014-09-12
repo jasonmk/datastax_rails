@@ -160,14 +160,17 @@ module DatastaxRails
       def establish_solr_connection
         opts = { url: "#{solr_base_url}/#{DatastaxRails::Base.connection.keyspace}.#{column_family}" }
         if ssl_type == :two_way_ssl
+          ca_cert = Pathname.new(DatastaxRails::Base.config[:ssl][:ca_cert])
           cert = Pathname.new(DatastaxRails::Base.config[:ssl][:cert])
           key = Pathname.new(DatastaxRails::Base.config[:ssl][:key])
           pass = DatastaxRails::Base.config[:ssl][:keypass]
+          ca_cert = Rails.root.join(ca_cert) unless ca_cert.absolute?
           cert = Rails.root.join(cert) unless cert.absolute?
           key = Rails.root.join(key) unless key.absolute?
           opts[:ssl_cert_file] = cert.to_s
           opts[:ssl_key_file] = key.to_s
           opts[:ssl_key_pass] = pass if pass
+          opts[:ssl_ca_file] = ca_cert.to_s
 
           RSolr::ClientCert.connect opts
         else

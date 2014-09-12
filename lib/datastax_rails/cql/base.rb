@@ -35,7 +35,7 @@ module DatastaxRails
           else
             stmt.execute(*@values)
           end
-        rescue Cql::NotConnectedError
+        rescue ::Cql::NotConnectedError
           if try_again
             Rails.logger.warn('Lost connection to Cassandra. Attempting to reconnect...')
             try_again = false

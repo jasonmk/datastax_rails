@@ -12,7 +12,7 @@ Cql::Client::ConnectionManager.class_eval do
   attr_reader :current_connection
 
   def random_connection
-    fail Cql::NotConnectedError unless connected?
+    fail ::Cql::NotConnectedError unless connected?
     @lock.synchronize do
       @count ||= 0
       @count += 1

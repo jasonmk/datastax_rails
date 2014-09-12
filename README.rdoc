@@ -15,10 +15,11 @@ Significant changes from SolandraObject:
 
 === Usage Note
 
-Before using this gem, you should probably take a strong look at the type of problem you are trying to solve.  Cassandra is primarily 
-designed as a solution to Big Data problems.  This gem is not.  You will notice that it still carries a lot of relational logic with it.  
-We are using DSE to solve a replication problem more so than a Big Data problem.  That's not to say that this gem won't work for Big Data problems, 
-it just might not be ideal.  You've been warned...
+Before using this gem, you should probably take a strong look at the type of problem you are trying to solve.
+Cassandra is primarily designed as a solution to Big Data problems. This gem is not. You will notice that it
+still carries a lot of relational logic with it. We are using DSE to solve a replication problem more so than
+a Big Data problem. That's not to say that this gem won't work for Big Data problems, it just might not be
+ideal. You've been warned...
 
 === Getting started
 
@@ -31,6 +32,7 @@ Configure the config/datastax.yml file:
   development:
     servers: ["127.0.0.1"]
     port: 9042
+    ssl: true
     keyspace: "<my_app>_development"
     strategy_class: "org.apache.cassandra.locator.NetworkTopologyStrategy"
     strategy_options: {"DC1": "1"} 
@@ -48,6 +50,7 @@ For a more simple, single datacenter setup, something like this should probably 
   development:
     servers: ["127.0.0.1"]
     port: 9042
+    ssl: false
     keyspace: "datastax_rails_development"
     strategy_class: "org.apache.cassandra.locator.SimpleStrategy"
     strategy_options: {"replication_factor": "1"}

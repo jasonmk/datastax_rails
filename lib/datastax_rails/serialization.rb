@@ -19,15 +19,19 @@ module DatastaxRails
                             end
       end
 
+      serializable_convert_uuids(hash)
+
       hash
     end
 
-    def as_json(options = {})
-      json = super(options)
-      json.each { |k, v| json[k] = v.to_s if v.is_a?(::Cql::Uuid) }
-    end
-
     private
+
+    def serializable_convert_uuids(hash)
+      hash.each do |k, v|
+        serializable_convert_uuids(v) if v.is_a?(Hash)
+        hash[k] = v.to_s if v.is_a?(::Cql::Uuid)
+      end
+    end
 
     # Add associations specified via the <tt>:include</tt> option.
     #

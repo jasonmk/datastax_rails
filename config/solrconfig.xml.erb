@@ -47,7 +47,7 @@
        that you fully re-index after changing this setting as it can
        affect both how text is indexed and queried.
     -->
-  <luceneMatchVersion>LUCENE_40</luceneMatchVersion>
+  <luceneMatchVersion>LUCENE_43</luceneMatchVersion>
   
   <!-- Enable DSE Search new type mappings -->
   <dseTypeMappingVersion>2</dseTypeMappingVersion>
@@ -336,30 +336,30 @@
                and old cache.  
       -->
     <filterCache class="solr.FastLRUCache"
-                 size="512"
-                 initialSize="512"
+                 size="256"
+                 initialSize="0"
                  autowarmCount="0"/>
 
     <!-- Query Result Cache
          
          Caches results of searches - ordered lists of document ids
          (DocList) based on a query, a sort, and the range of documents requested.  
-      -->
     <queryResultCache class="solr.LRUCache"
                      size="512"
                      initialSize="512"
                      autowarmCount="0"/>
+      -->
    
     <!-- Document Cache
 
          Caches Lucene Document objects (the stored fields for each
          document).  Since Lucene internal document ids are transient,
          this cache will not be autowarmed.  
-      -->
     <documentCache class="solr.LRUCache"
                    size="512"
                    initialSize="512"
                    autowarmCount="0"/>
+      -->
     
     <!-- Field Value Cache
          
@@ -761,7 +761,7 @@
        requires: -H 'Content-type:text/xml; charset=utf-8'
     -->
   <requestHandler name="/update" 
-                  class="solr.XmlUpdateRequestHandler">
+                  class="solr.UpdateRequestHandler">
     <!-- See below for information on defining 
          updateRequestProcessorChains that can be used by name 
          on each Update Request
@@ -776,7 +776,7 @@
        http://wiki.apache.org/solr/javabin
     -->
   <requestHandler name="/update/javabin" 
-                  class="solr.BinaryUpdateRequestHandler" />
+                  class="solr.UpdateRequestHandler" />
 
   <!-- CSV Update Request Handler
        http://wiki.apache.org/solr/UpdateCSV

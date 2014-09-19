@@ -545,7 +545,7 @@ module DatastaxRails
       when value.is_a?(Time) || value.is_a?(DateTime) || value.is_a?(Date)
         column.type_cast_for_solr(value)
       when value.is_a?(Array) || value.is_a?(Set)
-        column.type_cast_for_solr(value).map { |v| v.to_s.gsub(/ /, '\\ ') }.join(' OR ')
+        value.map {|v| column.type_cast_for_solr(v).to_s.gsub(/ /, '\\ ') }.join(' OR ')
       when value.is_a?(Fixnum)
         value < 0 ? "\\#{value}" : value
       when value.is_a?(Range)
@@ -553,6 +553,8 @@ module DatastaxRails
       when value.is_a?(String)
         solr_escape(downcase_query(value.gsub(/ /, '\\ ')))
       when value.is_a?(FalseClass), value.is_a?(TrueClass)
+        value.to_s
+      when value.is_a?(::Cql::Uuid)
         value.to_s
       else
         value

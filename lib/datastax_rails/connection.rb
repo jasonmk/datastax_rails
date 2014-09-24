@@ -110,7 +110,7 @@ module DatastaxRails
         end
         self.connection = ::Cql::Client.connect(cql_options)
       end
-      
+
       def ssl_type
         return false unless DatastaxRails::Base.config && DatastaxRails::Base.config[:ssl]
         config = DatastaxRails::Base.config

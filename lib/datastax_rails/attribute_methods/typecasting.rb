@@ -89,11 +89,13 @@ module DatastaxRails
         #   @macro attr_doc
         # @!method datetime(name, options = {})
         #   @macro attr_doc
+        # @!method double(name, options = {})
+        #   @macro attr_doc
         # @!method float(name, options = {})
         #   @macro attr_doc
         # @!method integer(name, options = {})
         #   @macro attr_doc
-        # @!method json(name, options = {})
+        # @!method long(name, options = {})
         #   @macro attr_doc
         # @!method string(name, options = {})
         #   @macro attr_doc
@@ -102,8 +104,6 @@ module DatastaxRails
         # @!method time(name, options = {})
         #   @macro attr_doc
         # @!method timestamp(name, options = {})
-        #   @macro attr_doc
-        # @!method time_with_zone(name, options = {})
         #   @macro attr_doc
         # @!method uuid(name, options = {})
         #   @macro attr_doc
@@ -115,7 +115,7 @@ module DatastaxRails
         #   @macro attr_doc
 
         # The following sets up a bunch of nearly identical attribute methods
-        %w(array boolean date datetime float integer json string text time timestamp time_with_zone
+        %w(array boolean date datetime double float integer long string text time timestamp
            uuid map set list).each do |type|
           class_eval <<-EOV, __FILE__, __LINE__ + 1
             def #{type}(name, options = {})                        # def string(name, options = {})

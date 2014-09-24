@@ -37,9 +37,11 @@ module DatastaxRails #:nodoc:
   # * binary - a large object that will not be indexed into SOLR (e.g., BLOB)
   # * boolean - true/false values
   # * date - a date without a time component
-  # * float - a number in floating point notation
-  # * integer - a whole, round number of any size
+  # * double - a 64-bit number in floating point notation
+  # * float - a 32-bit number in floating point notation
+  # * integer - a 32-bit signed integer
   # * list - an ordered list of values of a single type
+  # * long - a 64-bit signed integer
   # * map - a collection of key/value pairs of a single type (keys are always strings)
   # * set - an un-ordered set of unique values of a single type
   # * string - a generic string type that is not tokenized by default

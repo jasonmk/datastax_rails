@@ -51,7 +51,7 @@ module DatastaxRails
           multi_valued: false, sortable: false,
           tokenized: false,    fulltext: false,
           cql_index: false }
-      when :boolean, :date, :time, :timestamp, :datetime, :float, :integer, :uuid then
+      when :boolean, :date, :time, :timestamp, :datetime, :float, :integer, :uuid, :long, :double then
         { solr_index: true,    solr_store: true,
           multi_valued: false, sortable: true,
           tokenized: false,    fulltext: false,
@@ -78,7 +78,7 @@ module DatastaxRails
 
     # Returns +true+ if the column is either of type integer, float or decimal.
     def number?
-      [:decimal, :double, :float, :integer].include?(type)
+      [:double, :float, :integer, :long].include?(type)
     end
 
     # Returns +true+ if the column is of type binary
@@ -97,9 +97,9 @@ module DatastaxRails
     # Returns the Ruby class that corresponds to the abstract data type.
     def klass
       case type
-      when :integer                        then Fixnum
+      when :integer, :long                 then Fixnum
       when :float                          then Float
-      when :decimal, :double               then BigDecimal
+      when :double                         then BigDecimal
       when :timestamp, :time, :datetime    then Time
       when :date                           then Date
       when :text, :string, :binary, :ascii then String
@@ -121,7 +121,7 @@ module DatastaxRails
       case dest_type || type
       when :string, :text        then value.to_s
       when :ascii                then value.force_encoding('ascii')
-      when :integer              then klass.value_to_integer(value)
+      when :integer, :long       then klass.value_to_integer(value)
       when :float                then value.to_f
       when :decimal              then klass.value_to_decimal(value)
       when :datetime, :timestamp then klass.string_to_time(value)
@@ -375,6 +375,7 @@ module DatastaxRails
       options[:cql_type] ||
       case field_type.to_sym
       when :integer                            then 'int'
+      when :long                               then 'bigint'
       when :time, :date, :timestamp, :datetime then 'timestamp'
       when :binary                             then 'blob'
       when :list                               then "list<#{compute_cql_type(options[:holds], options)}>"
@@ -389,7 +390,6 @@ module DatastaxRails
       options[:solr_type] ||
       case field_type.to_sym
       when :integer                            then 'int'
-      when :decimal                            then 'double'
       when :timestamp, :time, :datetime        then 'date'
       when :list, :set, :map                   then compute_solr_type(options[:holds], options)
       else field_type.to_s

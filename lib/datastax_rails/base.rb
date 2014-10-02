@@ -470,7 +470,7 @@ module DatastaxRails #:nodoc:
       # Intentionally avoid using #column_defaults since overridden defaults
       # won't get written unless they get marked as changed
       self.class.columns.each do |c|
-        attr, orig_value = c.name, c.default
+        attr, orig_value = c.name, c.empty_value
         @changed_attributes[attr] = nil if _field_changed?(attr, orig_value, @attributes[attr])
       end
     end

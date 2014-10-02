@@ -27,7 +27,9 @@ module DatastaxRails
 
     # Returns a primary key hash for updates that includes the cluster key
     def id_for_update
-      { self.class.primary_key.to_s => id, self.class.cluster_by.to_s => read_attribute(self.class.cluster_by.to_s) }
+      cc = self.class.column_for_attribute(self.class.cluster_by)
+      { self.class.primary_key.to_s => __id,
+        self.class.cluster_by.to_s  => cc.type_cast_for_cql3(read_attribute(self.class.cluster_by.to_s)) }
     end
   end
 end

@@ -5,7 +5,7 @@ module DatastaxRails
     # built-in change tracking.
     class DynamicSet < Set
       include DirtyCollection
-      
+
       delegate :join, to: :to_a
     end
   end

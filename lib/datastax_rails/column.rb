@@ -94,6 +94,10 @@ module DatastaxRails
       default.present?
     end
 
+    def empty_value
+      extract_default(nil)
+    end
+
     # Returns the Ruby class that corresponds to the abstract data type.
     def klass
       case type
@@ -130,7 +134,7 @@ module DatastaxRails
       when :date                 then klass.value_to_date(value)
       when :binary               then klass.binary_to_string(value)
       when :boolean              then klass.value_to_boolean(value)
-      when :uuid, :timeuuid      then klass.value_to_uuid(value)
+      when :uuid, :timeuuid      then klass.value_to_uuid(value).to_s
       when :list, :set           then wrap_collection(value.map { |v| type_cast(v, record, @options[:holds]) }, record)
       when :map
         wrap_collection(value.each { |k, v| value[k] = type_cast(v, record, @options[:holds]) }.stringify_keys, record)

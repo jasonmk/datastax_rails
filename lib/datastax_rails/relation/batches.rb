@@ -85,7 +85,7 @@ module DatastaxRails
       records = start ? relation.where(@klass.primary_key).greater_than(start).to_a : relation.to_a
       while records.size > 0
         records_size = records.size
-        offset = records.last.id
+        offset = records.last.__id
         yield records
 
         break if records_size < batch_size

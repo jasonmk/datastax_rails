@@ -29,7 +29,7 @@ module DatastaxRails
         # keys = keys.flat_map { |k| attribute_definitions[primary_key].type_cast(k) }
         keys.each do |key|
           typecast_key = {}
-          key.each { |k, v| typecast_key[k] = attribute_definitions[k].type_cast(v) }
+          key.each { |k, v| typecast_key[k] = attribute_definitions[k].type_cast_for_cql3(v) }
 
           ActiveSupport::Notifications.instrument('remove.datastax_rails', column_family: column_family, key: key) do
             c = cql.delete(typecast_key)

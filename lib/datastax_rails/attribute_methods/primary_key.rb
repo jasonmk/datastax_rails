@@ -14,12 +14,16 @@ module DatastaxRails
 
       # Returns a primary key hash for updates. Wide models override this.
       def id_for_update
-        { self.class.primary_key.to_s => id }
+        { self.class.primary_key.to_s => __id }
       end
 
       # Returns the primary key value.
       def id
         read_attribute(self.class.primary_key)
+      end
+
+      def __id
+        self.class.column_for_attribute(self.class.primary_key).type_cast_for_cql3(id)
       end
 
       # Sets the primary key value.

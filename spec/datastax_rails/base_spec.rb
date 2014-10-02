@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe DatastaxRails::Base do
   it 'should raise RecordNotFound when finding a bogus ID' do
-    expect { Person.find('xyzzy') }.to raise_exception(DatastaxRails::RecordNotFound)
+    expect { Person.find(::Cql::TimeUuid::Generator.new.next) }.to raise_exception(DatastaxRails::RecordNotFound)
   end
 
   describe 'equality' do

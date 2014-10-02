@@ -183,7 +183,7 @@ module DatastaxRails
     end
 
     def find_one(id)
-      key = @klass.attribute_definitions[@klass.primary_key].type_cast(id)
+      key = @klass.attribute_definitions[@klass.primary_key].type_cast_for_cql3(id)
       key || fail(RecordNotFound, "Couldn't find #{@klass.name} with an invalid ID=#{id}")
 
       with_cassandra.where(@klass.primary_key => key).first ||
@@ -192,7 +192,7 @@ module DatastaxRails
 
     def find_some(ids)
       keys = ids.map do |id|
-        @klass.attribute_definitions[@klass.primary_key].type_cast(id) ||
+        @klass.attribute_definitions[@klass.primary_key].type_cast_for_cql3(id) ||
           fail(RecordNotFound, "Couldn't find #{@klass.name} with an invalid ID=#{id}")
       end
       result = with_cassandra.where(@klass.primary_key => keys).all

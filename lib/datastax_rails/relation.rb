@@ -305,7 +305,14 @@ module DatastaxRails
       cql = @cql.select((select_columns + [@klass.primary_key]).uniq)
       cql.using(@consistency_value) if @consistency_value
       @where_values.each do |wv|
-        cql.conditions(Hash[wv.map { |k, v| [(k.to_s == 'id' ? @klass.primary_key : k), v] }])
+        wv.each do |k, v|
+          attr = (k.to_s == 'id' ? @klass.primary_key : k)
+          col = klass.column_for_attribute(attr)
+          values = Array(v).map do |val|
+            col.type_cast_for_cql3(val)
+          end
+          cql.conditions(attr => values)
+        end
       end
       @greater_than_values.each do |gtv|
         gtv.each do |k, v|

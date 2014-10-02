@@ -78,7 +78,7 @@ module DatastaxRails
   class DynamicModel < WideStorageModel
     self.abstract_class = true
 
-    PREFIXES = { string: :s_, text: :t_, boolean: :b_, date: :d_,
+    PREFIXES = { string: :s_, text: :t_, boolean: :b_, date: :d_, long: :l_, double: :db_,
                  timestamp: :ts_, integer: :i_, float: :f_, uuid: :u_ }.with_indifferent_access
 
     class_attribute :group_by_attribute

@@ -288,12 +288,13 @@ module DatastaxRails
         when TrueClass, FalseClass
           value ? 1 : 0
         else
-          value.to_i rescue nil
+          value.blank? ? nil : value.to_i rescue nil
         end
       end
 
       # convert something to a BigDecimal
       def value_to_decimal(value)
+        return nil if value.blank?
         # Using .class is faster than .is_a? and
         # subclasses of BigDecimal will be handled
         # in the else clause

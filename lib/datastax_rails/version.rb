@@ -1,4 +1,4 @@
 # rubocop:disable Style/Documentation
 module DatastaxRails
-  VERSION = '2.0.23'
+  VERSION = '2.1.0'
 end

@@ -113,6 +113,7 @@ module DatastaxRails
 
     # Casts value (which can be a String) to an appropriate instance.
     def type_cast(value, record = nil, dest_type = nil) # rubocop:disable Style/CyclomaticComplexity
+      value = @default if value.nil?
       return nil if value.nil?
       return coder.load(value) if encoded?
 

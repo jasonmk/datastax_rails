@@ -212,6 +212,10 @@ describe DatastaxRails::Column do
         expect(c.type_cast({ 'field_key' => '7' }, record)).to be_a(DatastaxRails::Types::DynamicMap)
       end
 
+      it 'casts nil to an empty hash' do
+        expect(c.type_cast(nil, record)).to eq({})
+      end
+
       describe 'to cql' do
         it 'casts map values to the appropriate type' do
           date = Date.parse('1980-10-19')
@@ -231,6 +235,10 @@ describe DatastaxRails::Column do
       it 'wraps list values in a DynamicList' do
         expect(c.type_cast([1, '2', 6.minutes], record)).to be_a(DatastaxRails::Types::DynamicList)
       end
+
+      it 'casts nil to an empty array' do
+        expect(c.type_cast(nil, record)).to eq([])
+      end
     end
 
     describe 'set' do
@@ -242,6 +250,10 @@ describe DatastaxRails::Column do
 
       it 'wraps list values in a DynamicSet' do
         expect(c.type_cast([1, '2', 6.minutes, 2], record)).to be_a(DatastaxRails::Types::DynamicSet)
+      end
+
+      it 'casts nil to an empty set' do
+        expect(c.type_cast(nil, record)).to eq(Set.new)
       end
     end
   end

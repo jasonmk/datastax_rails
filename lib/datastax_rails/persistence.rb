@@ -60,11 +60,12 @@ module DatastaxRails
         end
       end
 
-      # Write a record to cassandra.  Can be either an insert or an update (they are exactly the same to cassandra)
+      # Write a full record to cassandra.
       #
       # @param [DatastaxRails::Base] record the record that we are writing
       # @param [Hash] options a hash containing various options
       # @option options [Symbol] :consistency the consistency to set for the Cassandra operation (e.g., ALL)
+      # @option options [Symbol] :new_record whether or not this is a new record (i.e., INSERT vs UPDATE)
       def write(record, options = {})
         level = (options[:consistency] || default_consistency).to_s.upcase
         if valid_consistency?(level)
@@ -77,9 +78,37 @@ module DatastaxRails
                                                                            key:           key.to_s,
                                                                            attributes:    record.attributes) do
             if (storage_method == :solr)
-              write_with_solr(record, options)
+              write_with_solr(record.id_for_update, encode_attributes(record, false), options)
             else
-              write_with_cql(record, options)
+              write_with_cql(record.id_for_update, encode_attributes(record, true), options)
+            end
+          end
+        end
+      end
+
+      # Write one or more attributes directly to cassandra. Bypasses all normal validation and callbacks.
+      # Record must be already persisted.
+      #
+      # @param [DatastaxRails::Base] record the record that we are writing
+      # @param [Hash] options a hash containing various options
+      # @option options [Symbol] :consistency the consistency to set for the Cassandra operation (e.g., ALL)
+      # @raise [NotPersistedError] if the record isn't persisted
+      def write_attribute(record, attributes, options = {})
+        fail NotPersistedError if record.new_record?
+        level = (options[:consistency] || default_consistency).to_s.upcase
+        if valid_consistency?(level)
+          options[:consistency] = level
+        else
+          fail ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
+        end
+        record.id.tap do |key|
+          ActiveSupport::Notifications.instrument('update.datastax_rails', column_family: column_family,
+                                                                           key:           key.to_s,
+                                                                           attributes:    record.attributes) do
+            if (storage_method == :solr)
+              write_with_solr(record.id_for_update, encode_attributes(record, false, attributes), options)
+            else
+              write_with_cql(record.id_for_update, encode_attributes(record, true, attributes), options)
             end
           end
         end
@@ -102,13 +131,17 @@ module DatastaxRails
       # @param [DatastaxRails::Base] record the record whose attributes we're encoding
       # @param [Boolean] cql True if we're formatting for CQL, otherwise False
       # @return [Hash] a new hash with attributes encoded for storage
-      def encode_attributes(record, cql)
+      def encode_attributes(record, cql, attributes = {})
         encoded = {}
         Types::DirtyCollection.ignore_modifications do
-          record.changed.each do |column_name|
-            value = record.read_attribute(column_name)
-            encoded[column_name.to_s] = cql ? attribute_definitions[column_name].type_cast_for_cql3(value) :
-                                              attribute_definitions[column_name].type_cast_for_solr(value)
+          if attributes.empty?
+            record.changed.each do |column_name|
+              attributes[column_name] = record.read_attribute(column_name)
+            end
+          end
+          attributes.each do |k, v|
+            encoded[k.to_s] = cql ? attribute_definitions[k].type_cast_for_cql3(v) :
+                                    attribute_definitions[k].type_cast_for_solr(v)
           end
         end
         encoded
@@ -116,18 +149,16 @@ module DatastaxRails
 
       private
 
-      def write_with_cql(record, options)
-        encoded = encode_attributes(record, true)
+      def write_with_cql(id, encoded, options)
         if options[:new_record]
           cql.insert.columns(encoded).using(options[:consistency]).execute
         else
-          cql.update(record.id_for_update).columns(encoded).using(options[:consistency]).execute
+          cql.update(id).columns(encoded).using(options[:consistency]).execute
         end
       end
 
-      def write_with_solr(record, options)
-        encoded = encode_attributes(record, false)
-        xml_doc = RSolr::Xml::Generator.new.add(encoded.merge(primary_key => record.id.to_s))
+      def write_with_solr(id, encoded, options)
+        xml_doc = RSolr::Xml::Generator.new.add(encoded.merge(primary_key => id.to_s))
         solr_connection.update(data: xml_doc, params: { replacefields: false, cl: options[:consistency] })
       end
     end
@@ -190,7 +221,7 @@ module DatastaxRails
     end
 
     # Updates the attributes of the model from the passed-in hash and saves the
-    # record If the object is invalid, the saving will fail and false will be returned.
+    # record. If the object is invalid, the saving will fail and false will be returned.
     def update_attributes(attributes, _options = {})
       assign_attributes(attributes)
       save

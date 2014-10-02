@@ -106,5 +106,14 @@ describe 'DatastaxRails::Base' do
         expect(CarPayload.find('limo').payload).to eq(smallfile)
       end
     end
+
+    describe '#write_attribute' do
+      let(:person) { create(:person) }
+
+      it 'writes an attribute directly to the database' do
+        Person.write_attribute(person, birthdate: Date.today)
+        expect(Person.find(person.id).birthdate).to eq(Date.today)
+      end
+    end
   end
 end

@@ -16,4 +16,7 @@ module DatastaxRails
 
   class UnknownAttributeError < DatastaxRailsError
   end
+
+  class NotPersistedError < DatastaxRailsError
+  end
 end

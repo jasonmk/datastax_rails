@@ -94,6 +94,12 @@ class Default < DatastaxRails::Base
   boolean :bool, default: true
   boolean :bool2, default: false
   boolean :bool3
+  map :m
+  map :m2, default: { 'test' => 'string' }
+  set :s
+  set :s2, default: ['unique string']
+  list :l
+  list :l2, default: ['ordered string']
 end
 
 class CoreMetadata < DatastaxRails::DynamicModel

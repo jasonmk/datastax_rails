@@ -203,12 +203,12 @@ module DatastaxRails
     end
 
     def extract_default(default)
-      case type
-      when :map      then {} # lambda {|rec| DatastaxRails::Types::DynamicMap.new(rec, self.name.to_s, {})}
-      when :list     then [] # lambda {|rec| DatastaxRails::Types::DynamicList.new(rec, self.name.to_s, [])}
-      when :set      then Set.new # lambda {|set| DatastaxRails::Types::DynamicSet.new(rec, self.name.to_s, Set.new)}
-      else default
-      end
+      default || case type
+                 when :map      then {}
+                 when :list     then []
+                 when :set      then Set.new
+                 else default
+                 end
     end
 
     # Used to convert from Strings to BLOBs

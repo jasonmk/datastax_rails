@@ -290,7 +290,14 @@ module DatastaxRails
       cql = @cql.select(['count(*)'])
       cql.using(@consistency_value) if @consistency_value
       @where_values.each do |wv|
-        cql.conditions(wv)
+        wv.each do |k, v|
+          attr = (k.to_s == 'id' ? @klass.primary_key : k)
+          col = klass.column_for_attribute(attr)
+          values = Array(v).map do |val|
+            col.type_cast_for_cql3(val)
+          end
+          cql.conditions(attr => values)
+        end
       end
       cql.allow_filtering if @allow_filtering_value
       cql.execute.first['count']

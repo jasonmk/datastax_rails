@@ -7,6 +7,8 @@ module DatastaxRails
       include DirtyCollection
 
       delegate :join, to: :to_a
+
+      alias_method :to_ary, :to_a
     end
   end
 end

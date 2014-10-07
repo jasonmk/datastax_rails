@@ -264,9 +264,7 @@ module DatastaxRails
         @where_values.each do |wv|
           wv.each do |k, _v|
             col = klass.column_for_attribute(k)
-            if col
-              next if col.options[:cql_index] || col.primary
-            end
+            next if col && (col.options[:cql_index] || col.primary)
             return :solr
           end
         end
@@ -318,6 +316,7 @@ module DatastaxRails
         wv.each do |k, v|
           attr = (k.to_s == 'id' ? @klass.primary_key : k)
           col = klass.column_for_attribute(attr)
+          return [] if col.primary && v.blank?
           values = Array(v).map do |val|
             col.type_cast_for_cql3(val)
           end

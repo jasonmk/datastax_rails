@@ -134,9 +134,11 @@ module DatastaxRails
       when :date                 then klass.value_to_date(value)
       when :binary               then klass.binary_to_string(value)
       when :boolean              then klass.value_to_boolean(value)
-      when :uuid, :timeuuid      then klass.value_to_uuid(value).to_s
+      when :uuid, :timeuuid
+        uuid = klass.value_to_uuid(value)
+        uuid.is_a?(::Cql::Uuid) ? uuid.to_s : uuid
       when :list, :set
-        wrap_collection(Array(value).map { |v| type_cast(v, record, @options[:holds]) }, record)
+        wrap_collection(Array(value).map { |v| type_cast(v, record, @options[:holds]) }.compact, record)
       when :map
         wrap_collection(value.each { |k, v| value[k] = type_cast(v, record, @options[:holds]) }.stringify_keys, record)
       else value

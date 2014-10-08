@@ -239,6 +239,10 @@ describe DatastaxRails::Column do
       it 'casts nil to an empty array' do
         expect(c.type_cast(nil, record)).to eq([])
       end
+
+      it 'casts a scalar value to a list' do
+        expect(c.type_cast(1, record)).to eq([1])
+      end
     end
 
     describe 'set' do
@@ -254,6 +258,10 @@ describe DatastaxRails::Column do
 
       it 'casts nil to an empty set' do
         expect(c.type_cast(nil, record)).to eq(Set.new)
+      end
+
+      it 'casts a scalar value to a set' do
+        expect(c.type_cast(1, record)).to eq(Set.new([1]))
       end
     end
   end

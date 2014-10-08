@@ -155,7 +155,7 @@ module DatastaxRails
       escaped = {}
       conditions.each do |k, v|
         if v.is_a?(String)
-          escaped[k] = v.gsub(/(\W)/, '\\\\\1')
+          escaped[k] = v.gsub(/([^\w-])/, '\\\\\1')
         else
           escaped[k] = v
         end

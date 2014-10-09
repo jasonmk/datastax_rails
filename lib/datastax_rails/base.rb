@@ -471,7 +471,7 @@ module DatastaxRails #:nodoc:
       # won't get written unless they get marked as changed
       self.class.columns.each do |c|
         attr, orig_value = c.name, c.empty_value
-        @changed_attributes[attr] = nil if _field_changed?(attr, orig_value, @attributes[attr])
+        @changed_attributes[attr] = nil if _field_changed?(attr, orig_value, @attributes[attr.to_s])
       end
     end
 

@@ -14,9 +14,6 @@ module DatastaxRails
         self.readonly_attributes = []
       end
 
-      # This is a hook for use by modules that need to do extra stuff to
-      # attributes when they are initialized. (e.g. attribute
-      # serialization)
       def initialize_attributes(attributes) #:nodoc:
         attrs = {}
         attributes.each do |k, v|

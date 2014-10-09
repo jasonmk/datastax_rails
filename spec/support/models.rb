@@ -90,10 +90,15 @@ class Default < DatastaxRails::Base
   self.column_family = 'defaults'
 
   uuid :id
-  string :str, default: 'string'
-  boolean :bool, default: true
-  boolean :bool2, default: false
-  boolean :bool3
+  string   :str, default: 'string'
+  boolean  :bool, default: true
+  boolean  :bool2, default: false
+  boolean  :bool3
+  integer  :version, default: 1
+  float    :complexity, default: 0.0
+  uuid     :previous_id, default: '00000000-0000-0000-0000-000000000000'
+  date     :epoch, default: Date.parse('1970-01-01')
+  datetime :epoch2, default: Time.parse('1970-01-01 00:00:00')
   map :m
   map :m2, default: { 'test' => 'string' }
   set :s

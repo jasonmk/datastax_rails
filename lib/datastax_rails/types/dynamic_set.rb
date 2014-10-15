@@ -6,7 +6,7 @@ module DatastaxRails
     class DynamicSet < Set
       include DirtyCollection
 
-      delegate :join, :[], to: :to_a
+      delegate :join, :[], :to_xml, to: :to_a
 
       alias_method :to_ary, :to_a
     end

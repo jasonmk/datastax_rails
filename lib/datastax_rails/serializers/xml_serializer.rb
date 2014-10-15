@@ -241,7 +241,9 @@ module DatastaxRails
                end
 
         { text: :string,
-          time: :datetime }[type] || type
+          time: :datetime,
+          set:  :array,
+          list: :array }[type] || type
       end
       protected :compute_type
     end

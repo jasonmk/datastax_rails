@@ -40,7 +40,7 @@ module DatastaxRails
       # Deletes the records according to the <tt>:dependent</tt> option.
       def delete_records(records, method)
         if method == :destroy
-          records.each { |r| r.destroy }
+          records.each(&:destroy)
         else
           keys = records.map { |r| r[reflection.association_primary_key] }
           scope = scoped.where(reflection.association_primary_key => keys)

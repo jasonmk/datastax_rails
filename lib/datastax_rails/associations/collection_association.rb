@@ -29,7 +29,7 @@ module DatastaxRails
         if !find_target? || loaded?
           target.size
         elsif !loaded? && target.is_a?(Array)
-          unsaved_records = target.select { |r| r.new_record? }
+          unsaved_records = target.select(&:new_record?)
           unsaved_records.size + scoped.count
         else
           scoped.count
@@ -75,8 +75,8 @@ module DatastaxRails
 
       # Implements the ids writer method, e.g. foo.item_ids= for Foo.has_many :items
       def ids_writer(ids)
-        ids = Array.wrap(ids).reject { |id| id.blank? }
-        replace(klass.find(ids).index_by { |r| r.id }.values_at(*ids))
+        ids = Array.wrap(ids).reject(&:blank?)
+        replace(klass.find(ids).index_by(&:id).values_at(*ids))
       end
 
       def reset
@@ -274,7 +274,7 @@ module DatastaxRails
       def delete_or_destroy(records, method)
         records = records.flatten
         records.each { |record| raise_on_type_mismatch(record) }
-        existing_records = records.reject { |r| r.new_record? }
+        existing_records = records.reject(&:new_record?)
 
         records.each { |record| callback(:before_remove, record) }
 

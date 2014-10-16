@@ -565,7 +565,7 @@ module DatastaxRails #:nodoc:
       end
 
       def models
-        descendants.reject { |m|m.abstract_class? }
+        descendants.reject(&:abstract_class?)
       end
 
       def payload_model?
@@ -594,7 +594,7 @@ module DatastaxRails #:nodoc:
 
       # Returns an array of attribute names as strings
       def attribute_names
-        @attribute_names ||= attribute_definitions.keys.map { |a|a.to_s }
+        @attribute_names ||= attribute_definitions.keys.map(&:to_s)
       end
       alias_method :column_names, :attribute_names
 
@@ -619,7 +619,7 @@ module DatastaxRails #:nodoc:
 
       def search_ids(&block)
         search = solr_search(&block)
-        search.raw_results.map { |result| result.primary_key }
+        search.raw_results.map(&:primary_key)
       end
 
       def valid_consistency?(level) #:nodoc:

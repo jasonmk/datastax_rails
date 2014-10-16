@@ -385,7 +385,7 @@ module DatastaxRails
       # of relevant reflections, plus any :source_type or polymorphic :as constraints.
       def conditions
         @conditions ||= begin
-          conditions = source_reflection.conditions.map { |c| c.dup }
+          conditions = source_reflection.conditions.map(&:dup)
 
           # Add to it the conditions from this reflection if necessary.
           conditions.first << options[:conditions] if options[:conditions]
@@ -434,7 +434,7 @@ module DatastaxRails
       #
       def source_reflection_names
         @source_reflection_names ||=
-          (options[:source] ? [options[:source]] : [name.to_s.singularize, name]).map { |n| n.to_sym }
+          (options[:source] ? [options[:source]] : [name.to_s.singularize, name]).map(&:to_sym)
       end
 
       def source_options

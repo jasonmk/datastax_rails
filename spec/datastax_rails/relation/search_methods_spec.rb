@@ -53,7 +53,7 @@ describe DatastaxRails::Relation do
         Hobby.create(name: word)
       end
       @relation.commit_solr
-      expect(@relation.order(:name).map { |h| h.name }).to eq(%w(boating chess fishing hiking jogging swimming))
+      expect(@relation.order(:name).map(&:name)).to eq(%w(boating chess fishing hiking jogging swimming))
     end
 
     it 'should return items in descending order' do
@@ -61,7 +61,7 @@ describe DatastaxRails::Relation do
         Hobby.create!(name: word)
       end
       @relation.commit_solr
-      expect(@relation.order(name: :desc).map { |h| h.name }).to eq(%w(swimming jogging hiking fishing chess boating))
+      expect(@relation.order(name: :desc).map(&:name)).to eq(%w(swimming jogging hiking fishing chess boating))
     end
   end
 
@@ -78,14 +78,14 @@ describe DatastaxRails::Relation do
       %w(john jason michael tony billy jim phil).each_with_index do |name, i|
         AuditLog.create!(uuid: "c1401540-f092-11e2-9001-6a5ab73a986#{i}", user: name, message: 'changed')
       end
-      expect(AuditLog.unscoped.slow_order(user: :asc).map { |log| log.user }).to eq(%w(billy jason jim john michael phil tony))
+      expect(AuditLog.unscoped.slow_order(user: :asc).map(&:user)).to eq(%w(billy jason jim john michael phil tony))
     end
 
     it 'should manually order items coming from Cassandra in descending order' do
       %w(john jason michael tony billy jim phil).each_with_index do |name, i|
         AuditLog.create!(uuid: "c1401540-f092-11e2-9001-6a5ab73a986#{i}", user: name, message: 'changed')
       end
-      expect(AuditLog.unscoped.slow_order(user: :desc).map { |log| log.user }).to eq(%w(tony phil michael john jim jason billy))
+      expect(AuditLog.unscoped.slow_order(user: :desc).map(&:user)).to eq(%w(tony phil michael john jim jason billy))
     end
   end
 
@@ -121,14 +121,6 @@ describe DatastaxRails::Relation do
       expect(@relation.where(complexity: { less_than: 2.0 })).not_to be_empty
     end
 
-    it 'should allow arrays to be passed as OR queries' do
-      %w(fishing hiking boating jogging swimming chess).each do |word|
-        Hobby.create(name: word)
-      end
-      @relation.commit_solr
-      expect(@relation.where(name: %w(boating jogging chess skydiving)).size).to eq(3)
-    end
-
     it 'should handle negative numbers without breaking' do
       Hobby.create(name: 'jogging', complexity: -1.2)
       @relation.commit_solr
@@ -154,6 +146,27 @@ describe DatastaxRails::Relation do
       @relation.commit_solr
       expect(@relation.where(complexity: 1..2)).not_to be_empty
       expect(@relation.where(complexity: 2..3)).to be_empty
+    end
+
+    context 'with an array as a parameter' do
+      it 'becomes an OR query' do
+        %w(fishing hiking boating jogging swimming chess).each do |word|
+          Hobby.create(name: word)
+        end
+        @relation.commit_solr
+        expect(@relation.where(name: %w(boating jogging chess skydiving)).size).to eq(3)
+      end
+      
+      context 'against the primary key' do
+        it 'removes nil values' do
+          hobby = create(:hobby)
+          expect(@relation.where(id: [hobby.id, nil])).to eq([hobby])
+        end
+        
+        it 'returns an empty array on only nil values' do
+          expect(@relation.where(id: [nil, nil])).to be_empty
+        end
+      end
     end
   end
 

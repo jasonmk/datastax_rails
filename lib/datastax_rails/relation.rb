@@ -3,7 +3,7 @@ require 'pp' if ENV['DEBUG_SOLR'] == 'true'
 # TODO: Move functionality into modules
 module DatastaxRails
   # = DatastaxRails Relation
-  class Relation # rubocop:disable Style/ClassLength
+  class Relation # rubocop:disable Metrics/ClassLength
     MULTI_VALUE_METHODS = %i(order where where_not fulltext greater_than less_than select stats field_facet
                              range_facet slow_order)
     SINGLE_VALUE_METHODS = %i(page per_page reverse_order query_parser consistency ttl use_solr escape group
@@ -294,6 +294,10 @@ module DatastaxRails
         wv.each do |k, v|
           attr = (k.to_s == 'id' ? @klass.primary_key : k)
           col = klass.column_for_attribute(attr)
+          if col.primary
+            v.compact! if v.respond_to?(:compact)
+            return 0 if v.blank?
+          end
           values = Array(v).map do |val|
             col.type_cast_for_cql3(val)
           end
@@ -316,7 +320,10 @@ module DatastaxRails
         wv.each do |k, v|
           attr = (k.to_s == 'id' ? @klass.primary_key : k)
           col = klass.column_for_attribute(attr)
-          return [] if col.primary && v.blank?
+          if col.primary
+            v.compact! if v.respond_to?(:compact)
+            return [] if v.blank?
+          end
           values = Array(v).map do |val|
             col.type_cast_for_cql3(val)
           end
@@ -411,26 +418,26 @@ module DatastaxRails
       @where_values.each do |wv|
         wv.each do |k, v|
           # If v is blank, check that there is no value for the field in the document
-          filter_queries << (v.blank? ? "-#{k}:#{full_solr_range(k)}" : "#{k}:(#{v})")
+          filter_queries << (v.blank? ? "-#{k}:#{full_solr_range(k)}" : "#{k}:(#{solr_format(k, v)})")
         end
       end
 
       @where_not_values.each do |wnv|
         wnv.each do |k, v|
           # If v is blank, check for any value for the field in document
-          filter_queries << (v.blank? ? "#{k}:#{full_solr_range(k)}" : "-#{k}:(#{v})")
+          filter_queries << (v.blank? ? "#{k}:#{full_solr_range(k)}" : "-#{k}:(#{solr_format(k, v)})")
         end
       end
 
       @greater_than_values.each do |gtv|
         gtv.each do |k, v|
-          filter_queries << "#{k}:[#{v} TO *]"
+          filter_queries << "#{k}:[#{solr_format(k, v)} TO *]"
         end
       end
 
       @less_than_values.each do |ltv|
         ltv.each do |k, v|
-          filter_queries << "#{k}:[* TO #{v}]"
+          filter_queries << "#{k}:[* TO #{solr_format(k, v)}]"
         end
       end
 
@@ -626,9 +633,7 @@ module DatastaxRails
         value.split(/\bAND\b/).map do |a|
           a.split(/\bOR\b/).map do |o|
             o.split(/\bNOT\b/).map do |n|
-              n.split(/\bTO\b/).map do |t|
-                t.downcase
-              end.join('TO')
+              n.split(/\bTO\b/).map(&:downcase).join('TO')
             end.join('NOT')
           end.join('OR')
         end.join('AND').gsub(SOLR_DATE_REGEX) { Regexp.last_match[1].upcase }

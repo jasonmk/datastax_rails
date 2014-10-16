@@ -7,7 +7,7 @@ module DatastaxRails
     def serializable_hash(options = nil)
       options = options.try(:clone) || {}
 
-      options[:except] = Array.wrap(options[:except]).map { |n| n.to_s }
+      options[:except] = Array.wrap(options[:except]).map(&:to_s)
 
       hash = super(options)
 

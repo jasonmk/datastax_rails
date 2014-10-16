@@ -7,7 +7,7 @@ Style/AlignHash:
   EnforcedHashRocketStyle: table
   EnforcedColonStyle: table
 
-Style/LineLength:
+Metrics/LineLength:
   Max: 120
   Exclude:
     - 'spec/**/*'
@@ -15,22 +15,22 @@ Style/LineLength:
 Style/Encoding:
   EnforcedStyle: when_needed
 
-Style/MethodLength:
+Metrics/MethodLength:
   Max: 35
 
 Style/NumericLiterals:
   MinDigits: 7
 
-Style/ParameterLists:
+Metrics/ParameterLists:
   CountKeywordArgs: false
 
-Style/BlockNesting:
+Metrics/BlockNesting:
   Max: 4
   
-Style/ClassLength:
+Metrics/ClassLength:
   Max: 250
   
-Style/CyclomaticComplexity:
+Metrics/CyclomaticComplexity:
   Max: 12
 
 Style/Documentation:

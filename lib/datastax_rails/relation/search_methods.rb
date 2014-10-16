@@ -397,8 +397,6 @@ module DatastaxRails
                 r.where_values << { k => value }
               end
               attributes.delete(k)
-            else
-              attributes[k] = solr_format(k, v)
             end
           end
           r.where_values << attributes unless attributes.empty?
@@ -441,8 +439,6 @@ module DatastaxRails
                 r.where_not_values << { k => value }
               end
               attributes.delete(k)
-            else
-              attributes[k] = solr_format(k, v)
             end
           end
           r.where_not_values << attributes unless attributes.empty?
@@ -573,9 +569,9 @@ module DatastaxRails
       def equal_to(value) #:nodoc:
         @relation.clone.tap do |r|
           if @invert
-            r.where_not_values << { @attribute => r.solr_format(@attribute, value) }
+            r.where_not_values << { @attribute => value }
           else
-            r.where_values << { @attribute => r.solr_format(@attribute, value) }
+            r.where_values << { @attribute => value }
           end
         end
       end
@@ -583,9 +579,9 @@ module DatastaxRails
       def greater_than(value) #:nodoc:
         @relation.clone.tap do |r|
           if @invert
-            r.less_than_values << { @attribute => r.solr_format(@attribute, value) }
+            r.less_than_values << { @attribute => value }
           else
-            r.greater_than_values << { @attribute => r.solr_format(@attribute, value) }
+            r.greater_than_values << { @attribute => value }
           end
         end
       end
@@ -593,9 +589,9 @@ module DatastaxRails
       def less_than(value) #:nodoc:
         @relation.clone.tap do |r|
           if @invert
-            r.greater_than_values << { @attribute => r.solr_format(@attribute, value) }
+            r.greater_than_values << { @attribute => value }
           else
-            r.less_than_values << { @attribute => r.solr_format(@attribute, value) }
+            r.less_than_values << { @attribute => value }
           end
         end
       end

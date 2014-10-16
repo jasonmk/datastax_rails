@@ -116,5 +116,18 @@ describe DatastaxRails::Relation do
       Boat.commit_solr
       expect(Boat.find_by(name: 'Dumb: Name')).not_to be_nil
     end
+
+    it 'does not interpret wildcards' do
+      Boat.create(name: 'Water Lily')
+      Boat.commit_solr
+      expect(Boat.find_by(name: 'Wat*')).to be_nil
+    end
+
+    it 'finds a record by an attribute with a wildcard in it' do
+      Boat.create(name: 'L*ly')
+      Boat.commit_solr
+      Boat.commit_solr
+      expect(Boat.find_by(name: 'L*ly')).not_to be_nil
+    end
   end
 end

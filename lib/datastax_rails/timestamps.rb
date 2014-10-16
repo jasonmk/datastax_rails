@@ -79,7 +79,7 @@ module DatastaxRails
 
     def max_updated_column_timestamp
       if (timestamps = timestamp_attributes_for_update.map { |attr| self[attr] }.compact).present?
-        timestamps.map { |ts| ts.to_time }.max
+        timestamps.map(&:to_time).max
       end
     end
 

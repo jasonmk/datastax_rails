@@ -32,7 +32,7 @@ module DatastaxRails
       if conditions
         ret = where(conditions).destroy_all
       else
-        ret = to_a.each { |object| object.destroy }
+        ret = to_a.each(&:destroy)
       end
       reset
       ret

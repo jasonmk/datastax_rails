@@ -255,9 +255,9 @@ module DatastaxRails
       if new_record
         association && association.target
       elsif autosave
-        association.target.select { |record| record.changed_for_autosave? }
+        association.target.select(&:changed_for_autosave?)
       else
-        association.target.select { |record| record.new_record? }
+        association.target.select(&:new_record?)
       end
     end
 
@@ -266,7 +266,7 @@ module DatastaxRails
     def nested_records_changed_for_autosave?
       self.class.reflect_on_all_autosave_associations.any? do |reflection|
         association = association_instance_get(reflection.name)
-        association && Array.wrap(association.target).any? { |a| a.changed_for_autosave? }
+        association && Array.wrap(association.target).any?(&:changed_for_autosave?)
       end
     end
 

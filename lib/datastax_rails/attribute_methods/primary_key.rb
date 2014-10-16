@@ -85,6 +85,10 @@ module DatastaxRails
           @primary_key        = value && value.to_s
           @quoted_primary_key = nil
         end
+        
+        def next_key
+          ::Cql::TimeUuid::Generator.new.next.to_s
+        end
       end
     end
   end

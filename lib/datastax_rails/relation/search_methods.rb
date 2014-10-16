@@ -545,7 +545,7 @@ module DatastaxRails
       when value.is_a?(Time) || value.is_a?(DateTime) || value.is_a?(Date)
         column.type_cast_for_solr(value)
       when value.is_a?(Array) || value.is_a?(Set)
-        value = value.to_a.compact! if column.primary
+        value = value.to_a.compact if column.primary
         value.map { |v| column.type_cast_for_solr(v, column.options[:holds]).to_s.gsub(/ /, '\\ ') }.join(' OR ')
       when value.is_a?(Fixnum)
         value < 0 ? "\\#{value}" : value

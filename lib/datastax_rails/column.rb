@@ -138,7 +138,7 @@ module DatastaxRails
         uuid = klass.value_to_uuid(value)
         uuid.is_a?(::Cql::Uuid) ? uuid.to_s : uuid
       when :list, :set
-        wrap_collection(Array(value).map { |v| type_cast(v, record, @options[:holds]) }.compact, record)
+        wrap_collection(Array(value).map { |v| type_cast(v, record, @options[:holds]) }.reject(&:blank?), record)
       when :map
         wrap_collection(value.each { |k, v| value[k] = type_cast(v, record, @options[:holds]) }.stringify_keys, record)
       else value

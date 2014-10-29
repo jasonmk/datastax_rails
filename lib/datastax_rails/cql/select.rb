@@ -52,10 +52,11 @@ module DatastaxRails #:nodoc:
         end
 
         @conditions.each do |k, v|
-          if v.is_a?(Array)
+          if k.to_s == @klass.primary_key && v.is_a?(Array)
             conditions << "\"#{k}\" IN (#{('?' * v.size).split(//).join(',')})"
             @values += v
           else
+            v = v.first if v.is_a?(Array)
             conditions << "\"#{k}\" = ?"
             @values << v
           end

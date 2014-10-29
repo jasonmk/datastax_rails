@@ -1,11 +1,17 @@
 require 'spec_helper'
 
 describe DatastaxRails::Cql::Select do
-  let(:model_class) { double('Model Class', column_family: 'users', default_consistency: DatastaxRails::Cql::Consistency::QUORUM) }
+  let(:model_class) { double('Model Class', column_family: 'users', primary_key: 'id', default_consistency: DatastaxRails::Cql::Consistency::QUORUM) }
 
   it 'should generate valid CQL' do
     cql = DatastaxRails::Cql::Select.new(model_class, ['*'])
     cql.using(DatastaxRails::Cql::Consistency::QUORUM).conditions(key: '12345').limit(1)
+    expect(cql.to_cql).to eq("SELECT * FROM users WHERE \"key\" = ? LIMIT 1 ")
+  end
+
+  it 'ignores multiple values for non-primary-key' do
+    cql = DatastaxRails::Cql::Select.new(model_class, ['*'])
+    cql.using(DatastaxRails::Cql::Consistency::QUORUM).conditions(key: %w(12345 67890)).limit(1)
     expect(cql.to_cql).to eq("SELECT * FROM users WHERE \"key\" = ? LIMIT 1 ")
   end
 

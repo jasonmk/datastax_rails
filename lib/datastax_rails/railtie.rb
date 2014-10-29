@@ -27,6 +27,13 @@ module DatastaxRails
           end
         end
       end
+      
+      # Instrumentation
+      require 'datastax_rails/instrumentation/log_subscriber'
+      require 'datastax_rails/instrumentation/controller_runtime'
+      ActiveSupport.on_load(:action_controller) do
+        include DatastaxRails::Instrumentation::ControllerRuntime
+      end
     end
 
     rake_tasks do

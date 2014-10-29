@@ -4,6 +4,7 @@ module DatastaxRails
     class Base
       # Base initialize that sets the default consistency.
       def initialize(klass, *_args)
+        @klass = klass
         @consistency = klass.default_consistency.to_s.downcase.to_sym
         @keyspace = DatastaxRails::Base.config[:keyspace]
         @values = []
@@ -24,25 +25,33 @@ module DatastaxRails
       # already been set up (Rails does this for you).
       def execute
         cql = to_cql
-        puts cql if ENV['DEBUG_CQL'] == 'true'
-        pp @values if ENV['DEBUG_CQL'] == 'true'
-        digest = Digest::MD5.digest cql
-        try_again = true
-        begin
-          stmt = DatastaxRails::Base.statement_cache[digest] ||= DatastaxRails::Base.connection.prepare(cql)
-          if @consistency
-            stmt.execute(*@values, consistency: @consistency)
-          else
-            stmt.execute(*@values)
-          end
-        rescue ::Cql::NotConnectedError
-          if try_again
-            Rails.logger.warn('Lost connection to Cassandra. Attempting to reconnect...')
-            try_again = false
-            DatastaxRails::Base.reconnect
-            retry
-          else
-            raise
+        ActiveSupport::Notifications.instrument(
+           'cql.datastax_rails',
+           name:           'CQL',
+           cql:            cql,
+           klass:          @klass,
+           connection_id:  DatastaxRails::Base.connection.object_id,
+           statement_name: self.class.name,
+           binds:          @values) do
+
+          digest = Digest::MD5.digest cql
+          try_again = true
+          begin
+            stmt = DatastaxRails::Base.statement_cache[digest] ||= DatastaxRails::Base.connection.prepare(cql)
+            if @consistency
+              stmt.execute(*@values, consistency: @consistency)
+            else
+              stmt.execute(*@values)
+            end
+          rescue ::Cql::NotConnectedError
+            if try_again
+              Rails.logger.warn('Lost connection to Cassandra. Attempting to reconnect...')
+              try_again = false
+              DatastaxRails::Base.reconnect
+              retry
+            else
+              raise
+            end
           end
         end
       end

@@ -398,14 +398,14 @@ module DatastaxRails #:nodoc:
     # attribute that CQL uses to "group" columns into logical records even though they
     # are stored on the same row.
     class_attribute :cluster_by
-    
+
     # Toggle Solr query logging on and off
     class_attribute :log_solr_queries
     self.log_solr_queries = ENV['DEBUG_SOLR']
-    
+
     # Toggle CQL query logging on and off
     class_attribute :log_cql_queries
-    self.log_cql_queries = ENV['DEBUG_CQL'] 
+    self.log_cql_queries = ENV['DEBUG_CQL']
 
     attr_reader :attributes
     attr_reader :loaded_attributes

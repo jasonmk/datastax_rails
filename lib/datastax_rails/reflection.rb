@@ -185,18 +185,22 @@ module DatastaxRails
         @type ||= options[:as] && "#{options[:as]}_type"
       end
 
+      def primary_key_column
+        @primary_key_column ||= klass.columns.find { |c| c.name == klass.primary_key }
+      end
+
       def association_foreign_key
         @association_foreign_key ||= options[:association_foreign_key] || class_name.foreign_key
       end
 
       # klass option is necessary to support loading polymorphic associations
-      # def association_primary_key(klass = nil)
-      # options[:primary_key] || primary_key(klass || self.klass)
-      # end
-      #
-      # def datastax_rails_primary_key
-      # @datastax_rails_primary_key ||= options[:primary_key] || primary_key(solandra_object)
-      # end
+      def association_primary_key(klass = nil)
+        options[:primary_key] || primary_key(klass || self.klass)
+      end
+      
+      def datastax_rails_primary_key
+        @datastax_rails_primary_key ||= options[:primary_key] || primary_key(datastax_rails)
+      end
 
       def check_validity!
         check_validity_of_inverse!
@@ -303,9 +307,9 @@ module DatastaxRails
         end
       end
 
-      # def primary_key(klass)
-      # klass.key || raise(UnknownPrimaryKey.new(klass))
-      # end
+      def primary_key(klass)
+        klass.primary_key || raise(UnknownPrimaryKey.new(klass))
+      end
     end
 
     # Holds all the meta-data about a :through association as it was specified

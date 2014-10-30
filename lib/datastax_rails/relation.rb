@@ -321,7 +321,7 @@ module DatastaxRails
           attr = (k.to_s == 'id' ? @klass.primary_key : k)
           col = klass.column_for_attribute(attr)
           if col.primary
-            v.compact! if v.respond_to?(:compact)
+            v.compact! if v.respond_to?(:compact!)
             return [] if v.blank?
           end
           values = Array(v).map do |val|
@@ -345,9 +345,7 @@ module DatastaxRails
         end
       rescue ::Cql::CqlError => e # TODO: Break out the various exception types
         # If we get an exception about an empty key, ignore it.  We'll return an empty set.
-        if e.message =~ /Key may not be empty/
-          # No-Op
-        else
+        unless e.message =~ /Key may not be empty/
           raise
         end
       end

@@ -4,6 +4,7 @@ class Person < DatastaxRails::Base
   has_one :job
   has_many :cars, dependent: :destroy
   has_and_belongs_to_many :hobbies
+  has_many :person_roles, dependent: :destroy
 
   uuid :id
   text :name, sortable: true
@@ -105,6 +106,28 @@ class Default < DatastaxRails::Base
   set :s2, default: ['unique string']
   list :l
   list :l2, default: ['ordered string']
+end
+
+class Role < DatastaxRails::Base
+  self.column_family = 'roles'
+
+  has_many :person_roles, dependent: :destroy
+
+  uuid :id
+  string :name
+  timestamps
+end
+
+class PersonRole < DatastaxRails::Base
+  self.column_family = 'person_roles'
+
+  belongs_to :person
+  belongs_to :role
+
+  uuid :id
+  uuid :person_id
+  uuid :role_id
+  timestamps
 end
 
 class CoreMetadata < DatastaxRails::DynamicModel

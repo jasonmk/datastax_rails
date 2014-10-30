@@ -32,17 +32,19 @@ module DatastaxRails
            klass:          @klass,
            connection_id:  DatastaxRails::Base.connection.object_id,
            statement_name: self.class.name,
-           binds:          @values) do
+           binds:          @values) do |payload|
 
           digest = Digest::MD5.digest cql
           try_again = true
           begin
             stmt = DatastaxRails::Base.statement_cache[digest] ||= DatastaxRails::Base.connection.prepare(cql)
             if @consistency
-              stmt.execute(*@values, consistency: @consistency)
+              results = stmt.execute(*@values, consistency: @consistency)
             else
-              stmt.execute(*@values)
+              results = stmt.execute(*@values)
             end
+            payload[:result_count] = results.count
+            results
           rescue ::Cql::NotConnectedError
             if try_again
               Rails.logger.warn('Lost connection to Cassandra. Attempting to reconnect...')

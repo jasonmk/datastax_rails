@@ -66,9 +66,10 @@ module DatastaxRails
         name    = "#{payload[:klass]} #{payload[:name]} (#{event.duration.round(1)}ms)"
         cql     = payload[:cql]
         binds   = nil
+        results = payload[:result_count]
 
         unless (payload[:binds] || []).empty?
-          binds = ' ' + payload[:binds].map { |col, v| [col, v.inspect.truncate(23)] }.inspect
+          binds = ' ' + payload[:binds].inspect
         end
 
         if odd?
@@ -78,7 +79,7 @@ module DatastaxRails
           name = color(name, MAGENTA, true)
         end
 
-        debug "  #{name} #{cql}#{binds}"
+        debug "  #{name} #{cql}#{binds} - #{results} results"
       end
 
       def odd?

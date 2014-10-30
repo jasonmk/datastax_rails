@@ -27,7 +27,7 @@ module DatastaxRails
           end
         end
       end
-      
+
       # Instrumentation
       require 'datastax_rails/instrumentation/log_subscriber'
       require 'datastax_rails/instrumentation/controller_runtime'

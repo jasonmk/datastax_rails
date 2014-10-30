@@ -13,7 +13,7 @@ module DatastaxRails
 
       attr_internal :solr_runtime
       attr_internal :cql_runtime
-      
+
       def process_action(action, *args)
         DatastaxRails::Instrumentation::LogSubscriber.reset_solr_runtime
         DatastaxRails::Instrumentation::LogSubscriber.reset_cql_runtime

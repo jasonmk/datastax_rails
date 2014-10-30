@@ -156,13 +156,13 @@ describe DatastaxRails::Relation do
         @relation.commit_solr
         expect(@relation.where(name: %w(boating jogging chess skydiving)).size).to eq(3)
       end
-      
+
       context 'against the primary key' do
         it 'removes nil values' do
           hobby = create(:hobby)
           expect(@relation.where(id: [hobby.id, nil])).to eq([hobby])
         end
-        
+
         it 'returns an empty array on only nil values' do
           expect(@relation.where(id: [nil, nil])).to be_empty
         end

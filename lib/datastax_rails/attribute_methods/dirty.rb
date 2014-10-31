@@ -13,7 +13,11 @@ module DatastaxRails
       # Attempts to +save+ the record and clears changed attributes if successful.
       def save(*) #:nodoc:
         if (status = super)
+          # FIXME: This dup/replace mess is here to work around what APPEARS to be a bug in Rails
+          # See Issue #29 for details
+          attrs = @attributes.dup
           @previously_changed = changes
+          @attributes = attrs
           @changed_attributes.clear
         end
         status
@@ -22,7 +26,9 @@ module DatastaxRails
       # Attempts to <tt>save!</tt> the record and clears changed attributes if successful.
       def save!(*) #:nodoc:
         super.tap do
+          attrs = @attributes.dup
           @previously_changed = changes
+          @attributes = attrs
           @changed_attributes.clear
         end
       end

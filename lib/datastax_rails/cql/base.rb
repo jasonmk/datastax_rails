@@ -43,7 +43,7 @@ module DatastaxRails
             else
               results = stmt.execute(*@values)
             end
-            payload[:result_count] = results.count
+            payload[:result_count] = results.respond_to?(:count) ? results.count : "No"
             results
           rescue ::Cql::NotConnectedError
             if try_again

@@ -415,15 +415,23 @@ module DatastaxRails
       orders = []
       @where_values.each do |wv|
         wv.each do |k, v|
-          # If v is blank, check that there is no value for the field in the document
-          filter_queries << (v.blank? ? "-#{k}:#{full_solr_range(k)}" : "#{k}:(#{solr_format(k, v)})")
+          # If v is blank but not false, check that there is no value for the field in the document
+          if v.blank? && v != false
+            filter_queries << "-#{k}:#{full_solr_range(k)}"
+          else
+            filter_queries << "#{k}:(#{solr_format(k, v)})"
+          end
         end
       end
 
       @where_not_values.each do |wnv|
         wnv.each do |k, v|
-          # If v is blank, check for any value for the field in document
-          filter_queries << (v.blank? ? "#{k}:#{full_solr_range(k)}" : "-#{k}:(#{solr_format(k, v)})")
+          # If v is blank but not false, check for any value in the field in the document
+          if v.blank? && v != false
+            filter_queries << "#{k}:#{full_solr_range(k)}"
+          else
+            filter_queries << "-#{k}:(#{solr_format(k, v)})"
+          end
         end
       end
 

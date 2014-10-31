@@ -97,6 +97,18 @@ describe DatastaxRails::Relation do
       expect(@relation.where(name: nil)).not_to be_empty
     end
 
+    it 'should return documents with false' do
+      Default.create
+      Default.commit_solr
+      expect(Default.where(bool2: false)).not_to be_empty
+    end
+
+    it 'should not return documents with nil booleans' do
+      Default.create
+      Default.commit_solr
+      expect(Default.where(bool3: false)).to be_empty
+    end
+
     it 'should return documents where a value is greater than the given value' do
       Hobby.create(name: 'Swimming', complexity: 1.1)
       @relation.commit_solr

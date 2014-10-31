@@ -132,49 +132,49 @@ end
 
 class CollectionOverride < DatastaxRails::Base
   self.column_family = 'collection_overrides'
-  
+
   uuid :id
   list :list1
   list :list2
-  set  :set1
-  set  :set2
-  map  :map1
-  map  :map2
-  
+  set :set1
+  set :set2
+  map :map1
+  map :map2
+
   def list1
     read_attribute(:list1).tap do |l|
-      l.each {|e| e.upcase!}
+      l.each(&:upcase!)
     end
   end
-  
+
   def list2
     read_attribute(:list2).map(&:upcase)
   end
 
   def set1
     read_attribute(:set1).tap do |s|
-      s.each {|e| e.upcase!}
+      s.each(&:upcase!)
     end
   end
-  
+
   def set2
-    read_attribute(:set2).map(&:upcase)
+    read_attribute(:set2).map(&:upcase).to_set
   end
-  
+
   def map1
     read_attribute(:map1).tap do |m|
-      m.each {|k,v| m[k] = v.upcase}
+      m.each { |k, v| m[k] = v.upcase }
     end
   end
-  
+
   def map2
     ret = {}
-    read_attribute(map2).each do |k,v|
+    read_attribute(map2).each do |k, v|
       ret[k] = v.upcase
     end
     ret
   end
-  
+
   timestamps
 end
 

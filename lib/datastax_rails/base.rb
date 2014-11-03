@@ -368,10 +368,6 @@ module DatastaxRails #:nodoc:
     include Serialization
     include SolrRepair
 
-    # Stores the default scope for the class
-    class_attribute :default_scopes, instance_writer: false
-    self.default_scopes = []
-
     # Stores the connection configuration information
     class_attribute :config
 

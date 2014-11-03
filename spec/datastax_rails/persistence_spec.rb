@@ -72,14 +72,24 @@ describe 'DatastaxRails::Base' do
         end
 
         it 'should successfully remove columns that are set to nil' do
-          skip
           Person.create!(name: 'Steven', birthdate: Date.today)
           Person.commit_solr
-          p = Person.find_by_name('Steven')
+          p = Person.find_by(name: 'Steven')
           p.birthdate = nil
           p.save
           Person.commit_solr
-          Person.find by_name('Steven').birthdate.should be_nil
+          expect(Person.find_by(name: 'Steven').birthdate).to be_nil
+        end
+
+        it 'keeps existing attributes from being deleted' do
+          p = Person.create!(name: 'Jacob', birthdate: Date.today)
+          p.nickname = 'Jake'
+          p.save
+          Person.commit_solr
+          p2 = Person.find_by(name: 'Jacob')
+          expect(p2.name).to eql('Jacob')
+          expect(p2.nickname).to eql('Jake')
+          expect(p2.birthdate).to eql(Date.today)
         end
       end
     end

@@ -180,7 +180,7 @@ module DatastaxRails
       when :date, :time, :datetime, :timestamp then value.to_time.utc.strftime(Format::SOLR_TIME_FORMAT)
       when :list, :set                         then list_to_solr_value(value)
       when :map                                then map_to_solr_value(value)
-      when :uuid                               then value.to_s
+      when :uuid, :timeuuid                    then value.to_s
       else value
       end
     end

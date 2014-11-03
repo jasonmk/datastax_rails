@@ -135,7 +135,7 @@ module DatastaxRails
         encoded = {}
         Types::DirtyCollection.ignore_modifications do
           if attributes.empty?
-            record.changed.each do |column_name|
+            record.send(cql ? 'changed' : 'column_names').each do |column_name|
               attributes[column_name] = record.read_attribute(column_name)
             end
           end
@@ -158,8 +158,8 @@ module DatastaxRails
       end
 
       def write_with_solr(id, encoded, options)
-        xml_doc = RSolr::Xml::Generator.new.add(encoded.merge(primary_key => id.to_s))
-        solr_connection.update(data: xml_doc, params: { replacefields: false, cl: options[:consistency] })
+        xml_doc = RSolr::Xml::Generator.new.add(encoded)
+        solr_connection.update(data: xml_doc, params: { cl: options[:consistency] })
       end
     end
 

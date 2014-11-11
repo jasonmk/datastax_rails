@@ -1,6 +1,6 @@
 module DatastaxRails
   module ModificationMethods
-    # Destroys the records matching +conditions+ by instantiating each
+    # Destroys the records matching this relation by instantiating each
     # record and calling its +destroy+ method. Each object's callbacks are
     # executed (including <tt>:dependent</tt> association options and
     # +before_destroy+/+after_destroy+ Observer methods). Returns the
@@ -10,35 +10,20 @@ module DatastaxRails
     #
     # Note: Instantiation, callback execution, and deletion of each
     # record can be time consuming when you're removing many records at
-    # once. However, it is necessary to perform it this way to ensure
-    # that the SOLR index stays in sync with the Cassandra data store.
+    # once. However, it is necessary to perform it this way since we have
+    # to get the results from SOLR (most likely) in order to know what to delete.
     #
-    # +delete_all+ is aliased to this because you can't delete without running
-    # the requisite callbacks. (at least not yet)
-    #
-    # ==== Parameters
-    #
-    # * +conditions+ - A string, array, or hash that specifies which records
-    # to destroy. If omitted, all records matching the current relation are
-    # destroyed. See the Conditions section in the introduction to
-    # DatastaxRails::Base for more information.
-    #
-    # ==== Examples
-    #
-    # Person.destroy_all(:status => "inactive")
+    # Person.destroy_all
     # Person.where(:age => 0..18).destroy_all
     # Person.where_not(:status => "active").destroy_all
-    def destroy_all(conditions = nil)
-      if conditions
-        ret = where(conditions).destroy_all
-      else
-        ret = to_a.each(&:destroy)
-      end
-      reset
-      ret
+    def destroy_all
+      to_a.each(&:destroy).tap { |_| reset }
     end
-    # TODO: Find a way to delete from both without instantiating
-    alias_method :delete_all, :destroy_all
+
+    # Like +destroy_all+ but will not run callbacks. It will still have to instantiate the objects.
+    def delete_all
+      select(klass.primary_key).to_a.each(&:destroy_without_callbacks).tap { |_| reset }
+    end
 
     # Destroy an object (or multiple objects) that has the given id, the object is instantiated first,
     # therefore all callbacks and filters are fired off before the object is deleted. This method is

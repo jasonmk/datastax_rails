@@ -182,6 +182,7 @@ module DatastaxRails
       @destroyed = true
       freeze
     end
+    alias_method :destroy_without_callbacks, :destroy
 
     # TODO: Make this work
     # def touch(name = nil)

@@ -33,6 +33,12 @@ describe DatastaxRails::Base do
         expect(subject).to receive(callback + '_callback')
         subject.destroy
       end
+
+      it 'provides a method to run without callbacks' do
+        subject.save
+        expect(subject).not_to receive(callback + '_callback')
+        subject.destroy_without_callbacks
+      end
     end
 
     it 'runs after_find' do

@@ -37,13 +37,14 @@ module DatastaxRails
           digest = Digest::MD5.digest cql
           try_again = true
           begin
+            DatastaxRails::Base.reconnect unless DatastaxRails::Base.connection
             stmt = DatastaxRails::Base.statement_cache[digest] ||= DatastaxRails::Base.connection.prepare(cql)
             if @consistency
               results = stmt.execute(*@values, consistency: @consistency)
             else
               results = stmt.execute(*@values)
             end
-            payload[:result_count] = results.respond_to?(:count) ? results.count : "No"
+            payload[:result_count] = results.respond_to?(:count) ? results.count : 'No'
             results
           rescue ::Cql::NotConnectedError
             if try_again

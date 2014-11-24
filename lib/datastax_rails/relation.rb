@@ -510,6 +510,8 @@ module DatastaxRails
           params['hl.mergeContiguous'] = @highlight_options[:merge_contiguous].present?
           params['hl.simple.pre'] = @highlight_options[:pre_tag] if @highlight_options[:pre_tag].present?
           params['hl.simple.post'] = @highlight_options[:post_tag] if @highlight_options[:post_tag].present?
+          params['hl.maxAnalyzedChars'] = 
+            @highlight_options[:max_analyzed_chars] if @highlight_options[:max_analyzed_chars].present?
         end
       end
 

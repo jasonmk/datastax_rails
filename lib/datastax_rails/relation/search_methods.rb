@@ -499,6 +499,7 @@ module DatastaxRails
     #   @param [Hash] opts an options hash to configure the Solr highlighter
     #   @option opts [Integer] :snippets number of highlighted snippets to return
     #   @option opts [Integer] :fragsize number of characters for each snippet length
+    #   @option opts [Integer] :max_analyzed_chars number of characters to analyze looking for snippets
     #   @option opts [String] :pre_tag text which appears before a highlighted term
     #   @option opts [String] :post_tag text which appears after a highlighted term
     #   @option opts [true, false] :merge_contiguous collapse contiguous fragments into a single fragment

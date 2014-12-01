@@ -17,6 +17,11 @@ module DatastaxRails
         { self.class.primary_key.to_s => __id }
       end
 
+      # Returns a primary key has for deletes. Payload models override this.
+      def id_for_destroy
+        id_for_update
+      end
+
       # Returns the primary key value.
       def id
         read_attribute(self.class.primary_key)

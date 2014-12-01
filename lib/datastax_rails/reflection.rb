@@ -197,7 +197,7 @@ module DatastaxRails
       def association_primary_key(klass = nil)
         options[:primary_key] || primary_key(klass || self.klass)
       end
-      
+
       def datastax_rails_primary_key
         @datastax_rails_primary_key ||= options[:primary_key] || primary_key(datastax_rails)
       end
@@ -308,7 +308,7 @@ module DatastaxRails
       end
 
       def primary_key(klass)
-        klass.primary_key || raise(UnknownPrimaryKey.new(klass))
+        klass.primary_key || fail(UnknownPrimaryKey.new(klass))
       end
     end
 

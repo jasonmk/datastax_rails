@@ -74,5 +74,9 @@ module DatastaxRails
 
       record.id
     end
+
+    def id_for_destroy
+      { digest: digest }
+    end
   end
 end

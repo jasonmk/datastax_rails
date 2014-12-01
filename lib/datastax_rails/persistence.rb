@@ -157,7 +157,7 @@ module DatastaxRails
         end
       end
 
-      def write_with_solr(id, encoded, options)
+      def write_with_solr(_id, encoded, options)
         xml_doc = RSolr::Xml::Generator.new.add(encoded)
         solr_connection.update(data: xml_doc, params: { cl: options[:consistency] })
       end
@@ -178,7 +178,7 @@ module DatastaxRails
     end
 
     def destroy(options = {})
-      self.class.remove(id_for_update, options)
+      self.class.remove(id_for_destroy, options)
       @destroyed = true
       freeze
     end

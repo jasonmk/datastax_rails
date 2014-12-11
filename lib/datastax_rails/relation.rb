@@ -7,7 +7,7 @@ module DatastaxRails
     MULTI_VALUE_METHODS = %i(order where where_not fulltext greater_than less_than select stats field_facet
                              range_facet slow_order)
     SINGLE_VALUE_METHODS = %i(page per_page reverse_order query_parser consistency ttl use_solr escape group
-                              allow_filtering)
+                              allow_filtering facet_threads)
 
     SOLR_CHAR_RX = /([\+\!\(\)\[\]\^\"\~\:\'\=\/]+)/
 
@@ -256,7 +256,7 @@ module DatastaxRails
         return :solr
       else
         [order_values, where_not_values, fulltext_values, greater_than_values, less_than_values, field_facet_values,
-         range_facet_values, group_value].each do |solr_only_stuff|
+         range_facet_values, group_value, facet_threads_value].each do |solr_only_stuff|
            return :solr unless solr_only_stuff.blank?
          end
         return :solr unless group_value.blank?
@@ -472,6 +472,8 @@ module DatastaxRails
       # Facet Fields
       unless field_facet_values.empty?
         params['facet'] = 'true'
+        params['facet.threads'] = facet_threads_value if facet_threads_value.present?
+
         facet_fields = []
         field_facet_values.each do |facet|
           facet_field = facet[:field]

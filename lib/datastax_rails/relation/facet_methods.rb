@@ -75,5 +75,16 @@ module DatastaxRails
                                 }
       end
     end
+
+    # New option as of SOLR 4.5
+    # limited to field_facets
+    def facet_threads(thread_count = 0)
+      # thread_count == -1 will create a THREAD per field_facet up to Integer.MAX_VALUE
+      thread_count = -1 if thread_count < 0
+
+      clone.tap do |r|
+        r.facet_threads_value = thread_count
+      end
+    end
   end
 end

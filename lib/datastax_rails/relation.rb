@@ -504,6 +504,7 @@ module DatastaxRails
         params['hl.fl'] = @highlight_options[:fields]
         params['hl.snippets'] = @highlight_options[:snippets] if @highlight_options[:snippets]
         params['hl.fragsize'] = @highlight_options[:fragsize] if @highlight_options[:fragsize]
+        params['hl.requireFieldMatch'] = @highlight_options[:require_field_match] if @highlight_options[:require_field_match].present?
         if @highlight_options[:use_fast_vector]
           params['hl.useFastVectorHighlighter'] = true
           params['hl.tag.pre'] = @highlight_options[:pre_tag] if @highlight_options[:pre_tag].present?

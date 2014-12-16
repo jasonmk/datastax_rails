@@ -16,11 +16,6 @@ module DatastaxRails #:nodoc:
         self
       end
 
-      def using(consistency)
-        @consistency = consistency
-        self
-      end
-
       def paginate(start)
         @paginate = start
         self

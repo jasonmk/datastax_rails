@@ -1,14 +1,17 @@
 module DatastaxRails
   module Cql
     module Consistency
-      ANY = 'ANY'
-      ONE = 'ONE'
-      QUORUM = 'QUORUM'
-      LOCAL_QUORUM = 'LOCAL_QUORUM'
-      EACH_QUORUM = 'EACH_QUORUM'
-      ALL = 'ALL'
+      ANY = :any
+      ONE = :one
+      LOCAL_ONE = :local_one
+      TWO = :two
+      THREE = :three
+      QUORUM = :quorum
+      LOCAL_QUORUM = :local_quorum
+      EACH_QUORUM = :each_quorum
+      ALL = :all
 
-      VALID_CONSISTENCY_LEVELS = [ANY, ONE, QUORUM, LOCAL_QUORUM, EACH_QUORUM, ALL]
+      VALID_CONSISTENCY_LEVELS = [ANY, ONE, LOCAL_ONE, TWO, THREE, QUORUM, LOCAL_QUORUM, EACH_QUORUM, ALL]
     end
   end
 end

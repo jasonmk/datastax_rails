@@ -45,7 +45,7 @@ module DatastaxRails
     # @param level [Symbol, String] the level to set the consistency at
     # @return [DatastaxRails::Relation] a new Relation object
     def consistency(level)
-      level = level.to_s.upcase
+      level = level
       unless self.valid_consistency?(level)
         fail ArgumentError, "'#{level}' is not a valid Cassandra consistency level"
       end

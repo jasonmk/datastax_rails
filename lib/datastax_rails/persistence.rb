@@ -34,7 +34,7 @@ module DatastaxRails
           ActiveSupport::Notifications.instrument('remove.datastax_rails', column_family: column_family, key: key) do
             c = cql.delete(typecast_key)
             if options[:consistency]
-              level = options[:consistency].to_s.upcase
+              level = options[:consistency]
               if valid_consistency?(level)
                 c.using(level)
               else
@@ -67,7 +67,7 @@ module DatastaxRails
       # @option options [Symbol] :consistency the consistency to set for the Cassandra operation (e.g., ALL)
       # @option options [Symbol] :new_record whether or not this is a new record (i.e., INSERT vs UPDATE)
       def write(record, options = {})
-        level = (options[:consistency] || default_consistency).to_s.upcase
+        level = (options[:consistency] || default_consistency)
         if valid_consistency?(level)
           options[:consistency] = level
         else

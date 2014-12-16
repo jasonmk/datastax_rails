@@ -531,7 +531,7 @@ module DatastaxRails #:nodoc:
     alias_method :column_names, :attribute_names
 
     def valid_consistency?(level) #:nodoc:
-      self.class.validate_consistency(level.to_s.upcase)
+      self.class.valid_consistency?(level)
     end
 
     private
@@ -627,7 +627,7 @@ module DatastaxRails #:nodoc:
       end
 
       def valid_consistency?(level) #:nodoc:
-        DatastaxRails::Cql::Consistency::VALID_CONSISTENCY_LEVELS.include?(level)
+        DatastaxRails::Cql::Consistency::VALID_CONSISTENCY_LEVELS.include?(level.to_s.downcase.to_sym)
       end
 
       # Returns a string like 'Post(id:integer, title:string, body:text)'

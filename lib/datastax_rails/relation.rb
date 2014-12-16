@@ -402,10 +402,9 @@ module DatastaxRails
       end
     end
 
-    # Constructs a solr query to run against SOLR. At this point, only where, where_not,
-    # fulltext, order and pagination are supported.  More will be added.
+    # Constructs a solr query to run against SOLR.
     #
-    # It's also worth noting that where and where_not make use of individual filter_queries.
+    # It's worth noting that where and where_not make use of individual filter_queries.
     # If that's not what you want, you might be better off constructing your own fulltext
     # query and sending that in.
     #

@@ -287,12 +287,13 @@ module DatastaxRails
     #   Model.query_parser('disMax').fulltext("john smith")
     #
     # @param parser [String] the parser to use for the fulltext query
+    # @param options [Hash] options to pass to the query parser (see http://wiki.apache.org/solr/ExtendedDisMax for details)
     # @return [DatastaxRails::Relation] a new Relation object
-    def query_parser(parser)
+    def query_parser(parser, options = {})
       return self if parser.blank?
 
       clone.tap do |r|
-        r.query_parser_value = parser
+        r.query_parser_value = { parser => options }
       end
     end
 

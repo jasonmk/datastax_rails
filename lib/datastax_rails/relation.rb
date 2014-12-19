@@ -55,6 +55,13 @@ module DatastaxRails
       @create_with_value = {}
       @escape_value = :default
       @stats = {}
+      if @klass.default_query_parser
+        @query_parser_value = if @klass.default_query_parser.is_a?(Hash)
+                                @klass.default_query_parser
+                              else
+                                { @klass.default_query_parser => {} }
+                              end 
+      end
     end
 
     # Returns true if the two relations have the same query parameters
@@ -463,6 +470,10 @@ module DatastaxRails
       params = { q: q }
       params[:sort] = sort
       params[:fq] = filter_queries unless filter_queries.empty?
+      if @query_parser_value
+        params['defType'] = @query_parser_value.keys.first
+        params.merge(@query_parser_value.values.first)
+      end
 
       # Facets
       # facet=true to enable faceting,  facet.field=<field_name> (can appear more than once for multiple fields)

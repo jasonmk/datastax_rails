@@ -377,6 +377,9 @@ module DatastaxRails #:nodoc:
     # Stores the default consistency level (QUORUM by default)
     class_attribute :default_consistency
     self.default_consistency = :quorum
+    
+    # Stores the default query parser (defaults to Solr default-'eDisMax' might be a good alternative)
+    class_attribute :default_query_parser
 
     # Stores the method of saving data (CQL by default)
     class_attribute :storage_method
@@ -553,7 +556,7 @@ module DatastaxRails #:nodoc:
       delegate :sum, :average, :minimum, :maximum, :stddev, to: :scoped
       delegate :cql, :with_cassandra, :with_solr, :commit_solr, :allow_filtering, to: :scoped
       delegate :find_each, :find_in_batches, :consistency, to: :scoped
-      delegate :field_facet, :range_facet, to: :scoped
+      delegate :field_facet, :range_facet, :query_parser, to: :scoped
 
       # Sets the column family name
       #

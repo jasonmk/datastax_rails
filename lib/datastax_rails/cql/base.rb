@@ -24,7 +24,8 @@ module DatastaxRails
       # If you are using this outside of Rails, then DatastaxRails::Base.connection must have
       # already been set up (Rails does this for you).
       def execute
-        cql = to_cql
+        cql = to_cql.force_encoding('UTF-8')
+
         ActiveSupport::Notifications.instrument(
            'cql.datastax_rails',
            name:           'CQL',

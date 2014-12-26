@@ -16,4 +16,9 @@ describe DatastaxRails::Cql::Delete do
       expect(cql.instance_variable_get(:@values)).to eq(%w(12345 core))
     end
   end
+
+  it 'supports lightweight transactions' do
+    cql = DatastaxRails::Cql::Delete.new(Person, id: '12345').if_exists
+    expect(cql.to_cql).to match(/DELETE\s+FROM people WHERE "id" = \? IF EXISTS/)
+  end
 end

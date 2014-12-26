@@ -19,7 +19,7 @@ gem 'pry-doc'
 # gem 'debugger', :platforms => :ruby_20
 # gem 'ruby-debug-base19', :platforms => :ruby_20
 # gem 'ruby-debug'
-gem 'rsolr-client-cert', path: '../rsolr-client-cert'
+gem 'rsolr-client-cert' # , path: '../rsolr-client-cert'
 gem 'byebug'
 gem 'guard-rspec', require: false
 gem 'guard-rubocop', require: false

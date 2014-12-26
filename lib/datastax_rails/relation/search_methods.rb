@@ -535,7 +535,7 @@ module DatastaxRails
     end
 
     # Formats a value for solr (assuming this is a solr query).
-    def solr_format(attribute, value) # rubocop:disable Style/CyclomaticComplexity
+    def solr_format(attribute, value) # rubocop:disable Metrics/CyclomaticComplexity
       return value unless use_solr_value
       column = attribute.is_a?(DatastaxRails::Column) ? attribute : klass.column_for_attribute(attribute)
       # value = column.type_cast_for_solr(value)

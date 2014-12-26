@@ -60,7 +60,7 @@ module DatastaxRails
                                 @klass.default_query_parser
                               else
                                 { @klass.default_query_parser => {} }
-                              end 
+                              end
       end
     end
 

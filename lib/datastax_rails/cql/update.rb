@@ -49,8 +49,8 @@ module DatastaxRails
           @values << v
         end
         stmt << " WHERE #{conditions.join(' AND ')}"
-        stmt.force_encoding('UTF-8')
       end
+      include Transactions
     end
   end
 end

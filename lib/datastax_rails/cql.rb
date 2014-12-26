@@ -25,6 +25,7 @@ module DatastaxRails
     autoload :DropKeyspace
     autoload :Insert
     autoload :Select
+    autoload :Transactions
     autoload :Truncate
     autoload :Update
     autoload :UseKeyspace

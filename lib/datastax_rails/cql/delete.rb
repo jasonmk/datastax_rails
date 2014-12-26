@@ -35,6 +35,8 @@ module DatastaxRails
 
         stmt
       end
+
+      include Transactions
     end
   end
 end

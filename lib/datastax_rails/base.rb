@@ -377,7 +377,7 @@ module DatastaxRails #:nodoc:
     # Stores the default consistency level (QUORUM by default)
     class_attribute :default_consistency
     self.default_consistency = :quorum
-    
+
     # Stores the default query parser (defaults to Solr default-'eDisMax' might be a good alternative)
     class_attribute :default_query_parser
 

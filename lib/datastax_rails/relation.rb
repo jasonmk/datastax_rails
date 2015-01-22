@@ -541,19 +541,20 @@ module DatastaxRails
         params['stats.facet'] = @group_value
       end
       solr_response = nil
-      ActiveSupport::Notifications.instrument(
-         'solr.datastax_rails',
-         name:   'Search',
-         klass:  @klass.name,
-         search: params) do
-        if @group_value
-          results = DatastaxRails::GroupedCollection.new
-          params[:group] = 'true'
-          params[:rows] = 10_000
-          params['group.field'] = @group_value
-          params['group.limit'] = @per_page_value
-          params['group.offset'] = (@page_value - 1) * @per_page_value
-          params['group.ngroups'] = 'false' # must be false due to issues with solr sharding
+
+      if @group_value
+        results = DatastaxRails::GroupedCollection.new
+        params[:group] = 'true'
+        params[:rows] = 10_000
+        params['group.field'] = @group_value
+        params['group.limit'] = @per_page_value
+        params['group.offset'] = (@page_value - 1) * @per_page_value
+        params['group.ngroups'] = 'false' # must be false due to issues with solr sharding
+        ActiveSupport::Notifications.instrument(
+           'solr.datastax_rails',
+           name:   'Search',
+           klass:  @klass.name,
+           search: params) do
           solr_response = rsolr.post('select', data: params)
           response = solr_response['grouped'][@group_value.to_s]
           results.total_groups = response['groups'].size
@@ -565,23 +566,29 @@ module DatastaxRails
               results.total_entries = results[group['groupValue']].total_entries
             end
           end
-        else
+        end
+      else
+        ActiveSupport::Notifications.instrument(
+           'solr.datastax_rails',
+           name:   'Search',
+           klass:  @klass.name,
+           search: params.merge(page: @page_value, per_page: @per_page_value)) do
           solr_response = rsolr.paginate(@page_value, @per_page_value, 'select', data: params, method: :post)
           response = solr_response['response']
           results = parse_docs(response, select_columns)
           results.highlights = solr_response['highlighting']
         end
-        if solr_response['stats']
-          @stats = solr_response['stats']['stats_fields'].with_indifferent_access
-        end
-        # Apply Facets if they exist
-        if solr_response['facet_counts']
-          results.facets = {}
-          results.facets = results.facets.merge(solr_response['facet_counts']['facet_fields'].to_h)
-          results.facets = results.facets.merge(solr_response['facet_counts']['facet_ranges'].to_h)
-        end
-        results
       end
+      if solr_response['stats']
+        @stats = solr_response['stats']['stats_fields'].with_indifferent_access
+      end
+      # Apply Facets if they exist
+      if solr_response['facet_counts']
+        results.facets = {}
+        results.facets = results.facets.merge(solr_response['facet_counts']['facet_fields'].to_h)
+        results.facets = results.facets.merge(solr_response['facet_counts']['facet_ranges'].to_h)
+      end
+      results
     end
 
     # Parse out a set of documents and return the results

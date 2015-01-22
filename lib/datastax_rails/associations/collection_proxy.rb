@@ -43,6 +43,7 @@ module DatastaxRails
       end
 
       delegate :order, :limit, :where, to: :scoped
+      delegate :sum, :average, :minimum, :maximum, :stddev, to: :scoped
       delegate :target, :load_target, :loaded?, :scoped, to: :@association
       delegate :select, :find, :first, :last, :build, :create, :create!, :destroy_all, :destroy,
                :delete, :delete_all, :count, :size, :length, :empty?, :any?, :many?, to: :@association

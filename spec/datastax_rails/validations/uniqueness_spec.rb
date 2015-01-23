@@ -1,5 +1,11 @@
 require 'spec_helper'
 
+class InvalidValidationModel < DatastaxRails::Base
+  text :text_field
+
+  validates :text_field, uniqueness: true
+end
+
 describe DatastaxRails::Base do
   describe 'uniqueness validation' do
     it 'should validate uniqueness' do
@@ -38,6 +44,19 @@ describe DatastaxRails::Base do
       Boat.commit_solr
       b = Boat.new
       expect(b).not_to be_valid
+    end
+
+    it 'does not allow uniqueness validations on tokenized fields' do
+      expect { InvalidValidationModel.new.valid? }.to raise_exception(DatastaxRails::InvalidValidationError)
+    end
+
+    it 'checks the untokenized version of the attribute' do
+      Person.create!(name: 'John Doe')
+      Person.commit_solr
+      person = Person.new(name: 'John Doe')
+      expect(person).not_to be_valid
+      person = Person.new(name: 'John')
+      expect(person).to be_valid
     end
   end
 end

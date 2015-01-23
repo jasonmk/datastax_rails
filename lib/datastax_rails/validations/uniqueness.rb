@@ -9,11 +9,19 @@ module DatastaxRails
 
       def validate_each(record, attribute, value)
         return true if options[:allow_blank] && value.blank?
+
+        attr_to_check = options[:untokenized_attr] || attribute
+        # XXX: I really want this error to show at load time, but I can't figure out how to find
+        #      the class from the above initializer.
+        if record.column_for_attribute(attr_to_check) && record.column_for_attribute(attr_to_check).options['tokenized']
+          fail DatastaxRails::InvalidValidationError, "Cannot specify uniqueness on a tokenized field: #{attr_to_check}"
+        end
+
         # XXX: The following will break if/when abstract base classes
         #      are implemented in datastax_rails (such as STI)
         finder_class = record.class
 
-        scope = finder_class.where(attribute => value)
+        scope = finder_class.where(attr_to_check => value)
         scope = scope.where_not(id: record.id) if record.persisted?
 
         Array.wrap(options[:scope]).each do |scope_item|
@@ -59,6 +67,7 @@ module DatastaxRails
       # * <tt>:scope</tt> - One or more columns by which to limit the scope of the uniqueness constraint.
       # * <tt>:allow_nil</tt> - If set to true, skips this validation if the attribute is +nil+ (default is +false+).
       # * <tt>:allow_blank</tt> - If set to true, skips this validation if the attribute is blank (default is +false+).
+      # * <tt>:untokenized_attr</tt> - If attr is tokenized, this is the untokenized version to check.
       # * <tt>:if</tt> - Specifies a method, proc or string to call to determine if the validation should
       #   occur (e.g. <tt>:if => :allow_validation</tt>, or <tt>:if => Proc.new { |user| user.signup_step > 2 }</tt>).
       #   The method, proc or string should return or evaluate to a true or false value.

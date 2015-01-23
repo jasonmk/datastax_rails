@@ -19,4 +19,7 @@ module DatastaxRails
 
   class NotPersistedError < DatastaxRailsError
   end
+
+  class InvalidValidationError < DatastaxRailsError
+  end
 end

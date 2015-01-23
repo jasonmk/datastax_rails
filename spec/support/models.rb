@@ -14,7 +14,7 @@ class Person < DatastaxRails::Base
   map :str_
   timestamps
 
-  validates :name, presence: true, uniqueness: :true
+  validates :name, presence: true, uniqueness: { untokenized_attr: :sort_name }
 end
 
 class Car < DatastaxRails::Base

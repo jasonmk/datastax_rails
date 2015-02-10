@@ -97,23 +97,24 @@ describe 'DatastaxRails::Base' do
     describe '#store_file' do
       it 'should store a file', slow: true do
         file = 'abcd' * 1.megabyte
-        CarPayload.create(digest: 'limo', payload: file)
-        expect(CarPayload.find('limo').payload).to eq(file)
+        digest = Digest::SHA1.hexdigest(file)
+        CarPayload.create(digest: digest, payload: file)
+        expect(CarPayload.find(digest).payload).to eq(file)
       end
 
       it 'should store really large files', slow: true do
         file = IO.read('/dev/zero', 25.megabyte)
-        CarPayload.create(digest: 'limo', payload: file)
-        expect(CarPayload.find('limo').payload).to eq(file)
+        digest = Digest::SHA1.hexdigest(file)
+        CarPayload.create(digest: digest, payload: file)
+        expect(CarPayload.find(digest).payload).to eq(file)
       end
 
-      it 'should successfully overwrite a larger file with a smaller one', slow: true do
+      it 'throws a ChecksumMismatchError if record incorrect' do
         file = 'abcd' * 1.megabyte
-        car = CarPayload.create(digest: 'limo', payload: file)
-        smallfile = 'e' * 1.kilobyte
-        car.payload = smallfile
-        car.save
-        expect(CarPayload.find('limo').payload).to eq(smallfile)
+        digest = Digest::SHA1.hexdigest(file)
+        CarPayload.create(digest: digest, payload: file)
+        DatastaxRails::Base.connection.prepare('DELETE FROM car_payloads WHERE digest=? AND chunk=2').execute(digest)
+        expect { CarPayload.find(digest) }.to raise_exception(DatastaxRails::ChecksumMismatchError)
       end
     end
 

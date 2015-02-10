@@ -45,6 +45,8 @@ module DatastaxRails
       end
       fail DatastaxRails::RecordNotFound unless found
       io.rewind
+      fail ChecksumMismatchError if digest != Digest::SHA1.hexdigest(io.read)
+      io.rewind
       instantiate(digest, { digest: digest, payload: io.read, chunk: chunk }, [:digest, :payload])
     end
 
@@ -64,6 +66,7 @@ module DatastaxRails
         i += 1
       end
 
+      # This probably doesn't make sense once we start enforcing digest to actually be the digest
       if count && count > i
         i.upto(count) do |j|
           c = cql.delete(digest: record.id, chunk: j)

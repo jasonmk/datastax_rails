@@ -22,4 +22,7 @@ module DatastaxRails
 
   class InvalidValidationError < DatastaxRailsError
   end
+
+  class ChecksumMismatchError < DatastaxRailsError
+  end
 end

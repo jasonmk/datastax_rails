@@ -47,7 +47,7 @@
        that you fully re-index after changing this setting as it can
        affect both how text is indexed and queried.
     -->
-  <luceneMatchVersion>LUCENE_43</luceneMatchVersion>
+  <luceneMatchVersion>LUCENE_46</luceneMatchVersion>
   
   <!-- Enable DSE Search new type mappings -->
   <dseTypeMappingVersion>2</dseTypeMappingVersion>
@@ -107,7 +107,7 @@
        persistent, and doesn't work with replication.
     -->
   <directoryFactory name="DirectoryFactory" 
-                    class="com.datastax.bdp.cassandra.index.solr.DSENRTCachingDirectoryFactory"/>
+                    class="${solr.directoryFactor:solr.MMapDirectoryFactory}"/>
   <indexConfig>
 
     <useCompoundFile>false</useCompoundFile>

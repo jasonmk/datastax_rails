@@ -30,8 +30,12 @@ module DatastaxRails
 
       def to_cql
         stmt = "update #{@klass.column_family} "
-        stmt << "AND TTL #{@ttl} " if @ttl
-        stmt << "AND TIMESTAMP #{@timestamp}" if @timestamp
+        if @ttl || @timestamp
+          stmt << 'USING '
+          stmt << "TTL #{@ttl} " if @ttl
+          stmt << 'AND ' if @ttl && @timestamp
+          stmt << "TIMESTAMP #{@timestamp} " if @timestamp
+        end
 
         unless @columns.empty?
           stmt << 'SET '

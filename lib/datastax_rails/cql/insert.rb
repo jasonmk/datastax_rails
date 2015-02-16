@@ -32,8 +32,12 @@ module DatastaxRails
         end
         stmt =  "INSERT INTO #{@klass.column_family} (#{keys.join(',')}) "
         stmt << "VALUES (#{('?' * keys.size).split(//).join(',')}) "
-        stmt << "AND TTL #{@ttl} " if @ttl
-        stmt << "AND TIMESTAMP #{@timestamp}" if @timestamp
+        if @ttl || @timestamp
+          stmt << 'USING '
+          stmt << "TTL #{@ttl} " if @ttl
+          stmt << 'AND ' if @ttl && @timestamp
+          stmt << "TIMESTAMP #{@timestamp} " if @timestamp
+        end
         stmt.force_encoding('UTF-8')
       end
     end

@@ -66,6 +66,8 @@ module DatastaxRails
       # @param [Hash] options a hash containing various options
       # @option options [Symbol] :consistency the consistency to set for the Cassandra operation (e.g., ALL)
       # @option options [Symbol] :new_record whether or not this is a new record (i.e., INSERT vs UPDATE)
+      # @option options [Symbol] :ttl the time-to-live for inserted/updated values to live (CQL only)
+      # @option options [Symbol] :timestamp the timestamp to write on the column(s) in microseconds
       def write(record, options = {})
         level = (options[:consistency] || default_consistency)
         if valid_consistency?(level)
@@ -151,9 +153,15 @@ module DatastaxRails
 
       def write_with_cql(id, encoded, options)
         if options[:new_record]
-          cql.insert.columns(encoded).using(options[:consistency]).execute
+          c = cql.insert.columns(encoded).using(options[:consistency])
+          c.ttl(options[:ttl]) if options[:ttl]
+          c.timestamp(options[:timestamp]) if options[:timestamp]
+          c.execute
         else
-          cql.update(id).columns(encoded).using(options[:consistency]).execute
+          c = cql.update(id).columns(encoded).using(options[:consistency])
+          c.ttl(options[:ttl]) if options[:ttl]
+          c.timestamp(options[:timestamp]) if options[:timestamp]
+          c.execute
         end
       end
 
@@ -167,6 +175,7 @@ module DatastaxRails
       !(new_record? || destroyed?)
     end
 
+    # See {DatastaxRails::Persistence.write} for allowed options
     def save(options = {})
       _create_or_update(options)
     rescue DatastaxRails::RecordInvalid

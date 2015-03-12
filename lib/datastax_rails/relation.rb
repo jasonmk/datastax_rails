@@ -350,7 +350,7 @@ module DatastaxRails
         cql.execute.each do |row|
           results << @klass.instantiate(row[@klass.primary_key], row, select_columns)
         end
-      rescue ::Cql::CqlError => e # TODO: Break out the various exception types
+      rescue Cassandra::Errors::ValidationError => e
         # If we get an exception about an empty key, ignore it.  We'll return an empty set.
         unless e.message =~ /Key may not be empty/
           raise

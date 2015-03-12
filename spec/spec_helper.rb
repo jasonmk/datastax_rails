@@ -37,9 +37,11 @@ RSpec.configure do |config|
   end
 
   config.after(:each) do
+    futures = []
     DatastaxRails::Base.recorded_classes.keys.each do |klass|
-      DatastaxRails::Base.connection.execute("TRUNCATE #{klass.column_family}")
+      futures << DatastaxRails::Base.connection.execute_async("TRUNCATE #{klass.column_family}")
     end
+    futures.each(&:get)
   end
 
   # config.after(:all) do

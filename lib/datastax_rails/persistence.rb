@@ -284,7 +284,7 @@ module DatastaxRails
 
     def _create_record(options)
       # TODO: handle the non-UUID case
-      self.id ||= ::Cql::TimeUuid::Generator.new.next
+      self.id ||= Cassandra::TimeUuid::Generator.new.now
       _write(options)
       @new_record = false
       self.id

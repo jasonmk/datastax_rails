@@ -162,7 +162,8 @@ module DatastaxRails
       when :uuid                        then value.is_a?(::Cql::Uuid) ? value : self.class.value_to_uuid(value)
       when :time, :datetime, :timestamp then value.to_time.utc
       when :date                        then value.to_time.utc
-      when :list, :set                  then list_to_cql3_value(value)
+      when :set                         then Set.new(list_to_cql3_value(value))
+      when :list                        then list_to_cql3_value(value)
       when :map                         then map_to_cql3_value(value)
       else value
       end

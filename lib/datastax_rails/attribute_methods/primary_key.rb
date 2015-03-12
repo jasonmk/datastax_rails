@@ -92,7 +92,7 @@ module DatastaxRails
         end
 
         def next_key
-          ::Cql::TimeUuid::Generator.new.next.to_s
+          Cassandra::TimeUuid::Generator.new.now.to_s
         end
       end
     end

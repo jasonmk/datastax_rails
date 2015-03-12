@@ -13,16 +13,19 @@ describe 'DatastaxRails::Base' do
     end
 
     describe 'with cql' do
+      let(:results) { double('results', execution_info: double('EI', hosts: [double('host', ip: '127.0.0.1')])) }
       before(:each) do
         Person.storage_method = :cql
         @statement = double('prepared statement')
         allow(DatastaxRails::Base.connection).to receive(:prepare).and_return(@statement)
+        allow(@statement).to receive(:bind).and_return(@statement)
       end
 
       describe '#create' do
         it 'should persist at the given consistency level' do
-          expect(@statement).to receive(:execute) do |*args|
+          expect(DatastaxRails::Base.connection).to receive(:execute) do |*args|
             expect(args.last).to include(consistency: :local_quorum)
+            results
           end
           Person.create({ name: 'Steven' }, { consistency: 'LOCAL_QUORUM' })
         end
@@ -30,8 +33,9 @@ describe 'DatastaxRails::Base' do
 
       describe '#save' do
         it 'should persist at the given consistency level' do
-          expect(@statement).to receive(:execute) do |*args|
+          expect(DatastaxRails::Base.connection).to receive(:execute) do |*args|
             expect(args.last).to include(consistency: :local_quorum)
+            results
           end
           p = Person.new(name: 'Steven')
           p.save(consistency: 'LOCAL_QUORUM')
@@ -40,10 +44,11 @@ describe 'DatastaxRails::Base' do
 
       describe '#remove' do
         it 'should remove at the given consistency level' do
-          allow(@statement).to receive(:execute)
+          allow(DatastaxRails::Base.connection).to receive(:execute).and_return(results)
           p = Person.create(name: 'Steven')
-          expect(@statement).to receive(:execute) do |*args|
+          expect(DatastaxRails::Base.connection).to receive(:execute) do |*args|
             expect(args.last).to include(consistency: :local_quorum)
+            results
           end
           p.destroy(consistency: :local_quorum)
         end
@@ -113,7 +118,7 @@ describe 'DatastaxRails::Base' do
         file = 'abcd' * 1.megabyte
         digest = Digest::SHA1.hexdigest(file)
         CarPayload.create(digest: digest, payload: file)
-        DatastaxRails::Base.connection.prepare('DELETE FROM car_payloads WHERE digest=? AND chunk=2').execute(digest)
+        DatastaxRails::Base.connection.execute("DELETE FROM car_payloads WHERE digest='#{digest}' AND chunk=2")
         expect { CarPayload.find(digest) }.to raise_exception(DatastaxRails::ChecksumMismatchError)
       end
     end

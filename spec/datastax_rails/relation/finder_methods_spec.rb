@@ -34,7 +34,7 @@ describe DatastaxRails::Relation do
 
     context 'with multiple ids' do
       it 'raises RecordNotFound if any portion of the records could not be found' do
-        expect { Hobby.find(h.id, ::Cql::TimeUuid::Generator.new.next) }.to raise_exception(DatastaxRails::RecordNotFound)
+        expect { Hobby.find(h.id, Cassandra::TimeUuid::Generator.new.now) }.to raise_exception(DatastaxRails::RecordNotFound)
       end
 
       context 'as an array' do

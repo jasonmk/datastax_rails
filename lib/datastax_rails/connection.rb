@@ -1,7 +1,7 @@
 # require 'datastax_rails/rsolr_client_wrapper'
 require 'rsolr/client_cert'
 require 'rest_client'
-require 'cql'
+require 'cassandra'
 
 module DatastaxRails
   # The connection module holds all the code for establishing and maintaining a connection to
@@ -12,26 +12,18 @@ module DatastaxRails
     included do
       include DatastaxRails::StatementCache
       class_attribute :connection
+      class_attribute :cluster
       class_attribute :solr
+      cattr_accessor :current_server
     end
 
     module ClassMethods # rubocop:disable Style/Documentation
       DEFAULT_OPTIONS = {
-        servers:            '127.0.0.1',
+        servers:            ['127.0.0.1'],
         port:               9160,
         connection_options: { timeout: 10 },
         ssl:                false
       }
-
-      # Returns the current server that we are talking to.  This is useful when you are talking to a
-      # cluster, and we want to know which server specifically we are connected to.
-      #
-      # Used by Relation to calculate the SOLR URL so that it follows the Cassandra connection.
-      #
-      # @return [String] the hostname or ip address of the current server
-      def current_server
-        connection.current_connection.instance_variable_get(:@connection).host
-      end
 
       # Establish a Cassandra connection to DSE.  datastax.yml will be read and the current environment's
       # settings passed to this method.
@@ -84,9 +76,9 @@ module DatastaxRails
       def establish_connection(spec)
         DatastaxRails::Base.config = spec.with_indifferent_access
         spec.reverse_merge!(DEFAULT_OPTIONS)
-        cql_options = { hosts:              spec[:servers],
-                        keyspace:           spec[:keyspace],
-                        connection_timeout: spec[:connection_options][:timeout] }
+        cluster_options = { hosts:              spec[:servers],
+                            connection_timeout: spec[:connection_options][:timeout],
+                            timeout:            spec[:connection_options][:timeout] }
         if ssl_type
           ca_cert = Pathname.new(DatastaxRails::Base.config[:ssl][:ca_cert])
           ca_cert = Rails.root.join(ca_cert) unless ca_cert.absolute?
@@ -106,9 +98,13 @@ module DatastaxRails
             end
             ssl_context.cert = OpenSSL::X509::Certificate.new(cert.read)
           end
-          cql_options[:ssl] = ssl_context
+          cluster_options[:ssl] = ssl_context
         end
-        self.connection = ::Cql::Client.connect(cql_options)
+
+        self.current_server = spec[:servers].first
+
+        self.cluster = Cassandra.cluster(cluster_options)
+        self.connection = cluster.connect(spec[:keyspace])
       end
 
       def ssl_type

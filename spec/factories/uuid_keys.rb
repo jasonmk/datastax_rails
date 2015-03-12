@@ -1,6 +1,6 @@
 FactoryGirl.define do
   trait(:uuid_key) do
-    id { ::Cql::TimeUuid::Generator.new.next }
+    id { ::Cassandra::TimeUuid::Generator.new.now }
     created_at { Time.now }
   end
 end

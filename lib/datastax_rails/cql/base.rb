@@ -40,14 +40,16 @@ module DatastaxRails
           begin
             DatastaxRails::Base.reconnect unless DatastaxRails::Base.connection
             stmt = DatastaxRails::Base.statement_cache[digest] ||= DatastaxRails::Base.connection.prepare(cql)
+            stmt = stmt.bind(@values)
             if @consistency
-              results = stmt.execute(*@values, consistency: @consistency)
+              results = DatastaxRails::Base.connection.execute(stmt, consistency: @consistency)
             else
-              results = stmt.execute(*@values)
+              results = DatastaxRails::Base.connection.execute(stmt)
             end
             payload[:result_count] = results.respond_to?(:count) ? results.count : 'No'
+            DatastaxRails::Base.current_server = results.execution_info.hosts.first.ip.to_s
             results
-          rescue ::Cql::NotConnectedError
+          rescue Cassandra::Errors::NoHostsAvailable
             if try_again
               Rails.logger.warn('Lost connection to Cassandra. Attempting to reconnect...')
               try_again = false

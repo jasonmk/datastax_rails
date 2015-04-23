@@ -259,7 +259,10 @@ module DatastaxRails #:nodoc:
   # DatastaxRails::FacetMethods::BY_MONTH (+1MONTH)
   # DatastaxRails::FacetMethods::BY_DAY   (+1DAY)
   #
-  # Model.range_facet(:publication_date, "1968-01-01T00:00:00Z", "2000-01-01T00:00:00Z", DatastaxRails::FacetMethods::BY_YEAR)
+  # Model.range_facet(:publication_date,
+  #                   "1968-01-01T00:00:00Z",
+  #                   "2000-01-01T00:00:00Z",
+  #                   DatastaxRails::FacetMethods::BY_YEAR)
   #
   # == Collections
   #

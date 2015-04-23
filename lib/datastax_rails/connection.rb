@@ -77,7 +77,8 @@ module DatastaxRails
       def establish_connection(spec)
         DatastaxRails::Base.config = spec.with_indifferent_access
         spec.reverse_merge!(DEFAULT_OPTIONS)
-        load_balancing_policy = DatastaxRails::LoadBalancing::Policies::StickyDcAwareRoundRobin.new(spec[:server_max_requests])
+        load_balancing_policy =
+          DatastaxRails::LoadBalancing::Policies::StickyDcAwareRoundRobin.new(spec[:server_max_requests])
         cluster_options = { hosts:                 spec[:servers],
                             connection_timeout:    spec[:connection_options][:timeout],
                             timeout:               spec[:connection_options][:timeout],
@@ -122,6 +123,7 @@ module DatastaxRails
         end
       end
 
+      # rubocop:disable Style/RescueModifier
       def reconnect
         connection.close rescue true
         self.connection = nil

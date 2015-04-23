@@ -57,7 +57,9 @@ module DatastaxRails
       #   end
       #
       # *Note*: the +:find+ scope also has effect on update and deletion methods, like +update_all+ and +delete_all+.
-      def with_scope(scope = {}, action = :merge, &_block) # rubocop:disable Metrics/CyclomaticComplexity
+      # rubocop:disable Metrics/CyclomaticComplexity
+      # rubocop:disable Metrics/PerceivedComplexity
+      def with_scope(scope = {}, action = :merge, &_block)
         # If another DatastaxRails class has been passed in, get its current scope
         scope = scope.current_scope if !scope.is_a?(Relation) && scope.respond_to?(:current_scope)
         previous_scope = current_scope

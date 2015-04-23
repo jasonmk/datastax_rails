@@ -20,7 +20,8 @@ namespace :ds do
     @migrator.drop_keyspace
   end
 
-  desc 'Migrate keyspace to latest version -- pass in model name to force an upload of just that one (all force-uploads everything).'
+  desc 'Migrate keyspace to latest version -- pass in model name ' \
+       'to force an upload of just that one (all force-uploads everything).'
   task :migrate, [:force_cf] => :configure do |_t, args|
     if args[:force_cf].blank?
       @migrator.migrate_all

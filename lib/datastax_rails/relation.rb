@@ -9,7 +9,7 @@ module DatastaxRails
     SINGLE_VALUE_METHODS = %i(page per_page reverse_order query_parser consistency ttl use_solr escape group
                               allow_filtering facet_threads)
 
-    SOLR_CHAR_RX = /([\+\!\(\)\[\]\^\"\~\:\'\=\/]+)/
+    SOLR_CHAR_RX = %r{([\+\!\(\)\[\]\^\"\~\:\'\=\/]+)}
 
     Relation::MULTI_VALUE_METHODS.each do |m|
       attr_accessor :"#{m}_values"
@@ -316,6 +316,9 @@ module DatastaxRails
     # Constructs a CQL query and runs it against Cassandra directly.  For this to
     # work, you need to run against either the primary key or a secondary index.
     # For ad-hoc queries, you will have to use Solr.
+    # rubocop:disable Metrics/MethodLength
+    # rubocop:disable Metrics/PerceivedComplexity
+    # rubocop:disable Metrics/CyclomaticComplexity
     def query_via_cql
       select_columns =
         select_values.empty? ? (@klass.attribute_definitions.keys - @klass.lazy_attributes) : select_values.flatten
@@ -510,7 +513,8 @@ module DatastaxRails
         params['hl.fl'] = @highlight_options[:fields]
         params['hl.snippets'] = @highlight_options[:snippets] if @highlight_options[:snippets]
         params['hl.fragsize'] = @highlight_options[:fragsize] if @highlight_options[:fragsize]
-        params['hl.requireFieldMatch'] = @highlight_options[:require_field_match] if @highlight_options[:require_field_match].present?
+        params['hl.requireFieldMatch'] =
+          @highlight_options[:require_field_match] if @highlight_options[:require_field_match].present?
         if @highlight_options[:use_fast_vector]
           params['hl.useFastVectorHighlighter'] = true
           params['hl.tag.pre'] = @highlight_options[:pre_tag] if @highlight_options[:pre_tag].present?

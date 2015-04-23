@@ -8,7 +8,10 @@ module DatastaxRails
       # before we roll on to the next node. This minimizes the chance of data not being where we
       # expect it to be.
       class StickyDcAwareRoundRobin < Cassandra::LoadBalancing::Policies::DCAwareRoundRobin
-        def initialize(max_requests, datacenter = nil, max_remote_hosts_to_use = nil, use_remote_hosts_for_local_consistency = false)
+        def initialize(max_requests,
+                       datacenter = nil,
+                       max_remote_hosts_to_use = nil,
+                       use_remote_hosts_for_local_consistency = false)
           @max_requests = max_requests
           super(datacenter, max_remote_hosts_to_use, use_remote_hosts_for_local_consistency)
           Thread.current[:position] = 0

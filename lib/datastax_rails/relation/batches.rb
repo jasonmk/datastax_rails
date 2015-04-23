@@ -62,6 +62,7 @@ module DatastaxRails
     #
     # @param options [Hash] finder options
     # @yield [records] a batch of DatastaxRails records
+    # rubocop:disable Metrics/PerceivedComplexity
     def find_in_batches(options = {})
       relation = self
 

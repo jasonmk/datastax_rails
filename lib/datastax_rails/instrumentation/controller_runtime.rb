@@ -42,8 +42,8 @@ module DatastaxRails
       module ClassMethods
         def log_process_action(payload)
           messages, solr_runtime, cql_runtime = super, payload[:solr_runtime], payload[:cql_runtime]
-          messages << ('Solr: %.1fms' % solr_runtime.to_f) if solr_runtime
-          messages << ('CQL: %.1fms' % cql_runtime.to_f) if cql_runtime
+          messages << format('Solr: %.1fms', solr_runtime.to_f) if solr_runtime
+          messages << format('CQL: %.1fms', cql_runtime.to_f) if cql_runtime
           messages
         end
       end

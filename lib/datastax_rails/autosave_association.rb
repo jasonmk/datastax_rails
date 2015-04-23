@@ -298,7 +298,7 @@ module DatastaxRails
     def association_valid?(reflection, record)
       return true if record.destroyed? || record.marked_for_destruction?
 
-      unless valid = record.valid?
+      unless (valid = record.valid?)
         if reflection.options[:autosave]
           record.errors.each do |attribute, message|
             attribute = "#{reflection.name}.#{attribute}"
@@ -324,11 +324,14 @@ module DatastaxRails
     #
     # In addition, it destroys all children that were marked for destruction
     # with mark_for_destruction.
+    # rubocop:disable Metrics/BlockNesting
+    # rubocop:disable Metrics/CyclomaticComplexity
+    # rubocop:disable Metrics/PerceivedComplexity
     def save_collection_association(reflection)
-      if association = association_instance_get(reflection.name)
+      if (association = association_instance_get(reflection.name))
         autosave = reflection.options[:autosave]
 
-        if records = associated_records_to_validate_or_save(association, @new_record_before_save, autosave)
+        if (records = associated_records_to_validate_or_save(association, @new_record_before_save, autosave))
 
           if autosave
             records_to_destroy = records.select(&:marked_for_destruction?)
@@ -369,6 +372,8 @@ module DatastaxRails
     #
     # This all happens inside a transaction, _if_ the Transactions module is included into
     # ActiveRecord::Base after the AutosaveAssociation module, which it does by default.
+    # rubocop:disable Metrics/CyclomaticComplexity
+    # rubocop:disable Metrics/PerceivedComplexity
     def save_has_one_association(reflection)
       association = association_instance_get(reflection.name)
       record      = association && association.load_target
@@ -403,6 +408,8 @@ module DatastaxRails
     # Saves the associated record if it's new or <tt>:autosave</tt> is enabled.
     #
     # In addition, it will destroy the association if it was marked for destruction.
+    # rubocop:disable Metrics/CyclomaticComplexity
+    # rubocop:disable Metrics/PerceivedComplexity
     def save_belongs_to_association(reflection)
       association = association_instance_get(reflection.name)
       record      = association && association.load_target

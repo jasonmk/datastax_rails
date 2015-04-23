@@ -44,7 +44,7 @@ Style/Documentation:
     - 'spec/**/*'
     
 Style/GuardClause:
-  MinBodyLength: 4
+  Enabled: false
 
 # Maybe this can go away eventually? It seems somewhat limiting though.
 Style/RaiseArgs:

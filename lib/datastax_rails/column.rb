@@ -383,27 +383,27 @@ module DatastaxRails
 
     def compute_cql_type(field_type, options)
       options[:cql_type] ||
-      case field_type.to_sym
-      when :integer                            then 'int'
-      when :long                               then 'bigint'
-      when :time, :date, :timestamp, :datetime then 'timestamp'
-      when :binary                             then 'blob'
-      when :list                               then "list<#{compute_cql_type(options[:holds], options)}>"
-      when :set                                then "set<#{compute_cql_type(options[:holds], options)}>"
-      when :map                                then "map<text, #{compute_cql_type(options[:holds], options)}>"
-      when :string                             then 'text'
-      else field_type.to_s
-      end
+        case field_type.to_sym
+        when :integer                            then 'int'
+        when :long                               then 'bigint'
+        when :time, :date, :timestamp, :datetime then 'timestamp'
+        when :binary                             then 'blob'
+        when :list                               then "list<#{compute_cql_type(options[:holds], options)}>"
+        when :set                                then "set<#{compute_cql_type(options[:holds], options)}>"
+        when :map                                then "map<text, #{compute_cql_type(options[:holds], options)}>"
+        when :string                             then 'text'
+        else field_type.to_s
+        end
     end
 
     def compute_solr_type(field_type, options)
       options[:solr_type] ||
-      case field_type.to_sym
-      when :integer                            then 'int'
-      when :timestamp, :time, :datetime        then 'date'
-      when :list, :set, :map                   then compute_solr_type(options[:holds], options)
-      else field_type.to_s
-      end
+        case field_type.to_sym
+        when :integer                            then 'int'
+        when :timestamp, :time, :datetime        then 'date'
+        when :list, :set, :map                   then compute_solr_type(options[:holds], options)
+        else field_type.to_s
+        end
     end
   end
 end

@@ -193,7 +193,7 @@ module DatastaxRails
     def find_some(ids)
       keys = ids.map do |id|
         @klass.attribute_definitions[@klass.primary_key].type_cast_for_cql3(id) ||
-          fail(RecordNotFound, "Couldn't find #{@klass.name} with an invalid ID=#{id}")
+        fail(RecordNotFound, "Couldn't find #{@klass.name} with an invalid ID=#{id}")
       end
       result = with_cassandra.where(@klass.primary_key => keys).all
 

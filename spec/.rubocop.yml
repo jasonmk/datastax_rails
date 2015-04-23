@@ -1,9 +1,6 @@
 inherit_from:
   - ../.rubocop.yml
 
-Style/Blocks:
-  Enabled: false
-
 Style/Documentation:
   Enabled: false
 

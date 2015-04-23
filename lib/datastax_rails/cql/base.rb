@@ -27,14 +27,13 @@ module DatastaxRails
         cql = to_cql.force_encoding('UTF-8')
 
         ActiveSupport::Notifications.instrument(
-           'cql.datastax_rails',
-           name:           'CQL',
-           cql:            cql,
-           klass:          @klass,
-           connection_id:  DatastaxRails::Base.connection.object_id,
-           statement_name: self.class.name,
-           binds:          @values) do |payload|
-
+          'cql.datastax_rails',
+          name:           'CQL',
+          cql:            cql,
+          klass:          @klass,
+          connection_id:  DatastaxRails::Base.connection.object_id,
+          statement_name: self.class.name,
+          binds:          @values) do |payload|
           digest = Digest::MD5.digest cql
           try_again = true
           begin

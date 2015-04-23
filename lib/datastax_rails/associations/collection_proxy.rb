@@ -57,8 +57,8 @@ module DatastaxRails
 
       def respond_to?(name, include_private = false)
         super ||
-        (load_target && target.respond_to?(name, include_private)) ||
-        proxy_association.klass.respond_to?(name, include_private)
+          (load_target && target.respond_to?(name, include_private)) ||
+          proxy_association.klass.respond_to?(name, include_private)
       end
 
       def method_missing(method, *args, &block)

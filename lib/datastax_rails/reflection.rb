@@ -113,9 +113,9 @@ module DatastaxRails
       def ==(other)
         super ||
           other.is_a?(self.class) &&
-          name == other.name &&
-          other.options &&
-          datastax_rails == other.datastax_rails
+            name == other.name &&
+            other.options &&
+            datastax_rails == other.datastax_rails
       end
 
       # XXX: Do we need to sanitize our query?

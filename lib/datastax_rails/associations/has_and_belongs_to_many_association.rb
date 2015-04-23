@@ -18,7 +18,7 @@ module DatastaxRails
           end
         end
 
-        left, right = [[record.class.name, record.id], [owner.class.name, owner.id]].sort { |a, b|b.first <=> a.first }
+        left, right = [[record.class.name, record.id], [owner.class.name, owner.id]].sort { |a, b| b.first <=> a.first }
 
         DatastaxRails::Base.connection.insert(join_column_family,
                                               SimpleUUID::UUID.new.to_guid,

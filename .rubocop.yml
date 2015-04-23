@@ -12,6 +12,9 @@ Metrics/LineLength:
   Exclude:
     - 'spec/**/*'
 
+Metrics/AbcSize:
+  Enabled: false
+
 Style/Encoding:
   EnforcedStyle: when_needed
 

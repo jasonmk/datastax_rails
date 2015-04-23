@@ -44,7 +44,6 @@ describe DatastaxRails::Relation do
   end
 
   describe '#group' do
-
   end
 
   describe '#order' do

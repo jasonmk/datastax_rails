@@ -19,10 +19,11 @@ module DatastaxRails
 
     module ClassMethods # rubocop:disable Style/Documentation
       DEFAULT_OPTIONS = {
-        servers:            ['127.0.0.1'],
-        port:               9160,
-        connection_options: { timeout: 10 },
-        ssl:                false
+        servers:             ['127.0.0.1'],
+        port:                9160,
+        connection_options:  { timeout: 10 },
+        ssl:                 false,
+        server_max_requests: 500
       }
 
       # Establish a Cassandra connection to DSE.  datastax.yml will be read and the current environment's
@@ -67,7 +68,7 @@ module DatastaxRails
       #   Defaults to 0.
       # * *server_retry_period* - Amount of time to wait before retrying a down server. Defaults to 1.
       # * *server_max_requests* - Number of requests to make to a server before moving to the next one (helps
-      #   keep load balanced). Default to nil which means cycling does not take place.
+      #   keep load balanced). Default to 500.
       # * *retry_overrides* - Overrides retries option for individual exceptions.
       # * *connect_timeout* - The connection timeout on the Thrift socket. Defaults to 0.1.
       # * *timeout* - The timeout for the transport layer. Defaults to 1.
@@ -76,9 +77,11 @@ module DatastaxRails
       def establish_connection(spec)
         DatastaxRails::Base.config = spec.with_indifferent_access
         spec.reverse_merge!(DEFAULT_OPTIONS)
-        cluster_options = { hosts:              spec[:servers],
-                            connection_timeout: spec[:connection_options][:timeout],
-                            timeout:            spec[:connection_options][:timeout] }
+        load_balancing_policy = DatastaxRails::LoadBalancing::Policies::StickyDcAwareRoundRobin.new(spec[:server_max_requests])
+        cluster_options = { hosts:                 spec[:servers],
+                            connection_timeout:    spec[:connection_options][:timeout],
+                            timeout:               spec[:connection_options][:timeout],
+                            load_balancing_policy: load_balancing_policy }
         if ssl_type
           ca_cert = Pathname.new(DatastaxRails::Base.config[:ssl][:ca_cert])
           ca_cert = Rails.root.join(ca_cert) unless ca_cert.absolute?

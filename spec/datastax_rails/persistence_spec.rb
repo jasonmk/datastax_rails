@@ -27,7 +27,7 @@ describe 'DatastaxRails::Base' do
             expect(args.last).to include(consistency: :local_quorum)
             results
           end
-          Person.create({ name: 'Steven' }, { consistency: 'LOCAL_QUORUM' })
+          Person.create({ name: 'Steven' }, consistency: 'LOCAL_QUORUM')
         end
       end
 
@@ -65,7 +65,7 @@ describe 'DatastaxRails::Base' do
       describe '#create' do
         it 'should persist at the given consistency level' do
           expect(Person.solr_connection).to receive(:update).with(hash_including(params: hash_including(cl: 'LOCAL_QUORUM'))).and_return(true)
-          Person.create({ name: 'Steven' }, { consistency: 'LOCAL_QUORUM' })
+          Person.create({ name: 'Steven' }, consistency: 'LOCAL_QUORUM')
         end
       end
 

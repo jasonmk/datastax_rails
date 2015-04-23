@@ -27,6 +27,7 @@ module DatastaxRails
   autoload :GroupedCollection
   autoload :Index
   autoload :Inheritance
+  autoload :LoadBalancing
   autoload :PayloadModel
   autoload :Persistence
   autoload :Reflection

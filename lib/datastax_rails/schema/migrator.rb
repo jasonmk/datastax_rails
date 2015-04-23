@@ -18,7 +18,6 @@ module DatastaxRails
 
       def migrate_all(force = false)
         say_with_time('Migrating all models') do
-
           FileList[rails_models].each do |model|
             require model
           end

@@ -29,6 +29,5 @@ describe DatastaxRails::Schema::Solr do
   end
 
   describe '#upload_solr_configuration' do
-
   end
 end

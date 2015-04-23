@@ -45,5 +45,4 @@ describe DatastaxRails::Base do
       end
     end
   end
-
 end

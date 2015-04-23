@@ -71,7 +71,7 @@ module DatastaxRails
                                   options: options.merge(start: start_range.to_s,
                                                          end:   end_range.to_s,
                                                          gap:   gap.to_s
-                                                         )
+                                                        )
                                 }
       end
     end

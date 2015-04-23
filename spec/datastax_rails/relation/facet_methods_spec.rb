@@ -6,7 +6,6 @@ describe DatastaxRails::Relation do
   end
 
   describe '#field_facet' do
-
     it 'should return facets on a field' do
       Hobby.create(name: 'skiing')
       Hobby.create(name: 'boating')
@@ -23,11 +22,9 @@ describe DatastaxRails::Relation do
       Hobby.commit_solr
       expect(@relation.field_facet(:name, prefix: 's').all.facets['name']).to eq(['singing', 1, 'skiing', 1])
     end
-
   end
 
   describe '#range_facet' do
-
     it 'should return facets on a field' do
       Hobby.create(complexity: 1.0)
       Hobby.create(complexity: 5.0)
@@ -55,6 +52,5 @@ describe DatastaxRails::Relation do
                'start'  => 1.0,
                'end'    => 11.0)
     end
-
   end
 end

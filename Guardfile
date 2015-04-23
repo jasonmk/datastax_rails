@@ -10,7 +10,7 @@ group :red_green_refactor, halt_on_fail: true do
   end
 
   guard :rubocop, all_on_start: false, cli: '-D --auto-correct' do
-    watch(%r{.+\.rb$})
+    watch(/.+\.rb$/)
     watch(%r{(?:.+/)?\.rubocop\.yml$}) { |m| File.dirname(m[0]) }
   end
 end

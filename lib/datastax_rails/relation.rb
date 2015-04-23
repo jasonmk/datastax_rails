@@ -249,9 +249,7 @@ module DatastaxRails
 
     # Override respond_to? so that it matches method_missing
     def respond_to?(method, include_private = false)
-      Array.method_defined?(method)                       ||
-      @klass.respond_to?(method, include_private)         ||
-      super
+      Array.method_defined?(method) || @klass.respond_to?(method, include_private) || super
     end
 
     def path_decision
@@ -352,9 +350,7 @@ module DatastaxRails
         end
       rescue Cassandra::Errors::ValidationError => e
         # If we get an exception about an empty key, ignore it.  We'll return an empty set.
-        unless e.message =~ /Key may not be empty/
-          raise
-        end
+        raise unless e.message =~ /Key may not be empty/
       end
       if @slow_order_values.any?
         results.sort! do |a, b|
@@ -551,10 +547,10 @@ module DatastaxRails
         params['group.offset'] = (@page_value - 1) * @per_page_value
         params['group.ngroups'] = 'false' # must be false due to issues with solr sharding
         ActiveSupport::Notifications.instrument(
-           'solr.datastax_rails',
-           name:   'Search',
-           klass:  @klass.name,
-           search: params) do
+          'solr.datastax_rails',
+          name:   'Search',
+          klass:  @klass.name,
+          search: params) do
           solr_response = rsolr.post('select', data: params)
           response = solr_response['grouped'][@group_value.to_s]
           results.total_groups = response['groups'].size
@@ -569,10 +565,10 @@ module DatastaxRails
         end
       else
         ActiveSupport::Notifications.instrument(
-           'solr.datastax_rails',
-           name:   'Search',
-           klass:  @klass.name,
-           search: params.merge(page: @page_value, per_page: @per_page_value)) do
+          'solr.datastax_rails',
+          name:   'Search',
+          klass:  @klass.name,
+          search: params.merge(page: @page_value, per_page: @per_page_value)) do
           solr_response = rsolr.paginate(@page_value, @per_page_value, 'select', data: params, method: :post)
           response = solr_response['response']
           results = parse_docs(response, select_columns)

@@ -520,8 +520,8 @@ module DatastaxRails #:nodoc:
     def ==(other)
       super ||
         other.instance_of?(self.class) &&
-        id.present? &&
-        other.id.eql?(id)
+          id.present? &&
+          other.id.eql?(id)
     end
 
     def eql?(other)

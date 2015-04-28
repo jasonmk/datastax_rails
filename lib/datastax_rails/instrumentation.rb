@@ -1,4 +1,4 @@
 module DatastaxRails
-  module Instrumentation
+  module Instrumentation #:nodoc:
   end
 end

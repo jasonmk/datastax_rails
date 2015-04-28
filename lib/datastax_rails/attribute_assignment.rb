@@ -1,6 +1,9 @@
 require 'active_support/concern'
 
 module DatastaxRails
+  # Model.new expects that a hash of attributes will be passed in and expects
+  # them to be set on the new instance. This module takes care of that while
+  # also delegating nested attribute assignment to the respective models.
   module AttributeAssignment
     extend ActiveSupport::Concern
     include ActiveModel::ForbiddenAttributesProtection
@@ -11,6 +14,7 @@ module DatastaxRails
     # If the passed hash responds to <tt>permitted?</tt> method and the return value
     # of this method is +false+ an <tt>ActiveModel::ForbiddenAttributesError</tt>
     # exception is raised.
+    # XXX: Is the above statement still true?
     def assign_attributes(new_attributes)
       return if new_attributes.blank?
 

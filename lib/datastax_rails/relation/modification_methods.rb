@@ -1,4 +1,5 @@
 module DatastaxRails
+  # Relation methods for destroying an entire collection of records.
   module ModificationMethods
     # Destroys the records matching this relation by instantiating each
     # record and calling its +destroy+ method. Each object's callbacks are

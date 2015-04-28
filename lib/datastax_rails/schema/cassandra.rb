@@ -1,6 +1,6 @@
-# rubocop:disable Style/LineLength
 module DatastaxRails
   module Schema
+    # Methods for managing the Cassandra schema
     module Cassandra
       # Check for missing columns or columns needing cassandra indexes
       def check_missing_schema(model) # rubocop:disable MethodLength
@@ -20,26 +20,36 @@ module DatastaxRails
               end
               count += 1
               say "Creating cassandra index on #{attribute}", :subitem
-              DatastaxRails::Cql::CreateIndex.new(cassandra_index_cql_name(model.column_family.to_s, attribute.to_s)).on(model.column_family.to_s).column(attribute.to_s).execute
+              DatastaxRails::Cql::CreateIndex.new(
+                cassandra_index_cql_name(
+                  model.column_family.to_s, attribute.to_s)
+              ).on(model.column_family.to_s).column(attribute.to_s).execute
             end
           elsif definition.options[:cql_index]
             unless column_exists?(model.column_family.to_s, "__#{attribute}")
               # Create and populate the new column
               count += 1
               say "Adding column '__#{attribute}'", :subitem
-              DatastaxRails::Cql::AlterColumnFamily.new(model.column_family).add("__#{attribute}" => definition.cql_type).execute
+              DatastaxRails::Cql::AlterColumnFamily.new(model.column_family)
+                .add("__#{attribute}" => definition.cql_type).execute
               say "Populating column '__#{attribute}' (this might take a while)", :subitem
-              export = "echo \"copy #{model.column_family} (key, #{attribute}) TO 'dsr_export.csv';\" | cqlsh #{model.current_server}"
-              import = "echo \"copy #{model.column_family} (key, __#{attribute}) FROM 'dsr_export.csv';\" | cqlsh #{model.current_server}"
+              export = "echo \"copy #{model.column_family} (key, #{attribute}) " \
+                       "TO 'dsr_export.csv';\" | cqlsh #{model.current_server}"
+              import = "echo \"copy #{model.column_family} (key, __#{attribute}) " \
+                       "FROM 'dsr_export.csv';\" | cqlsh #{model.current_server}"
               if system(export)
                 system(import)
               else
-                @errors << "Looks like you don't have a working cqlsh command in your path.\nRun the following two commands from a server with cqlsh:\n\n#{export}\n#{import}"
+                @errors << "Looks like you don't have a working cqlsh command in your path.\n" \
+                           "Run the following two commands from a server with cqlsh:\n\n#{export}\n#{import}"
               end
             end
             count += 1
             say "Creating cassandra index on __#{attribute}", :subitem
-            DatastaxRails::Cql::CreateIndex.new(cassandra_index_cql_name(model.column_family.to_s, "__#{attribute}")).on(model.column_family.to_s).column("__#{attribute}").execute
+            DatastaxRails::Cql::CreateIndex.new(
+              cassandra_index_cql_name(
+                model.column_family.to_s, "__#{attribute}")
+            ).on(model.column_family.to_s).column("__#{attribute}").execute
           end
         end
         count
@@ -62,7 +72,8 @@ module DatastaxRails
       # Creates the named keyspace
       def create_keyspace(keyspace, options = {})
         opts = { name:           keyspace.to_s,
-                 strategy_class: 'org.apache.cassandra.locator.NetworkTopologyStrategy' }.with_indifferent_access.merge(options)
+                 strategy_class: 'org.apache.cassandra.locator.NetworkTopologyStrategy' }
+               .with_indifferent_access.merge(options)
 
         if keyspace_exists?(keyspace.to_s)
           say "Keyspace #{keyspace} already exists"
@@ -113,15 +124,19 @@ module DatastaxRails
       def column_exists?(cf, col)
         klass = OpenStruct.new(column_family: 'system.schema_columns', default_consistency: 'QUORUM')
         cql = DatastaxRails::Cql::ColumnFamily.new(klass)
-        results = cql.select('count(*)').conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf, 'column_name' => col).execute
+        results = cql.select('count(*)')
+                  .conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf, 'column_name' => col).execute
         exists = results.first['count'] > 0
         unless exists
           # We need to check if it's part of an alias (ugh)
           klass = OpenStruct.new(column_family: 'system.schema_columnfamilies', default_consistency: 'QUORUM')
           cql = DatastaxRails::Cql::ColumnFamily.new(klass)
-          results = cql.select('column_aliases, key_aliases, value_alias').conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf).execute
+          results = cql.select('column_aliases, key_aliases, value_alias')
+                    .conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf).execute
           row = results.first
-          exists = row['key_aliases'].include?(col.to_s) || row['column_aliases'].include?(col.to_s) || (row['value_alias'] && row['value_alias'].include?(col.to_s))
+          exists = row['key_aliases'].include?(col.to_s) ||
+                   row['column_aliases'].include?(col.to_s) ||
+                   (row['value_alias'] && row['value_alias'].include?(col.to_s))
         end
         exists
       end
@@ -130,7 +145,8 @@ module DatastaxRails
       def index_exists?(cf, col)
         klass = OpenStruct.new(column_family: 'system.schema_columns', default_consistency: 'QUORUM')
         cql = DatastaxRails::Cql::ColumnFamily.new(klass)
-        results = cql.select('index_name').conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf, 'column_name' => col).execute
+        results = cql.select('index_name')
+                  .conditions('keyspace_name' => @keyspace, 'columnfamily_name' => cf, 'column_name' => col).execute
         results.first['index_name'] != nil
       end
     end

@@ -1,5 +1,6 @@
 module DatastaxRails
   module Validations
+    # See +DatastaxRails::Validations::ClassMethods.validates_associated
     class AssociatedValidator < ActiveModel::EachValidator
       def validate_each(record, attribute, value)
         if Array.wrap(value).reject { |r| r.destroyed? || r.valid? }.any?
@@ -8,7 +9,7 @@ module DatastaxRails
       end
     end
 
-    module ClassMethods
+    module ClassMethods #:nodoc:
       # Validates whether the associated object or objects are all valid themselves. Works with any kind of association.
       #
       #   class Book < DatastaxRails::Base

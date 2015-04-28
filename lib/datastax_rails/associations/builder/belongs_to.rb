@@ -1,4 +1,7 @@
-module DatastaxRails::Associations::Builder # rubocop:disable Style/ClassAndModuleChildren
+# rubocop:disable Style/ClassAndModuleChildren
+module DatastaxRails::Associations::Builder
+  # Builds a belongs_to relation to another model. This is specified on the side
+  # of the relationship that contains the foreign key.
   class BelongsTo < SingularAssociation
     self.macro = :belongs_to
 

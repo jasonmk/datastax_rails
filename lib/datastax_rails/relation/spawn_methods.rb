@@ -1,9 +1,6 @@
 module DatastaxRails
+  # Relation methods for building a new relation from an existing one (which may be empty).
   module SpawnMethods
-    # def scoped #:nodoc:
-    # self
-    # end
-
     def merge(r) #:nodoc:
       return self unless r
       return to_a & r if r.is_a?(Array)

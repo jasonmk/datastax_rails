@@ -1,6 +1,7 @@
-module DatastaxRails #:nodoc:
-  module Cql #:nodoc:
-    class CreateIndex < Base #:nodoc:
+module DatastaxRails
+  module Cql
+    # CQL generation for CREATE INDEX
+    class CreateIndex < Base
       def initialize(index_name = nil)
         @cf_name = nil
         @column = nil

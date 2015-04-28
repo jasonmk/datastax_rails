@@ -1,5 +1,6 @@
 module DatastaxRails
   module Cql
+    # CQL generation for TRUNCATE
     class Truncate < Base
       def initialize(klass)
         @klass = klass

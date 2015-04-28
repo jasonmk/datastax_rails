@@ -1,6 +1,7 @@
 AllCops:
   Exclude:
     - 'spec/dummy/**/*'
+    - 'Guardfile'
   RunRailsCops: false
 
 Style/AlignHash:
@@ -52,6 +53,6 @@ Style/RaiseArgs:
 
 Style/Next:
   Enabled: false
-  
-Style/Documentation:
+
+Style/RescueModifier:
   Enabled: false

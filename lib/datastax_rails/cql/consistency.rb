@@ -1,5 +1,6 @@
 module DatastaxRails
   module Cql
+    # Module to store valid consistency levels for CQL
     module Consistency
       ANY = :any
       ONE = :one

@@ -2,6 +2,7 @@ require 'active_support/core_ext/array/wrap'
 
 module DatastaxRails
   module Validations
+    # Uniqueness validation
     class UniquenessValidator < ActiveModel::EachValidator
       def initialize(options)
         super
@@ -37,7 +38,7 @@ module DatastaxRails
       end
     end
 
-    module ClassMethods
+    module ClassMethods #:nodoc:
       # Validates whether the value of the specified attributes are unique across the system.
       # Useful for making sure that only one user can be named "davidhh".
       #

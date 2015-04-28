@@ -1,8 +1,11 @@
 module DatastaxRails
+  # Methods related to Single Table Inheritance (STI)
+  #
+  # TODO: This code is very incomplete and likely broken.
   module Inheritance
     extend ActiveSupport::Concern
 
-    module ClassMethods
+    module ClassMethods #:nodoc:
       # Determines if one of the attributes passed in is the inheritance column,
       # and if the inheritance column is attr accessible, it initializes an
       # instance of the given subclass instead of the base class.

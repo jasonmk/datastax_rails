@@ -1,6 +1,7 @@
-module DatastaxRails #:nodoc:
-  module Cql #:nodoc:
-    class AlterColumnFamily < Base #:nodoc:
+module DatastaxRails
+  module Cql
+    # CQL generation for ALTER COLUMNFAMILY
+    class AlterColumnFamily < Base
       def initialize(cf_name)
         @cf_name = cf_name
         @action = nil

@@ -1,6 +1,7 @@
-module DatastaxRails #:nodoc:
-  module Cql #:nodoc:
-    class CreateKeyspace < Base #:nodoc:
+module DatastaxRails
+  module Cql
+    # CQL Generation for CREATE KEYSPACE
+    class CreateKeyspace < Base
       def initialize(ks_name)
         @ks_name = ks_name
         @strategy_options = {}

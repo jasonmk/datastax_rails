@@ -1,6 +1,7 @@
-module DatastaxRails #:nodoc:
-  module Cql #:nodoc:
-    class Select < Base #:nodoc:
+module DatastaxRails
+  module Cql
+    # CQL generation for SELECT
+    class Select < Base
       def initialize(klass, select)
         @select = select.join(',')
         @limit = nil

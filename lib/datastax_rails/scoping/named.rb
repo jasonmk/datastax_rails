@@ -5,12 +5,12 @@ require 'active_support/core_ext/object/blank'
 require 'active_support/core_ext/class/attribute'
 
 module DatastaxRails
-  # = DatastaxRails Named \Scopes
   module Scoping
+    # = DatastaxRails Named \Scopes
     module Named
       extend ActiveSupport::Concern
 
-      module ClassMethods
+      module ClassMethods #:nodoc:
         # Returns an anonymous \scope.
         #
         #   posts = Post.scoped

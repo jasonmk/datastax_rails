@@ -267,7 +267,7 @@ module DatastaxRails
       :before_destroy, :around_destroy, :after_destroy, :after_commit
     ]
 
-    module ClassMethods
+    module ClassMethods #:nodoc:
       include ActiveModel::Callbacks
     end
 

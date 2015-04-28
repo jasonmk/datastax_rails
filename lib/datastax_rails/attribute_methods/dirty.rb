@@ -1,5 +1,7 @@
 module DatastaxRails
   module AttributeMethods
+    # Change tracking for attributes. Builds on ActiveModel::Dirty in order to
+    # reset changes on save.
     module Dirty
       extend ActiveSupport::Concern
       include ActiveModel::Dirty

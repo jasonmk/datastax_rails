@@ -1,5 +1,6 @@
 module DatastaxRails
   module AttributeMethods
+    # Methods for writing attributes and maintaining method name safety
     module Write
       extend ActiveSupport::Concern
 
@@ -7,7 +8,7 @@ module DatastaxRails
         attribute_method_suffix '='
       end
 
-      module ClassMethods
+      module ClassMethods #:nodoc:
         protected
 
         # See define_method_attribute in read.rb for an explanation of

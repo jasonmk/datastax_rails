@@ -1,6 +1,10 @@
 require 'active_support/concern'
 
 module DatastaxRails
+  # Scopes allow common relation operations to be specified ahead of time allowing
+  # for easy, repeatable use elsewhere.
+  #
+  # TODO: document some examples here
   module Scoping
     extend ActiveSupport::Concern
 
@@ -9,7 +13,7 @@ module DatastaxRails
       include Named
     end
 
-    module ClassMethods
+    module ClassMethods #:nodoc:
       # with_scope lets you apply options to inner block incrementally. It takes a hash and the keys must be
       # <tt>:find</tt> or <tt>:create</tt>. <tt>:find</tt> parameter is <tt>Relation</tt> while
       # <tt>:create</tt> parameters are an attributes hash.

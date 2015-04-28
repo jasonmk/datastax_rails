@@ -39,7 +39,7 @@ module DatastaxRails
         payload[:cql_runtime] = (cql_runtime || 0) + DatastaxRails::Instrumentation::LogSubscriber.reset_cql_runtime
       end
 
-      module ClassMethods
+      module ClassMethods #:nodoc:
         def log_process_action(payload)
           messages, solr_runtime, cql_runtime = super, payload[:solr_runtime], payload[:cql_runtime]
           messages << format('Solr: %.1fms', solr_runtime.to_f) if solr_runtime

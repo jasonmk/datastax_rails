@@ -1,4 +1,5 @@
 module DatastaxRails
+  # +Relation+ methods for incrementally building up a search query.
   module SearchMethods
     # By default, Cassandra will throw an error if you try to set a where condition
     # on either a column with no index or on more than one column that isn't part

@@ -1,5 +1,6 @@
 module DatastaxRails
   module Cql
+    # CQL generation for UPDATE
     class Update < Base
       def initialize(klass, key)
         @klass = klass

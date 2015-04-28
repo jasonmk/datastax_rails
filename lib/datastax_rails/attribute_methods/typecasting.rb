@@ -34,7 +34,7 @@ module DatastaxRails
         attrs
       end
 
-      module ClassMethods
+      module ClassMethods #:nodoc:
         # Provide some measure of compatibility with things that expect this from ActiveRecord.
         def columns_hash
           attribute_definitions

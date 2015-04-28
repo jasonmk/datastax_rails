@@ -5,6 +5,7 @@ require 'action_controller/railtie'
 require 'yaml'
 
 module DatastaxRails
+  # Initialize DSR and tie into the Rails framework
   class Railtie < Rails::Railtie
     config.action_dispatch.rescue_responses.merge!(
       'DatastaxRails::RecordNotFound' => :not_found,

@@ -1,5 +1,5 @@
 module DatastaxRails
-  module LoadBalancing
+  module LoadBalancing #:nodoc:
     extend ActiveSupport::Autoload
 
     autoload :Policies

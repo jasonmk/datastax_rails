@@ -1,4 +1,5 @@
 module DatastaxRails
+  # Validation exception class
   class RecordInvalid < DatastaxRailsError
     attr_reader :record
     def initialize(record)
@@ -7,10 +8,12 @@ module DatastaxRails
     end
   end
 
+  # Model validation. Extends ActiveModel validations to automatically run at various
+  # points in the model lifecycle (e.g., create, save, etc).
   module Validations
     extend ActiveSupport::Concern
 
-    module ClassMethods
+    module ClassMethods #:nodoc:
       def create!(attributes = {})
         new(attributes).tap do |object|
           yield(object) if block_given?

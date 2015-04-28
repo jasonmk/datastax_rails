@@ -1,6 +1,7 @@
-module DatastaxRails #:nodoc:
-  module Cql #:nodoc:
-    class CreateColumnFamily < Base #:nodoc:
+module DatastaxRails
+  module Cql
+    # CQL generation for CREATE COLUMNFAMILY
+    class CreateColumnFamily < Base
       def initialize(cf_name)
         @cf_name = cf_name
         @columns = {}

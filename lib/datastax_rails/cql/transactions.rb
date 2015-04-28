@@ -1,5 +1,6 @@
 module DatastaxRails
   module Cql
+    # CQL generation for appending transactions to other queries
     module Transactions
       extend ActiveSupport::Concern
 

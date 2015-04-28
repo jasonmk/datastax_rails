@@ -1,5 +1,6 @@
 module DatastaxRails
   module Cql
+    # CQL generation for INSERT
     class Insert < Base
       def initialize(klass)
         @klass = klass

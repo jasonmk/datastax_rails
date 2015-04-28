@@ -1,4 +1,5 @@
 module DatastaxRails
+  # Relation methods for operating on batches of records.
   module Batches
     # Yields each record that was found by the find +options+. The find is
     # performed by find_in_batches with a batch size of 1000 (or as

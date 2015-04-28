@@ -1,6 +1,6 @@
 module DatastaxRails
   module LoadBalancing
-    module Policies
+    module Policies #:nodoc:
       extend ActiveSupport::Autoload
 
       autoload :StickyDcAwareRoundRobin

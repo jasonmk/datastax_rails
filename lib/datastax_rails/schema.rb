@@ -1,5 +1,5 @@
 module DatastaxRails
-  module Schema
+  module Schema #:nodoc:
     extend ActiveSupport::Autoload
 
     autoload :Solr

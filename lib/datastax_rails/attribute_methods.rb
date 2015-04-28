@@ -1,6 +1,7 @@
 require 'mutex_m'
 
 module DatastaxRails
+  # Methods for defining attributes on a model
   module AttributeMethods
     extend ActiveSupport::Concern
     include ActiveModel::AttributeMethods
@@ -19,7 +20,7 @@ module DatastaxRails
       alias_method :has_attribute?, :attribute_exists?
     end
 
-    module ClassMethods
+    module ClassMethods #:nodoc:
       def inherited(child_class)
         child_class.initialize_generated_modules
         super

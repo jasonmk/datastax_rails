@@ -1,5 +1,6 @@
 module DatastaxRails
   module AttributeMethods
+    # Methods for reading and caching attribute values
     module Read
       extend ActiveSupport::Concern
 
@@ -10,7 +11,7 @@ module DatastaxRails
         self.attribute_types_cached_by_default = ATTRIBUTE_TYPES_CACHED_BY_DEFAULT
       end
 
-      module ClassMethods
+      module ClassMethods #:nodoc:
         # +cache_attributes+ allows you to declare which converted attribute
         # values should be cached. Usually caching only pays off for attributes
         # with expensive conversion methods, like time related columns (e.g.

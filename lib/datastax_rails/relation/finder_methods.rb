@@ -1,4 +1,5 @@
 module DatastaxRails
+  # Relation methods to locate a single record either by PK or set of values.
   module FinderMethods
     # Find operates with four different retrieval approaches:
     #
@@ -10,9 +11,6 @@ module DatastaxRails
     # * Find last - This will return the last record matched by the options used. These options can either be specific
     #   conditions or merely an order. If no record can be matched, +nil+ is returned. Use
     #   <tt>Model.find(:last, *args)</tt> or its shortcut <tt>Model.last(*args)</tt>.
-    # * Find all - This will return all the records matched by the options used.
-    #   If no records are found, an empty array is returned. Use
-    #   <tt>Model.find(:all, *args)</tt> or its shortcut <tt>Model.all(*args)</tt>.
     #
     # All approaches accept an options hash as their last parameter.
     #
@@ -47,13 +45,6 @@ module DatastaxRails
     #   Person.last # returns the last object in the column family
     #   Person.where(:user_name => user_name).last
     #   Person.order(:created_at => :desc).offset(5).last
-    #
-    #   # find all
-    #   Person.all # returns an array of objects for all the rows in the column family
-    #   Person.where(["category IN (?)", categories]).limit(50).all
-    #   Person.where(:friends => ["Bob", "Steve", "Fred"]).all
-    #   Person.offset(10).limit(10).all
-    #   Person.group("category").all
     def find(*args)
       return to_a.find { |*block_args| yield(*block_args) } if block_given?
 
@@ -62,7 +53,7 @@ module DatastaxRails
         apply_finder_options(options).find(*args)
       else
         case args.first
-        when :first, :last, :all
+        when :first, :last
           send(args.first)
         else
           self.use_solr_value = false

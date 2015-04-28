@@ -2,6 +2,8 @@ require 'active_support/concern'
 
 module DatastaxRails
   module Scoping
+    # Default scopes allow initial relations to be automatically configured.
+    # For example, a model can be given a default sort order.
     module Default
       extend ActiveSupport::Concern
 
@@ -11,7 +13,7 @@ module DatastaxRails
         self.default_scopes = []
       end
 
-      module ClassMethods
+      module ClassMethods #:nodoc:
         # Returns a scope for the model without the default_scope.
         #
         #   class Post < DatastaxRails::Base

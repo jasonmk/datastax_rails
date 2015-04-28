@@ -21,7 +21,7 @@ module DatastaxRails
       self.storage_method = :cql
     end
 
-    module ClassMethods
+    module ClassMethods #:nodoc:
       def attribute(name, options)
         opts = options.update(solr_index: false,    solr_store: false,
                               multi_valued: false,  sortable: false,

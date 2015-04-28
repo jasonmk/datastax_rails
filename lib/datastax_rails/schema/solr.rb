@@ -1,6 +1,7 @@
-# rubocop:disable Style/LineLength
+# rubocop:disable Metrics/LineLength
 module DatastaxRails
   module Schema
+    # Methods relating to maintaining Solr indexes and configuration
     module Solr
       # Generates a SOLR schema file.  The default schema template included with DSR can handle
       # most normal circumstances for indexing.  When a customized template is required, it can

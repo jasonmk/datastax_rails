@@ -1,13 +1,14 @@
 require 'set'
 
 # TODO: Break this up into manageable pieces
-# rubocop:disable Style/RescueModifier
 module DatastaxRails
-  class Column # rubocop:disable Style/ClassLength
+  # Contains the metadata for a given column. Also provides a number of helper
+  # methods to take cast values to the appropriate types (i.e., Ruby, CQL, Solr)
+  class Column # rubocop:disable Metrics/ClassLength
     TRUE_VALUES = [true, 1, '1', 't', 'T', 'true', 'TRUE', 'on', 'ON'].to_set
     FALSE_VALUES = [false, 0, '0', 'f', 'F', 'false', 'FALSE', 'off', 'OFF'].to_set
 
-    module Format
+    module Format #:nodoc:
       ISO_DATE = /\A(\d{4})-(\d\d)-(\d\d)\z/
       ISO_DATETIME = /\A(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)(\.\d+)?\z/
       SOLR_TIME_FORMAT = '%Y-%m-%dT%H:%M:%SZ'.force_encoding('utf-8').freeze
@@ -116,7 +117,7 @@ module DatastaxRails
     end
 
     # Casts value (which can be a String) to an appropriate instance.
-    def type_cast(value, record = nil, dest_type = nil) # rubocop:disable Style/CyclomaticComplexity
+    def type_cast(value, record = nil, dest_type = nil) # rubocop:disable Metrics/CyclomaticComplexity
       value = @default if value.nil?
       return nil if value.nil?
       return coder.load(value) if encoded?
@@ -332,7 +333,7 @@ module DatastaxRails
         year && year != 0 && Date.new(year, mon, mday) rescue nil
       end
 
-      def new_time(year, mon, mday, hour, min, sec, microsec, offset = nil) # rubocop:disable Style/ParameterLists
+      def new_time(year, mon, mday, hour, min, sec, microsec, offset = nil) # rubocop:disable Metrics/ParameterLists
         # Treat 0000-00-00 00:00:00 as nil.
         return nil if year.nil? || (year == 0 && mon == 0 && mday == 0)
 

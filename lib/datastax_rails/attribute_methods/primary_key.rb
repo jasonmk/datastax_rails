@@ -2,6 +2,7 @@ require 'set'
 
 module DatastaxRails
   module AttributeMethods
+    # Methods for working with PKs
     module PrimaryKey
       extend ActiveSupport::Concern
 
@@ -47,7 +48,7 @@ module DatastaxRails
         attr_name == 'id' || super
       end
 
-      module ClassMethods
+      module ClassMethods #:nodoc:
         def define_method_attribute(attr_name)
           super
 

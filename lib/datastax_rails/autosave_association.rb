@@ -1,4 +1,5 @@
-# rubocop:disable
+# rubocop:disable Metrics/CyclomaticComplexity
+# rubocop:disable Metrics/PerceivedComplexity
 module DatastaxRails
   # = DatastaxRails Autosave Association
   #
@@ -138,7 +139,7 @@ module DatastaxRails
       end
     end
 
-    module ClassMethods # rubocop:disable Style/Documentation
+    module ClassMethods #:nodoc:
       private
 
       def define_non_cyclic_method(name, reflection, &block)
@@ -201,7 +202,7 @@ module DatastaxRails
           end
         end
 
-        if reflection.validate? && !method_defined?(validation_method) # rubocop:disable Style/GuardClause
+        if reflection.validate? && !method_defined?(validation_method)
           method = (collection ? :validate_collection_association : :validate_single_association)
           define_non_cyclic_method(validation_method, reflection) { send(method, reflection) }
           validate validation_method
@@ -324,9 +325,8 @@ module DatastaxRails
     #
     # In addition, it destroys all children that were marked for destruction
     # with mark_for_destruction.
+    #
     # rubocop:disable Metrics/BlockNesting
-    # rubocop:disable Metrics/CyclomaticComplexity
-    # rubocop:disable Metrics/PerceivedComplexity
     def save_collection_association(reflection)
       if (association = association_instance_get(reflection.name))
         autosave = reflection.options[:autosave]
@@ -372,8 +372,6 @@ module DatastaxRails
     #
     # This all happens inside a transaction, _if_ the Transactions module is included into
     # ActiveRecord::Base after the AutosaveAssociation module, which it does by default.
-    # rubocop:disable Metrics/CyclomaticComplexity
-    # rubocop:disable Metrics/PerceivedComplexity
     def save_has_one_association(reflection)
       association = association_instance_get(reflection.name)
       record      = association && association.load_target
@@ -408,8 +406,6 @@ module DatastaxRails
     # Saves the associated record if it's new or <tt>:autosave</tt> is enabled.
     #
     # In addition, it will destroy the association if it was marked for destruction.
-    # rubocop:disable Metrics/CyclomaticComplexity
-    # rubocop:disable Metrics/PerceivedComplexity
     def save_belongs_to_association(reflection)
       association = association_instance_get(reflection.name)
       record      = association && association.load_target

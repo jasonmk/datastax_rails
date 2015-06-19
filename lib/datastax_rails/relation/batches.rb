@@ -70,8 +70,9 @@ module DatastaxRails
       unless @order_values.empty?
         DatastaxRails::Base.logger.warn('Scoped order and limit are ignored, ' \
                                         "it's forced to be batch order and batch size")
+        relation = relation.clone
+        relation.order_values.clear
       end
-
       if (finder_options = options.except(:start, :batch_size)).present?
         fail "You can't specify an order, it's forced to be #{@klass.primary_key}" if options[:order].present?
         fail "You can't specify a limit, it's forced to be the batch_size" if options[:limit].present?

@@ -37,8 +37,10 @@ namespace :ds do
   task :reindex, [:model] => :configure do |_t, args|
     if args[:model].blank?
       puts "\nUSAGE: rake ds:reindex[Model]"
+    elsif args[:model] == 'all'
+      @migrator.reindex_all
     else
-      @migrator.reindex_solr(args[:model].constantize)
+      @migrator.reindex_one(args[:model].constantize)
     end
   end
 

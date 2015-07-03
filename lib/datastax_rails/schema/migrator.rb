@@ -16,6 +16,31 @@ module DatastaxRails
         @errors = []
       end
 
+      def reindex_all
+        say_with_time('Reindexing all models') do
+          FileList[rails_models].each do |model|
+            require model
+          end
+
+          count = 0
+          DatastaxRails::Base.models.each do |m|
+            count += reindex_one(m) unless m.abstract_class?
+          end
+          count
+        end
+      end
+
+      def reindex_one(model)
+        count = 0
+        unless model <= DatastaxRails::CassandraOnlyModel
+          say_with_time("Reindexing #{model.name}") do
+            reindex_solr(model, false)
+            count += 1
+          end
+        end
+        count
+      end
+
       def migrate_all(force = false)
         say_with_time('Migrating all models') do
           FileList[rails_models].each do |model|

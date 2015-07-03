@@ -33,8 +33,8 @@ describe DatastaxRails::DynamicModel do
     two.save
     one.destroy
     DynamicTestModel1.commit_solr
-    expect(DynamicTestModel1.count).to be(0)
     DynamicTestModel2.commit_solr
+    expect(DynamicTestModel1.count).to be(0)
     expect(DynamicTestModel2.count).to be(1)
   end
 

@@ -47,7 +47,7 @@
        that you fully re-index after changing this setting as it can
        affect both how text is indexed and queried.
     -->
-  <luceneMatchVersion>LUCENE_46</luceneMatchVersion>
+  <luceneMatchVersion>4.10.3</luceneMatchVersion>
   
   <!-- Enable DSE Search new type mappings -->
   <dseTypeMappingVersion>2</dseTypeMappingVersion>
@@ -111,7 +111,7 @@
   <indexConfig>
 
     <useCompoundFile>false</useCompoundFile>
-    <ramBufferSizeMB>100</ramBufferSizeMB>
+    <ramBufferSizeMB><%= @ram_buffer_size %></ramBufferSizeMB>
     <mergeFactor>10</mergeFactor>
 
     <!-- Unlock On Startup

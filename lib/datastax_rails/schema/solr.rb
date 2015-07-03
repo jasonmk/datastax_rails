@@ -67,6 +67,7 @@ module DatastaxRails
           solrconfig = Rails.root.join('config', 'solr', "#{model.column_family}-solrconfig.xml").read
         else
           @solr_commit_time = model.solr_commit_time
+          @ram_buffer_size = model.ram_buffer_size
           solrconfig = ERB.new(File.read(File.join(File.dirname(__FILE__), '..', '..', '..', 'config', 'solrconfig.xml.erb'))).result(binding)
         end
         if Rails.root.join('config', 'solr', "#{model.column_family}-stopwords.txt").exist?

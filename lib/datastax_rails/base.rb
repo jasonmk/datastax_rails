@@ -392,9 +392,17 @@ module DatastaxRails #:nodoc:
     # See {DatastaxRails::WideStorageModel} or {DatastaxRails::Payload} model for an example
     class_attribute :create_options
 
-    # Allows the setting of how frequently to commit data to solr. Default is 10s.
+    # Allows the setting of how frequently to commit data to solr. Default is 1000ms.
+    # If you're running something prior to DSE 4.7 or not using live indexing, you should
+    # change this to at least 5000ms.
     class_attribute :solr_commit_time
-    self.solr_commit_time = 10_000
+    self.solr_commit_time = 1000
+
+    # Allows the setting of how much memory to dedicate to the solr ram buffer. This defaults to 2000MB
+    # in order to allow live indexing to do its thing. If you don't want to use live indexing (or if you
+    # are using DSE prior to 4.7) you should set this to something more reasonable like 100MB.
+    class_attribute :ram_buffer_size
+    self.ram_buffer_size = 2000
 
     # Stores the attribute that wide models should cluster on. Basically, this is the
     # attribute that CQL uses to "group" columns into logical records even though they

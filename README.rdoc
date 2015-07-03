@@ -13,6 +13,13 @@ Significant changes from SolandraObject:
 * Solr communication is now handled directly via RSolr
 * Bifurcation of data is no longer necessary as DSE writes data to SOLR automatically 
 
+As of 2.4.0, DSE 4.7 is supported and live indexing is enabled by default. 
+If you are using any version prior to DSE 4.7 or do not wish to use live indexing, 
+you will want to override the following settings:
+
+  DatastaxRails::Base.solr_commit_time = 5000
+  DatastaxRails::Base.ram_buffer_size = 100
+
 === Usage Note
 
 Before using this gem, you should probably take a strong look at the type of problem you are trying to solve.

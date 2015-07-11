@@ -2,7 +2,7 @@
 # More info at https://github.com/guard/guard#readme
 
 group :red_green_refactor, halt_on_fail: true do
-  guard :rspec, failed_mode: :focus, cmd: 'BUNDLE_GEMFILE=/apps/rails_apps/datastax_rails/gemfiles/rails40.gemfile bundle exec rspec' do
+  guard :rspec, failed_mode: :focus, cmd: 'BUNDLE_GEMFILE=./gemfiles/rails42.gemfile bundle exec rspec' do
     watch(%r{^spec/.+_spec\.rb$})
     watch(%r{^spec/support/.+\.rb$})
     watch(%r{^lib/(.+)\.rb$})     { |m| "spec/#{m[1]}_spec.rb" }

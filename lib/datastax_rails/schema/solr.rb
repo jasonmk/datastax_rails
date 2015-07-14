@@ -66,8 +66,9 @@ module DatastaxRails
           say 'Using custom solrconfig file', :subitem
           solrconfig = Rails.root.join('config', 'solr', "#{model.column_family}-solrconfig.xml").read
         else
-          @solr_commit_time = model.solr_commit_time
-          @ram_buffer_size = model.ram_buffer_size
+          @live_indexing = model.live_indexing
+          @solr_commit_time = model.solr_commit_time || (@live_indexing ? '1000' : '5000')
+          @ram_buffer_size = model.ram_buffer_size || (@live_indexing ? '2000' : '100')
           solrconfig = ERB.new(File.read(File.join(File.dirname(__FILE__), '..', '..', '..', 'config', 'solrconfig.xml.erb'))).result(binding)
         end
         if Rails.root.join('config', 'solr', "#{model.column_family}-stopwords.txt").exist?

@@ -406,6 +406,11 @@ module DatastaxRails #:nodoc:
     # when live indexing is enabled. Otherwise the default is 100MB.
     class_attribute :ram_buffer_size
 
+    # Allows the setting of what lucene version (and bugs) data should be indexed with.
+    # Defaults to LUCENE_46.
+    class_attribute :lucene_match_version
+    self.lucene_match_version = 'LUCENE_46'
+
     # Stores the attribute that wide models should cluster on. Basically, this is the
     # attribute that CQL uses to "group" columns into logical records even though they
     # are stored on the same row.

@@ -41,7 +41,7 @@ module DatastaxRails
       def reindex_solr(model, destructive = false)
         url = "#{DatastaxRails::Base.solr_base_url}/admin/cores?action=RELOAD&name=#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}&reindex=true&deleteAll=#{destructive}"
         say "Posting reindex command to '#{url}'", :subitem
-        `curl -s -X POST '#{url}'`
+        `curl -s -X POST '#{url}' -H 'Content-type:text/xml; charset=utf-8'`
         say 'Reindexing will run in the background', :subitem
       end
 
@@ -50,7 +50,7 @@ module DatastaxRails
       def create_solr_core(model)
         url = "#{DatastaxRails::Base.solr_base_url}/admin/cores?action=CREATE&name=#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}"
         say "Posting create command to '#{url}'", :subitem
-        `curl -s -X POST '#{url}'`
+        `curl -s -X POST '#{url}' -H 'Content-type:text/xml; charset=utf-8'`
       end
 
       # Uploads the necessary configuration files for solr to function
@@ -62,13 +62,14 @@ module DatastaxRails
       # TODO: Simplify this method
       def upload_solr_configuration(model, force = false, reindex = true) # rubocop:disable all
         count = 0
+        @live_indexing = model.live_indexing
+        @solr_commit_time = model.solr_commit_time || (@live_indexing ? '1000' : '5000')
+        @ram_buffer_size = model.ram_buffer_size || (@live_indexing ? '2000' : '100')
+        @lucene_match_version = model.lucene_match_version
         if Rails.root.join('config', 'solr', "#{model.column_family}-solrconfig.xml").exist?
           say 'Using custom solrconfig file', :subitem
-          solrconfig = Rails.root.join('config', 'solr', "#{model.column_family}-solrconfig.xml").read
+          solrconfig = ERB.new(Rails.root.join('config', 'solr', "#{model.column_family}-solrconfig.xml").read).result(binding)
         else
-          @live_indexing = model.live_indexing
-          @solr_commit_time = model.solr_commit_time || (@live_indexing ? '1000' : '5000')
-          @ram_buffer_size = model.ram_buffer_size || (@live_indexing ? '2000' : '100')
           solrconfig = ERB.new(File.read(File.join(File.dirname(__FILE__), '..', '..', '..', 'config', 'solrconfig.xml.erb'))).result(binding)
         end
         if Rails.root.join('config', 'solr', "#{model.column_family}-stopwords.txt").exist?
@@ -105,7 +106,7 @@ module DatastaxRails
           count += 1
           loop do
             say "Posting Solr Config file to '#{solr_url}/solrconfig.xml'", :subitem
-            http.post(uri.path + '/solrconfig.xml', solrconfig)
+            http.post(uri.path + '/solrconfig.xml', solrconfig, 'Content-type' => 'text/xml; charset=utf-8')
             if Rails.env.production?
               sleep(5)
               resp = http.get(uri.path + '/solrconfig.xml')
@@ -119,7 +120,7 @@ module DatastaxRails
           count += 1
           loop do
             say "Posting Solr Stopwords file to '#{solr_url}/stopwords.txt'", :subitem
-            http.post(uri.path + '/stopwords.txt', stopwords)
+            http.post(uri.path + '/stopwords.txt', stopwords, 'Content-type' => 'text/xml; charset=utf-8')
             if Rails.env.production?
               sleep(5)
               resp = http.get(uri.path + '/stopwords.txt')
@@ -133,7 +134,7 @@ module DatastaxRails
           count += 1
           loop do
             say "Posting Solr Schema file to '#{solr_url}/schema.xml'", :subitem
-            http.post(uri.path + '/schema.xml', schema)
+            http.post(uri.path + '/schema.xml', schema, 'Content-type' => 'text/xml; charset=utf-8')
             if Rails.env.production?
               sleep(5)
               resp = http.get(uri.path + '/schema.xml')

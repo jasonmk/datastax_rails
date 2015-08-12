@@ -466,7 +466,7 @@ module DatastaxRails
 
       q = @fulltext_values.empty? ? '*:*' : @fulltext_values.map { |ftv| '(' + ftv[:query] + ')' }.join(' AND ')
 
-      params = { q: q }
+      params = { q: q, commit: true }
       params[:sort] = sort
       params[:fq] = filter_queries unless filter_queries.empty?
       if @query_parser_value

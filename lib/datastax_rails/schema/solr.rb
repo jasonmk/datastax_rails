@@ -39,10 +39,17 @@ module DatastaxRails
       # Sends a command to Solr instructing it to reindex the data.  The data is reindexed in the background,
       # and the new index is swapped in once it is finished.
       def reindex_solr(model, destructive = false)
-        url = "#{DatastaxRails::Base.solr_base_url}/admin/cores?action=RELOAD&name=#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}&reindex=true&deleteAll=#{destructive}"
-        say "Posting reindex command to '#{url}'", :subitem
+        reload_solr_core(model, true, destructive)
+      end
+
+      # Sends a command to Solr instructing it to reload the core for a given model.
+      # This is for making sure that solr knows the model changes when it comes to multiple
+      # datacenter deployments.
+      def reload_solr_core(model, reindex = false, destructive = false)
+        url = "#{DatastaxRails::Base.solr_base_url}/admin/cores?action=RELOAD&name=#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}&reindex=#{reindex}&deleteAll=#{destructive}"
+        say "Posting reindex command to '#{url}'", :subitem if reindex.eql?(true)
         `curl -s -X POST '#{url}' -H 'Content-type:text/xml; charset=utf-8'`
-        say 'Reindexing will run in the background', :subitem
+        say 'Reindexing will run in the background', :subitem if reindex.eql?(true)
       end
 
       # Creates the initial Solr Core.  This is required once the first time a Solr schema is uploaded.
@@ -61,6 +68,7 @@ module DatastaxRails
       # TODO: find a way to upload arbitrary files automatically (e.g., additional stopwords lists)
       # TODO: Simplify this method
       def upload_solr_configuration(model, force = false, reindex = true) # rubocop:disable all
+        reload_solr_core(model, false, false)
         count = 0
         @live_indexing = model.live_indexing
         @solr_commit_time = model.solr_commit_time || (@live_indexing ? '1000' : '5000')

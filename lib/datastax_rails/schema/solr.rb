@@ -47,9 +47,10 @@ module DatastaxRails
       # datacenter deployments.
       def reload_solr_core(model, reindex = false, destructive = false)
         url = "#{DatastaxRails::Base.solr_base_url}/admin/cores?action=RELOAD&name=#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}&reindex=#{reindex}&deleteAll=#{destructive}"
-        say "Posting reindex command to '#{url}'", :subitem if reindex.eql?(true)
-        `curl -s -X POST '#{url}' -H 'Content-type:text/xml; charset=utf-8' &`
-        say 'Reindexing will run in the background', :subitem if reindex.eql?(true)
+        action = reindex ? 'reindex' : 'reload'
+        say "Posting #{action} command to '#{url}'", :subitem
+        system("curl -s -X POST '#{url}' -H 'Content-type:text/xml; charset=utf-8' &")
+        say "#{action.capitalize} will run in the background", :subitem
       end
 
       # Creates the initial Solr Core.  This is required once the first time a Solr schema is uploaded.
@@ -57,7 +58,7 @@ module DatastaxRails
       def create_solr_core(model)
         url = "#{DatastaxRails::Base.solr_base_url}/admin/cores?action=CREATE&name=#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}"
         say "Posting create command to '#{url}'", :subitem
-        `curl -s -X POST '#{url}' -H 'Content-type:text/xml; charset=utf-8'`
+        system("curl -s -X POST '#{url}' -H 'Content-type:text/xml; charset=utf-8' &"
       end
 
       # Uploads the necessary configuration files for solr to function

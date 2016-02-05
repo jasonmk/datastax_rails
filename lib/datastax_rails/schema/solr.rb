@@ -58,7 +58,7 @@ module DatastaxRails
       def create_solr_core(model)
         url = "#{DatastaxRails::Base.solr_base_url}/admin/cores?action=CREATE&name=#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}"
         say "Posting create command to '#{url}'", :subitem
-        system("curl -s -X POST '#{url}' -H 'Content-type:text/xml; charset=utf-8' &"
+        system("curl -s -X POST '#{url}' -H 'Content-type:text/xml; charset=utf-8' &")
       end
 
       # Uploads the necessary configuration files for solr to function

@@ -48,7 +48,7 @@ module DatastaxRails
       def reload_solr_core(model, reindex = false, destructive = false)
         url = "#{DatastaxRails::Base.solr_base_url}/admin/cores?action=RELOAD&name=#{DatastaxRails::Base.config[:keyspace]}.#{model.column_family}&reindex=#{reindex}&deleteAll=#{destructive}"
         say "Posting reindex command to '#{url}'", :subitem if reindex.eql?(true)
-        `curl -s -X POST '#{url}' -H 'Content-type:text/xml; charset=utf-8'`
+        `curl -s -X POST '#{url}' -H 'Content-type:text/xml; charset=utf-8' &`
         say 'Reindexing will run in the background', :subitem if reindex.eql?(true)
       end
 
